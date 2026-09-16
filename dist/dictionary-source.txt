@@ -1,0 +1,7 @@
+Word Links dictionary
+
+ENABLE (Enhanced North American Benchmark LExicon), a public-domain word-game list.
+Source mirror: https://github.com/dolph/dictionary/blob/master/enable1.txt
+Retrieved: 2026-09-16
+Only alphabetic entries from 2 to 15 letters are included.
+The original Word Links list remains accepted as well.
