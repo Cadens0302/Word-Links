@@ -120,7 +120,9 @@ function renderLevels() {
   target.innerHTML = EXTRA_LEVELS.map((level, index) => {
     const number = index + 1;
     const score = best[number];
-    return `<button class="level-card${completed[number] ? ' completed' : ''}" type="button" data-level="${number}"><span class="level-number">${number}</span><span class="level-name">${level.name}</span><span class="level-status">${completed[number] ? '✓ Completed' : 'Not completed'}</span><span class="level-best">Best: ${score === undefined ? '—' : `${score} pts`}</span><span class="level-target">Target: ≤ ${level.target} pts</span></button>`;
+    const unlocked = number === 1 || Boolean(completed[number - 1]);
+    const status = completed[number] ? '✓ Completed' : unlocked ? 'Not completed' : `🔒 Complete level ${number - 1} first`;
+    return `<button class="level-card${completed[number] ? ' completed' : ''}${unlocked ? '' : ' locked'}" type="button" data-level="${number}"${unlocked ? '' : ' disabled'}><span class="level-number">${number}</span><span class="level-name">${level.name}</span><span class="level-status">${status}</span><span class="level-best">Best: ${score === undefined ? '—' : `${score} pts`}</span><span class="level-target">Target: ≤ ${level.target} pts</span></button>`;
   }).join('');
   target.querySelectorAll('[data-level]').forEach(button => {
     button.addEventListener('click', () => startExtraLevel(Number(button.dataset.level)));
