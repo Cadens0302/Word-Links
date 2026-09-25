@@ -84,7 +84,8 @@ function writeDailyLayouts(layouts) {
 function dailyPuzzleFor(date) {
   let hash = 0;
   for (const char of date) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
-  return DAILY_PUZZLES[hash % DAILY_PUZZLES.length];
+  const puzzle = DAILY_PUZZLES[hash % DAILY_PUZZLES.length];
+  return puzzle[2] ? puzzle : [puzzle[0], puzzle[1], `DAILY CONNECTION ${date}`];
 }
 
 function streakFor(history, anchor = todayKey()) {
@@ -112,7 +113,8 @@ function startDaily() {
   const assignments = readPuzzleAssignments();
   const assignmentKey = `daily-${date}`;
   if (!Number.isInteger(assignments[assignmentKey])) {
-    assignments[assignmentKey] = DAILY_PUZZLES.indexOf(dailyPuzzleFor(date));
+    const generated = dailyPuzzleFor(date);
+    assignments[assignmentKey] = DAILY_PUZZLES.findIndex(puzzle => puzzle[0] === generated[0] && puzzle[1] === generated[1]);
     writePuzzleAssignments(assignments);
   }
   window.DAILY_PUZZLE = DAILY_PUZZLES[assignments[assignmentKey]] || dailyPuzzleFor(date);
