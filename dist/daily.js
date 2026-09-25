@@ -2,6 +2,7 @@
 
 // Daily state is intentionally device-local: no account or personal data is needed.
 const DAILY_STORAGE_KEY = 'wordLinksDailyHistoryV1';
+const EXTRA_BEST_STORAGE_KEY = 'wordLinksExtraBestV1';
 const DAILY_PUZZLES = [
   ['LIGHT','SOUND','THE FIRST CONNECTION'],
   ['NIGHT','SHORE','AFTER HOURS'],
@@ -29,6 +30,15 @@ function readHistory() {
 
 function writeHistory(history) {
   try { localStorage.setItem(DAILY_STORAGE_KEY, JSON.stringify(history)); } catch {}
+}
+
+function readExtraBest() {
+  try { return JSON.parse(localStorage.getItem(EXTRA_BEST_STORAGE_KEY) || '{}'); }
+  catch { return {}; }
+}
+
+function writeExtraBest(best) {
+  try { localStorage.setItem(EXTRA_BEST_STORAGE_KEY, JSON.stringify(best)); } catch {}
 }
 
 function dailyPuzzleFor(date) {
@@ -59,19 +69,49 @@ function updateStreakLabels() {
 function startDaily() {
   window.DAILY_MODE = true;
   window.DAILY_PUZZLE = dailyPuzzleFor(todayKey());
+  window.EXTRA_LEVEL = null;
+  window.EXTRA_PUZZLE = null;
   startGame();
   updateStreakLabels();
 }
 
-function startExtraPuzzle() {
+function startExtraLevel(levelNumber) {
+  const level = EXTRA_LEVELS[levelNumber - 1];
+  if (!level) return;
   window.DAILY_MODE = false;
   window.DAILY_PUZZLE = null;
+  window.EXTRA_LEVEL = levelNumber;
+  window.EXTRA_PUZZLE = [...level.puzzles[Math.floor(Math.random() * level.puzzles.length)], level.name];
   startGame();
+  document.getElementById('levels-modal').hidden = true;
   document.getElementById('history-modal').hidden = true;
   document.getElementById('welcome-modal').hidden = true;
 }
 
-function recordDailyCompletion(result) {
+function renderLevels() {
+  const target = document.getElementById('level-grid');
+  const best = readExtraBest();
+  target.innerHTML = EXTRA_LEVELS.map((level, index) => {
+    const number = index + 1;
+    const score = best[number];
+    return `<button class="level-card" type="button" data-level="${number}"><span class="level-number">${number}</span><span class="level-name">${level.name}</span><span class="level-best">Best: ${score === undefined ? '—' : `${score} pts`}</span><span class="level-target">Target: ≤ ${level.target} pts</span></button>`;
+  }).join('');
+  target.querySelectorAll('[data-level]').forEach(button => {
+    button.addEventListener('click', () => startExtraLevel(Number(button.dataset.level)));
+  });
+}
+
+function recordCompletion(result) {
+  if (!window.DAILY_MODE && window.EXTRA_LEVEL) {
+    const best = readExtraBest();
+    const previous = best[window.EXTRA_LEVEL];
+    const isBest = previous === undefined || result.score < previous;
+    if (isBest) { best[window.EXTRA_LEVEL] = result.score; writeExtraBest(best); }
+    const level = EXTRA_LEVELS[window.EXTRA_LEVEL - 1];
+    feedback(`Level ${window.EXTRA_LEVEL} complete! You scored ${result.score} points. ${isBest ? 'New personal best. ' : ''}Target: ${level.target} points.`, 'success');
+    renderLevels();
+    return;
+  }
   if (!window.DAILY_MODE) return;
   const date = todayKey();
   const history = readHistory().filter(item => item.date !== date);
@@ -83,7 +123,7 @@ function recordDailyCompletion(result) {
   feedback(`Good job finishing today’s daily puzzle! You now have a ${streak} day${streak === 1 ? '' : 's'} streak. Your score: ${result.score} points.`, 'success');
 }
 
-window.wordLinksCompleted = recordDailyCompletion;
+window.wordLinksCompleted = recordCompletion;
 
 function renderHistory() {
   const target = document.getElementById('history-list');
@@ -104,13 +144,15 @@ function openWelcome() {
   document.getElementById('welcome-modal').hidden = false;
 }
 
-document.getElementById('extra-puzzles').addEventListener('click', startExtraPuzzle);
+document.getElementById('extra-puzzles').addEventListener('click', () => { renderLevels(); document.getElementById('levels-modal').hidden = false; });
 document.getElementById('history-button').addEventListener('click', () => { renderHistory(); document.getElementById('history-modal').hidden = false; });
 document.getElementById('history-close').addEventListener('click', () => { document.getElementById('history-modal').hidden = true; });
+document.getElementById('levels-close').addEventListener('click', () => { document.getElementById('levels-modal').hidden = true; });
 document.getElementById('welcome-close').addEventListener('click', () => { document.getElementById('welcome-modal').hidden = true; });
 document.getElementById('play-daily').addEventListener('click', () => { startDaily(); document.getElementById('welcome-modal').hidden = true; });
 document.getElementById('welcome-modal').addEventListener('click', event => { if (event.target.id === 'welcome-modal') event.currentTarget.hidden = true; });
 document.getElementById('history-modal').addEventListener('click', event => { if (event.target.id === 'history-modal') event.currentTarget.hidden = true; });
+document.getElementById('levels-modal').addEventListener('click', event => { if (event.target.id === 'levels-modal') event.currentTarget.hidden = true; });
 
 startDaily();
 openWelcome();
