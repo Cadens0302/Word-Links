@@ -5,6 +5,7 @@ const DAILY_STORAGE_KEY = 'wordLinksDailyHistoryV1';
 const EXTRA_BEST_STORAGE_KEY = 'wordLinksExtraBestV1';
 const EXTRA_COMPLETED_STORAGE_KEY = 'wordLinksExtraCompletedV1';
 const EXTRA_HISTORY_STORAGE_KEY = 'wordLinksExtraHistoryV1';
+const PUZZLE_ASSIGNMENTS_STORAGE_KEY = 'wordLinksPuzzleAssignmentsV1';
 const DAILY_PUZZLES = [
   ['LIGHT','SOUND','THE FIRST CONNECTION'],
   ['NIGHT','SHORE','AFTER HOURS'],
@@ -61,6 +62,15 @@ function writeExtraHistory(history) {
   try { localStorage.setItem(EXTRA_HISTORY_STORAGE_KEY, JSON.stringify(history)); } catch {}
 }
 
+function readPuzzleAssignments() {
+  try { return JSON.parse(localStorage.getItem(PUZZLE_ASSIGNMENTS_STORAGE_KEY) || '{}'); }
+  catch { return {}; }
+}
+
+function writePuzzleAssignments(assignments) {
+  try { localStorage.setItem(PUZZLE_ASSIGNMENTS_STORAGE_KEY, JSON.stringify(assignments)); } catch {}
+}
+
 function dailyPuzzleFor(date) {
   let hash = 0;
   for (const char of date) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
@@ -89,7 +99,13 @@ function updateStreakLabels() {
 function startDaily() {
   window.DAILY_MODE = true;
   const date = todayKey();
-  window.DAILY_PUZZLE = dailyPuzzleFor(date);
+  const assignments = readPuzzleAssignments();
+  const assignmentKey = `daily-${date}`;
+  if (!Number.isInteger(assignments[assignmentKey])) {
+    assignments[assignmentKey] = DAILY_PUZZLES.indexOf(dailyPuzzleFor(date));
+    writePuzzleAssignments(assignments);
+  }
+  window.DAILY_PUZZLE = DAILY_PUZZLES[assignments[assignmentKey]] || dailyPuzzleFor(date);
   window.DAILY_SEED = `daily-${date}`;
   window.EXTRA_LEVEL = null;
   window.EXTRA_PUZZLE = null;
@@ -104,7 +120,13 @@ function startExtraLevel(levelNumber) {
   window.DAILY_MODE = false;
   window.DAILY_PUZZLE = null;
   window.EXTRA_LEVEL = levelNumber;
-  const puzzleIndex = (levelNumber * 7 + level.name.length) % level.puzzles.length;
+  const assignments = readPuzzleAssignments();
+  const assignmentKey = `level-${levelNumber}`;
+  if (!Number.isInteger(assignments[assignmentKey])) {
+    assignments[assignmentKey] = (levelNumber * 7 + level.name.length) % level.puzzles.length;
+    writePuzzleAssignments(assignments);
+  }
+  const puzzleIndex = assignments[assignmentKey] % level.puzzles.length;
   window.EXTRA_PUZZLE = [...level.puzzles[puzzleIndex], level.name];
   window.EXTRA_SEED = `level-${levelNumber}`;
   startGame();
