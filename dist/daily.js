@@ -6,6 +6,7 @@ const EXTRA_BEST_STORAGE_KEY = 'wordLinksExtraBestV1';
 const EXTRA_COMPLETED_STORAGE_KEY = 'wordLinksExtraCompletedV1';
 const EXTRA_HISTORY_STORAGE_KEY = 'wordLinksExtraHistoryV1';
 const PUZZLE_ASSIGNMENTS_STORAGE_KEY = 'wordLinksPuzzleAssignmentsV1';
+const DAILY_LAYOUT_STORAGE_KEY = 'wordLinksDailyLayoutsV1';
 const DAILY_PUZZLES = [
   ['LIGHT','SOUND','THE FIRST CONNECTION'],
   ['NIGHT','SHORE','AFTER HOURS'],
@@ -71,6 +72,15 @@ function writePuzzleAssignments(assignments) {
   try { localStorage.setItem(PUZZLE_ASSIGNMENTS_STORAGE_KEY, JSON.stringify(assignments)); } catch {}
 }
 
+function readDailyLayouts() {
+  try { return JSON.parse(localStorage.getItem(DAILY_LAYOUT_STORAGE_KEY) || '{}'); }
+  catch { return {}; }
+}
+
+function writeDailyLayouts(layouts) {
+  try { localStorage.setItem(DAILY_LAYOUT_STORAGE_KEY, JSON.stringify(layouts)); } catch {}
+}
+
 function dailyPuzzleFor(date) {
   let hash = 0;
   for (const char of date) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
@@ -107,10 +117,16 @@ function startDaily() {
   }
   window.DAILY_PUZZLE = DAILY_PUZZLES[assignments[assignmentKey]] || dailyPuzzleFor(date);
   window.DAILY_SEED = `daily-${date}`;
+  const layouts = readDailyLayouts();
+  window.DAILY_LAYOUT = Array.isArray(layouts[date]) ? layouts[date] : null;
   window.EXTRA_LEVEL = null;
   window.EXTRA_PUZZLE = null;
   window.EXTRA_SEED = null;
   startGame();
+  if (!layouts[date] && Array.isArray(window.STARTING_WORDS)) {
+    layouts[date] = window.STARTING_WORDS;
+    writeDailyLayouts(layouts);
+  }
   updateStreakLabels();
 }
 
@@ -120,6 +136,7 @@ function startExtraLevel(levelNumber) {
   window.DAILY_MODE = false;
   window.DAILY_PUZZLE = null;
   window.EXTRA_LEVEL = levelNumber;
+  window.DAILY_LAYOUT = null;
   const assignments = readPuzzleAssignments();
   const assignmentKey = `level-${levelNumber}`;
   if (!Number.isInteger(assignments[assignmentKey])) {
@@ -190,7 +207,7 @@ function renderHistory(section = 'all') {
   if (!history.length) { target.innerHTML = `<div class="history-empty">No ${section === 'daily' ? 'daily challenges' : section === 'levels' ? 'level puzzles' : 'puzzles'} solved yet.</div>`; return; }
   target.innerHTML = history.map(item => {
     const date = new Date(`${item.date}T12:00:00`).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric',year:'numeric'});
-    const label = item.type === 'daily' ? 'Daily challenge' : `Level ${item.level} · ${EXTRA_LEVELS[item.level - 1]?.name || 'Extra puzzle'}`;
+    const label = item.type === 'daily' ? `Daily challenge · ${item.puzzle || `Challenge ${item.date}`}` : `Level ${item.level} · ${EXTRA_LEVELS[item.level - 1]?.name || 'Extra puzzle'}`;
     return `<div class="history-row"><div><div class="history-date">${date}</div><div class="history-meta">${label} · ${item.words?.length || 0} links</div></div><div class="history-score">${item.score} pts</div></div>`;
   }).join('');
 }
