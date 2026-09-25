@@ -1,5 +1,7 @@
 'use strict';
 
+const MINI_SIZE = 20;
+
 const MINI_PUZZLES = [
   {
     title: 'A little word square',
@@ -34,7 +36,7 @@ let miniPuzzle = MINI_PUZZLES[0];
 let miniCells = [];
 let selectedEntry = null;
 
-function miniCell(row, col) { return miniCells[row * 5 + col]; }
+function miniCell(row, col) { return miniCells[row * MINI_SIZE + col]; }
 
 function entryCells(entry) {
   return [...entry.answer].map((_, index) => ({
@@ -49,7 +51,8 @@ function renderMini() {
   miniCells = [];
   const starts = new Map();
   miniPuzzle.entries.forEach(entry => starts.set(`${entry.row},${entry.col}`, entry.id));
-  miniPuzzle.rows.forEach((row, r) => [...row].forEach((value, c) => {
+  const rows = Array.from({length: MINI_SIZE}, (_, r) => (miniPuzzle.rows[r] || '').padEnd(MINI_SIZE, '#').slice(0, MINI_SIZE));
+  rows.forEach((row, r) => [...row].forEach((value, c) => {
     const cell = document.createElement(value === '#' ? 'span' : 'input');
     cell.className = value === '#' ? 'mini-block' : 'mini-cell';
     cell.dataset.row = r;
@@ -66,8 +69,8 @@ function renderMini() {
         if (event.key === 'Backspace' && !cell.value) focusMiniCell(r, c, -1);
         if (event.key === 'ArrowRight') { event.preventDefault(); focusMiniCell(r, c, 1); }
         if (event.key === 'ArrowLeft') { event.preventDefault(); focusMiniCell(r, c, -1); }
-        if (event.key === 'ArrowDown') { event.preventDefault(); focusMiniCell(r, c, 5); }
-        if (event.key === 'ArrowUp') { event.preventDefault(); focusMiniCell(r, c, -5); }
+        if (event.key === 'ArrowDown') { event.preventDefault(); focusMiniCell(r, c, MINI_SIZE); }
+        if (event.key === 'ArrowUp') { event.preventDefault(); focusMiniCell(r, c, -MINI_SIZE); }
       });
       cell.addEventListener('focus', () => highlightEntryAt(r, c));
       miniCells.push(cell);
@@ -79,7 +82,7 @@ function renderMini() {
 }
 
 function focusMiniCell(row, col, offset) {
-  const start = row * 5 + col;
+  const start = row * MINI_SIZE + col;
   for (let index = start + offset; index >= 0 && index < 25; index += offset) {
     if (miniCells[index]) { miniCells[index].focus(); return; }
   }
