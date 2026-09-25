@@ -174,4 +174,5 @@ document.getElementById('mini-history-button').addEventListener('click', () => {
 
 document.getElementById('mini-modal').addEventListener('click', event => { if (event.target.id === 'mini-modal') event.currentTarget.hidden = true; });
 
-window.addEventListener('load', () => { document.getElementById('game-selector').hidden = false; });
+window.addEventListener('load', () => { document.getElementById('game-welcome').hidden = false; document.getElementById('game-selector').hidden = true; });
+document.getElementById('game-welcome-continue').addEventListener('click', () => { document.getElementById('game-welcome').hidden = true; document.getElementById('game-selector').hidden = false; });
