@@ -58,21 +58,27 @@ function findClue() {
           const move={text,r,c,dir};
           if (!validate(text,r,c,dir).error) {
             const path=cells(move); const distance=Math.min(...path.flatMap(p=>targetCells.map(t=>Math.abs(p.r-t.r)+Math.abs(p.c-t.c))));
-            candidates.push({move,distance,crosses:word===words[0]?0:1});
+            const wordIndex=words.indexOf(word); const useful=roots[wordIndex]===roots[0]&&roots[wordIndex]!==roots[1];
+            candidates.push({move,distance,priority:useful?0:1});
           }
         }
       }
     }
   }
-  candidates.sort((a,b)=>a.distance-b.distance||a.crosses-b.crosses);
+  candidates.sort((a,b)=>a.priority-b.priority||a.distance-b.distance);
   return candidates[0]?.move || null;
 }
 
 function clueMessage(move) {
-  if (!move) return 'No clue is available for this layout. You can still try your own words, or Replay for a fresh board.';
+  if (!move) return 'No word clue fits this layout yet. Easier route hint: choose a highlighted start box, use the highlighted end box, and enter a word that crosses the existing word there. The next useful word will move toward the second green word.';
   const end = cells(move).at(-1);
   const coordinate = p => `${String.fromCharCode(65+p.c)}${p.r+1}`;
-  return `Start at ${coordinate(move)} · End at ${coordinate(end)}\n${move.dir === 'H' ? 'Across' : 'Down'} · ${move.text.length} letters\n${WORD_CLUES[move.text]}`;
+  const board=boardMap(); const crossing=cells(move).find(p=>board.has(`${p.r},${p.c}`));
+  const anchor=crossing?words.find(word=>cells(word).some(p=>p.r===crossing.r&&p.c===crossing.c)):null;
+  const clue=WORD_CLUES[move.text] || 'A word that fits the highlighted route and helps connect the two green words.';
+  const easier=`Easier clue: starts with “${move.text[0]}”, has ${move.text.length} letters, and crosses ${anchor?.text || 'the existing word'} at ${crossing?coordinate(crossing):'the highlighted box'}.`;
+  const next=words[1]?.text?`After placing it, look for the next legal crossing that moves toward ${words[1].text}.`:'Use the highlighted route to continue the connection.';
+  return `Start at ${coordinate(move)} · End at ${coordinate(end)}\n${move.dir === 'H' ? 'Across' : 'Down'} · ${move.text.length} letters\nClue: ${clue}\n${easier}\n${next}`;
 }
 
 $('clue').addEventListener('click', () => {
