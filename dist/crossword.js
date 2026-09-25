@@ -139,10 +139,13 @@ document.querySelectorAll('[data-game-choice]').forEach(button => button.addEven
   if (button.dataset.gameChoice === 'mini') openMiniGame();
   else document.getElementById('game-selector').hidden = true;
 }));
-document.getElementById('game-menu').addEventListener('click', () => {
+function showGameSelector() {
   document.getElementById('mini-modal').hidden = true;
   document.getElementById('game-selector').hidden = false;
-});
+}
+
+document.getElementById('game-menu').addEventListener('click', showGameSelector);
+document.getElementById('mini-game-menu').addEventListener('click', showGameSelector);
 document.getElementById('mini-close').addEventListener('click', () => { document.getElementById('mini-modal').hidden = true; });
 document.getElementById('mini-check').addEventListener('click', checkMini);
 document.getElementById('mini-new').addEventListener('click', newMiniPuzzle);
