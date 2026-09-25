@@ -31,8 +31,15 @@ const MINI_PUZZLES = [
   }
 ];
 
-let miniIndex = 0;
-let miniPuzzle = MINI_PUZZLES[0];
+function miniDateKey(date = new Date()) { return date.toISOString().slice(0, 10); }
+function miniDailyIndex() { let hash = 0; for (const char of miniDateKey()) hash = (hash * 31 + char.charCodeAt(0)) >>> 0; return hash % MINI_PUZZLES.length; }
+function miniHistory() { try { return JSON.parse(localStorage.getItem('wordLinksMiniHistory') || '[]'); } catch { return []; } }
+function miniStreak() { const solved = new Set(miniHistory().map(item => item.date)); let streak = 0; const date = new Date(); while (solved.has(miniDateKey(date))) { streak++; date.setUTCDate(date.getUTCDate() - 1); } return streak; }
+function recordMiniSolved() { const date = miniDateKey(); const history = miniHistory(); if (!history.some(item => item.date === date)) { history.unshift({date, title: miniPuzzle.title}); localStorage.setItem('wordLinksMiniHistory', JSON.stringify(history.slice(0, 60))); } return miniStreak(); }
+function renderMiniHistory() { const panel = document.getElementById('mini-history-panel'); const history = miniHistory(); panel.innerHTML = history.length ? `<strong>Mini history</strong><br>${history.slice(0, 8).map(item => `${item.date} · ${item.title}`).join('<br>')}<br><strong>${miniStreak()} day streak</strong>` : 'No completed mini puzzles yet.'; }
+
+let miniIndex = miniDailyIndex();
+let miniPuzzle = MINI_PUZZLES[miniIndex];
 let miniCells = [];
 let selectedEntry = null;
 
@@ -120,8 +127,9 @@ function checkMini() {
     else cell?.classList.remove('mini-wrong');
   }));
   const feedback = document.getElementById('mini-feedback');
-  feedback.textContent = complete ? 'Solved! Nice little crossword.' : 'Keep going—red squares need another look.';
+  if (complete) { const streak = recordMiniSolved(); feedback.textContent = `Solved! Nice little crossword. You have a ${streak} day mini streak.`; } else feedback.textContent = 'Keep going—red squares need another look.';
   feedback.className = `mini-feedback${complete ? ' success' : ''}`;
+  renderMiniHistory();
 }
 
 function newMiniPuzzle() {
@@ -152,6 +160,18 @@ document.getElementById('mini-game-menu').addEventListener('click', showGameSele
 document.getElementById('mini-close').addEventListener('click', () => { document.getElementById('mini-modal').hidden = true; });
 document.getElementById('mini-check').addEventListener('click', checkMini);
 document.getElementById('mini-new').addEventListener('click', newMiniPuzzle);
+document.getElementById('mini-daily').addEventListener('click', () => {
+  miniIndex = miniDailyIndex();
+  miniPuzzle = MINI_PUZZLES[miniIndex];
+  renderMini();
+  document.getElementById('mini-feedback').textContent = `Today’s mini · ${miniStreak()} day streak`;
+});
+document.getElementById('mini-history-button').addEventListener('click', () => {
+  const panel = document.getElementById('mini-history-panel');
+  renderMiniHistory();
+  panel.hidden = !panel.hidden;
+});
+
 document.getElementById('mini-modal').addEventListener('click', event => { if (event.target.id === 'mini-modal') event.currentTarget.hidden = true; });
 
 window.addEventListener('load', () => { document.getElementById('game-selector').hidden = false; });
