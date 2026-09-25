@@ -3,6 +3,7 @@
 // Daily state is intentionally device-local: no account or personal data is needed.
 const DAILY_STORAGE_KEY = 'wordLinksDailyHistoryV1';
 const EXTRA_BEST_STORAGE_KEY = 'wordLinksExtraBestV1';
+const EXTRA_COMPLETED_STORAGE_KEY = 'wordLinksExtraCompletedV1';
 const DAILY_PUZZLES = [
   ['LIGHT','SOUND','THE FIRST CONNECTION'],
   ['NIGHT','SHORE','AFTER HOURS'],
@@ -20,7 +21,7 @@ const DAILY_PUZZLES = [
 
 function todayKey() {
   const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+  return `${now.getUTCFullYear()}-${String(now.getUTCMonth()+1).padStart(2,'0')}-${String(now.getUTCDate()).padStart(2,'0')}`;
 }
 
 function readHistory() {
@@ -39,6 +40,15 @@ function readExtraBest() {
 
 function writeExtraBest(best) {
   try { localStorage.setItem(EXTRA_BEST_STORAGE_KEY, JSON.stringify(best)); } catch {}
+}
+
+function readExtraCompleted() {
+  try { return JSON.parse(localStorage.getItem(EXTRA_COMPLETED_STORAGE_KEY) || '{}'); }
+  catch { return {}; }
+}
+
+function writeExtraCompleted(completed) {
+  try { localStorage.setItem(EXTRA_COMPLETED_STORAGE_KEY, JSON.stringify(completed)); } catch {}
 }
 
 function dailyPuzzleFor(date) {
@@ -68,9 +78,12 @@ function updateStreakLabels() {
 
 function startDaily() {
   window.DAILY_MODE = true;
-  window.DAILY_PUZZLE = dailyPuzzleFor(todayKey());
+  const date = todayKey();
+  window.DAILY_PUZZLE = dailyPuzzleFor(date);
+  window.DAILY_SEED = `daily-${date}`;
   window.EXTRA_LEVEL = null;
   window.EXTRA_PUZZLE = null;
+  window.EXTRA_SEED = null;
   startGame();
   updateStreakLabels();
 }
@@ -81,7 +94,9 @@ function startExtraLevel(levelNumber) {
   window.DAILY_MODE = false;
   window.DAILY_PUZZLE = null;
   window.EXTRA_LEVEL = levelNumber;
-  window.EXTRA_PUZZLE = [...level.puzzles[Math.floor(Math.random() * level.puzzles.length)], level.name];
+  const puzzleIndex = (levelNumber * 7 + level.name.length) % level.puzzles.length;
+  window.EXTRA_PUZZLE = [...level.puzzles[puzzleIndex], level.name];
+  window.EXTRA_SEED = `level-${levelNumber}`;
   startGame();
   document.getElementById('levels-modal').hidden = true;
   document.getElementById('history-modal').hidden = true;
@@ -91,10 +106,11 @@ function startExtraLevel(levelNumber) {
 function renderLevels() {
   const target = document.getElementById('level-grid');
   const best = readExtraBest();
+  const completed = readExtraCompleted();
   target.innerHTML = EXTRA_LEVELS.map((level, index) => {
     const number = index + 1;
     const score = best[number];
-    return `<button class="level-card" type="button" data-level="${number}"><span class="level-number">${number}</span><span class="level-name">${level.name}</span><span class="level-best">Best: ${score === undefined ? '—' : `${score} pts`}</span><span class="level-target">Target: ≤ ${level.target} pts</span></button>`;
+    return `<button class="level-card${completed[number] ? ' completed' : ''}" type="button" data-level="${number}"><span class="level-number">${number}</span><span class="level-name">${level.name}</span><span class="level-status">${completed[number] ? '✓ Completed' : 'Not completed'}</span><span class="level-best">Best: ${score === undefined ? '—' : `${score} pts`}</span><span class="level-target">Target: ≤ ${level.target} pts</span></button>`;
   }).join('');
   target.querySelectorAll('[data-level]').forEach(button => {
     button.addEventListener('click', () => startExtraLevel(Number(button.dataset.level)));
@@ -104,9 +120,12 @@ function renderLevels() {
 function recordCompletion(result) {
   if (!window.DAILY_MODE && window.EXTRA_LEVEL) {
     const best = readExtraBest();
+    const completed = readExtraCompleted();
     const previous = best[window.EXTRA_LEVEL];
     const isBest = previous === undefined || result.score < previous;
     if (isBest) { best[window.EXTRA_LEVEL] = result.score; writeExtraBest(best); }
+    completed[window.EXTRA_LEVEL] = true;
+    writeExtraCompleted(completed);
     const level = EXTRA_LEVELS[window.EXTRA_LEVEL - 1];
     feedback(`Level ${window.EXTRA_LEVEL} complete! You scored ${result.score} points. ${isBest ? 'New personal best. ' : ''}Target: ${level.target} points.`, 'success');
     renderLevels();
