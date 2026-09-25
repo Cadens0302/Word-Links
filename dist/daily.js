@@ -4,6 +4,7 @@
 const DAILY_STORAGE_KEY = 'wordLinksDailyHistoryV1';
 const EXTRA_BEST_STORAGE_KEY = 'wordLinksExtraBestV1';
 const EXTRA_COMPLETED_STORAGE_KEY = 'wordLinksExtraCompletedV1';
+const EXTRA_HISTORY_STORAGE_KEY = 'wordLinksExtraHistoryV1';
 const DAILY_PUZZLES = [
   ['LIGHT','SOUND','THE FIRST CONNECTION'],
   ['NIGHT','SHORE','AFTER HOURS'],
@@ -49,6 +50,15 @@ function readExtraCompleted() {
 
 function writeExtraCompleted(completed) {
   try { localStorage.setItem(EXTRA_COMPLETED_STORAGE_KEY, JSON.stringify(completed)); } catch {}
+}
+
+function readExtraHistory() {
+  try { return JSON.parse(localStorage.getItem(EXTRA_HISTORY_STORAGE_KEY) || '[]'); }
+  catch { return []; }
+}
+
+function writeExtraHistory(history) {
+  try { localStorage.setItem(EXTRA_HISTORY_STORAGE_KEY, JSON.stringify(history)); } catch {}
 }
 
 function dailyPuzzleFor(date) {
@@ -126,6 +136,9 @@ function recordCompletion(result) {
     if (isBest) { best[window.EXTRA_LEVEL] = result.score; writeExtraBest(best); }
     completed[window.EXTRA_LEVEL] = true;
     writeExtraCompleted(completed);
+    const levelHistory = readExtraHistory();
+    levelHistory.push({date: todayKey(), level: window.EXTRA_LEVEL, score: result.score, words: result.words});
+    writeExtraHistory(levelHistory);
     const level = EXTRA_LEVELS[window.EXTRA_LEVEL - 1];
     feedback(`Level ${window.EXTRA_LEVEL} complete! You scored ${result.score} points. ${isBest ? 'New personal best. ' : ''}Target: ${level.target} points.`, 'success');
     renderLevels();
@@ -144,13 +157,17 @@ function recordCompletion(result) {
 
 window.wordLinksCompleted = recordCompletion;
 
-function renderHistory() {
+function renderHistory(section = 'all') {
   const target = document.getElementById('history-list');
-  const history = readHistory().slice().sort((a,b) => b.date.localeCompare(a.date));
-  if (!history.length) { target.innerHTML = '<div class="history-empty">No daily puzzles solved yet. Start today’s challenge and your results will appear here.</div>'; return; }
+  const daily = readHistory().map(item => ({...item, type:'daily'}));
+  const levels = readExtraHistory().map(item => ({...item, type:'level'}));
+  const history = (section === 'daily' ? daily : section === 'levels' ? levels : [...daily, ...levels]).sort((a,b) => b.date.localeCompare(a.date));
+  document.querySelectorAll('[data-history-section]').forEach(button => button.classList.toggle('active', button.dataset.historySection === section));
+  if (!history.length) { target.innerHTML = `<div class="history-empty">No ${section === 'daily' ? 'daily challenges' : section === 'levels' ? 'level puzzles' : 'puzzles'} solved yet.</div>`; return; }
   target.innerHTML = history.map(item => {
     const date = new Date(`${item.date}T12:00:00`).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric',year:'numeric'});
-    return `<div class="history-row"><div><div class="history-date">${date}</div><div class="history-meta">${item.puzzle || 'Daily connection'} · ${item.words?.length || 0} links</div></div><div class="history-score">${item.score} pts</div></div>`;
+    const label = item.type === 'daily' ? 'Daily challenge' : `Level ${item.level} · ${EXTRA_LEVELS[item.level - 1]?.name || 'Extra puzzle'}`;
+    return `<div class="history-row"><div><div class="history-date">${date}</div><div class="history-meta">${label} · ${item.words?.length || 0} links</div></div><div class="history-score">${item.score} pts</div></div>`;
   }).join('');
 }
 
@@ -164,7 +181,8 @@ function openWelcome() {
 }
 
 document.getElementById('extra-puzzles').addEventListener('click', () => { renderLevels(); document.getElementById('levels-modal').hidden = false; });
-document.getElementById('history-button').addEventListener('click', () => { renderHistory(); document.getElementById('history-modal').hidden = false; });
+document.getElementById('history-button').addEventListener('click', () => { renderHistory('all'); document.getElementById('history-modal').hidden = false; });
+document.querySelectorAll('[data-history-section]').forEach(button => button.addEventListener('click', () => renderHistory(button.dataset.historySection)));
 document.getElementById('history-close').addEventListener('click', () => { document.getElementById('history-modal').hidden = true; });
 document.getElementById('levels-close').addEventListener('click', () => { document.getElementById('levels-modal').hidden = true; });
 document.getElementById('welcome-close').addEventListener('click', () => { document.getElementById('welcome-modal').hidden = true; });
