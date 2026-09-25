@@ -128,11 +128,24 @@ function newMiniPuzzle() {
   renderMini();
 }
 
-document.getElementById('mini-crossword').addEventListener('click', () => {
+function openMiniGame() {
   renderMini();
   document.getElementById('mini-modal').hidden = false;
+  document.getElementById('game-selector').hidden = true;
+}
+
+document.getElementById('mini-crossword').addEventListener('click', openMiniGame);
+document.querySelectorAll('[data-game-choice]').forEach(button => button.addEventListener('click', () => {
+  if (button.dataset.gameChoice === 'mini') openMiniGame();
+  else document.getElementById('game-selector').hidden = true;
+}));
+document.getElementById('game-menu').addEventListener('click', () => {
+  document.getElementById('mini-modal').hidden = true;
+  document.getElementById('game-selector').hidden = false;
 });
 document.getElementById('mini-close').addEventListener('click', () => { document.getElementById('mini-modal').hidden = true; });
 document.getElementById('mini-check').addEventListener('click', checkMini);
 document.getElementById('mini-new').addEventListener('click', newMiniPuzzle);
 document.getElementById('mini-modal').addEventListener('click', event => { if (event.target.id === 'mini-modal') event.currentTarget.hidden = true; });
+
+window.addEventListener('load', () => { document.getElementById('game-selector').hidden = false; });
