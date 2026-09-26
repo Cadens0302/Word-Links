@@ -77,7 +77,9 @@ function layoutMiniEntries() {
   let state = miniSeed();
   const random = () => { state = (Math.imul(state,1664525)+1013904223) >>> 0; return state/4294967296; };
   const dirs = [{name:'Across',dr:0,dc:1},{name:'Down',dr:1,dc:0}];
-  const wordPool = miniMode === 'level' ? MINI_WORDS.filter(word => word.answer.length >= MINI_LEVELS[miniLevel-1].minLength && word.answer.length <= MINI_LEVELS[miniLevel-1].maxLength) : MINI_WORDS;
+  const wordPool = miniMode === 'level' ? MINI_WORDS.filter(word => word.answer.length >= MINI_LEVELS[miniLevel-1].minLength && word.answer.length <= MINI_LEVELS[miniLevel-1].maxLength) : miniMode === 'daily' ? MINI_WORDS.filter(word => word.answer.length <= 6) : MINI_WORDS;
+  const targetCount = miniMode === 'daily' ? 8 : 9;
+  const varietyTarget = miniMode === 'daily' ? 4 : 5;
   const key = (row,col) => `${row},${col}`;
   const cellsFor = (word,row,col,dir) => [...word.answer].map((letter,i) => ({letter,row:row+dir.dr*i,col:col+dir.dc*i}));
   const boundsArea = cells => {
@@ -92,12 +94,13 @@ function layoutMiniEntries() {
       placed.push({...word,row,col,dir:dir.name}); used.add(word.answer);
       cells.forEach(cell=>occupied.set(key(cell.row,cell.col),cell));
     };
-    const starters=wordPool.filter(word=>word.answer.length>=Math.min(6, MINI_LEVELS[miniLevel-1]?.minLength || 6));
+    const starterLength = miniMode === 'daily' ? 4 : miniMode === 'level' ? MINI_LEVELS[miniLevel-1].minLength : 6;
+    const starters=wordPool.filter(word=>word.answer.length>=starterLength);
     const first=starters[Math.floor(random()*starters.length)],dir=dirs[Math.floor(random()*dirs.length)];
     const row=Math.floor((MINI_SIZE-dir.dr*(first.answer.length-1))/2);
     const col=Math.floor((MINI_SIZE-dir.dc*(first.answer.length-1))/2);
     add(first,row,col,dir,cellsFor(first,row,col,dir));
-    while(placed.length<9) {
+    while(placed.length<targetCount) {
       const candidates=[],seen=new Set(),oldCells=[...occupied.values()];
       const lengths=new Set(placed.map(word=>word.answer.length));
       for(const word of wordPool) {
@@ -139,9 +142,9 @@ function layoutMiniEntries() {
     }
     const score=placed.length*1000+new Set(placed.map(entry=>entry.answer.length)).size*30+boundsArea([...occupied.values()]);
     if(score>bestScore){best=placed;bestScore=score;}
-    if(best.length===9 && new Set(best.map(entry=>entry.answer.length)).size>=5)break;
+    if(best.length===targetCount && new Set(best.map(entry=>entry.answer.length)).size>=varietyTarget)break;
   }
-  if(best.length<8)throw new Error('Could not generate a connected crossword.');
+  if(best.length<targetCount)throw new Error('Could not generate a connected crossword.');
   const starts=new Map(); let number=0;
   best.sort((a,b)=>a.row-b.row||a.col-b.col).forEach(entry=>{
     const start=key(entry.row,entry.col);
