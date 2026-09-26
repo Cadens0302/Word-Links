@@ -2,43 +2,43 @@
 
 const MINI_SIZE = 12;
 
+const MINI_WORDS = [
+  ['CAT','A small pet that purrs.'], ['DOG','A pet that barks.'],
+  ['SUN','The star that lights our days.'], ['MAP','A drawing that helps you find your way.'],
+  ['HAT','Something you wear on your head.'], ['BED','Where you sleep at night.'],
+  ['CUP','A small container for a drink.'], ['BEE','An insect that makes honey.'],
+  ['KEY','It unlocks a door.'], ['OWL','A bird known for its nighttime hoot.'],
+  ['TREE','A tall plant with a trunk.'], ['BOOK','Its pages tell a story.'],
+  ['LAMP','A light you might put beside your bed.'], ['FISH','An animal with fins and gills.'],
+  ['MOON','Earth’s natural companion in the night sky.'], ['RAIN','Water falling from clouds.'],
+  ['BOAT','A small craft that floats on water.'], ['CAKE','A sweet treat with birthday candles.'],
+  ['STAR','A distant light that twinkles at night.'], ['KITE','It flies on the end of a string.'],
+  ['APPLE','A crunchy fruit that can be red or green.'], ['HOUSE','A building where people live.'],
+  ['BEACH','A sandy place beside the sea.'], ['CLOUD','A fluffy shape floating in the sky.'],
+  ['TRAIN','It carries passengers along tracks.'], ['BREAD','You use slices of it for a sandwich.'],
+  ['CHAIR','A seat with a back and usually four legs.'], ['RIVER','Water flowing toward a lake or sea.'],
+  ['MUSIC','Sounds arranged into a song.'], ['TIGER','A large cat with stripes.'],
+  ['GARDEN','A place where people grow flowers.'], ['ORANGE','A citrus fruit with the same name as a color.'],
+  ['BRIDGE','A structure that lets you cross a river.'], ['FLOWER','The colorful part of a plant that may smell sweet.'],
+  ['RABBIT','A long-eared animal that hops.'], ['PENCIL','A writing tool with an eraser on one end.'],
+  ['WINDOW','A glass opening that lets light into a room.'], ['FOREST','A large area covered with trees.'],
+  ['TURTLE','A slow-moving animal with a shell.'], ['BASKET','A woven container with a handle.'],
+  ['RAINBOW','A colorful arc that can appear after rain.'], ['BALLOON','An air-filled party decoration.'],
+  ['BICYCLE','A two-wheeled vehicle powered by pedals.'], ['DOLPHIN','A playful sea mammal with a curved fin.'],
+  ['KITCHEN','The room where meals are cooked.'], ['PENGUIN','A black-and-white bird that waddles and swims.'],
+  ['GIRAFFE','An animal with a very long neck.'], ['LIBRARY','A place where you can borrow books.'],
+  ['PANCAKE','A round breakfast food often served with syrup.'], ['FEATHER','A light covering on a bird.'],
+  ['ELEPHANT','A very large animal with a trunk.'], ['UMBRELLA','You hold this above your head to stay dry.'],
+  ['SANDWICH','A meal made with filling between slices of bread.'], ['MOUNTAIN','A very high natural rise in the land.'],
+  ['NOTEBOOK','A book of blank pages for writing.'], ['FOOTBALL','A sport played with a ball and two teams.'],
+  ['BACKPACK','A bag carried over both shoulders.'], ['SNOWFLAKE','A tiny ice crystal that falls in winter.'],
+  ['BUTTERFLY','An insect with large, colorful wings.'], ['CHOCOLATE','A sweet treat made from cocoa.'],
+  ['SUNFLOWER','A tall flower with a large yellow head.'], ['PINEAPPLE','A tropical fruit with spiky leaves on top.']
+].map(([answer,clue]) => ({answer,clue}));
+
 const MINI_PUZZLES = [
-  {
-    title: 'A little word square',
-    rows: ['#CAT#', '#ARE#', '#TEN#', '#####', '#DOG#'],
-    entries: [
-      {id:'1a',dir:'Across',row:0,col:1,answer:'CAT',clue:'A small pet that purrs.'},
-      {id:'2a',dir:'Across',row:1,col:1,answer:'ARE',clue:'Plural form of “be.”'},
-      {id:'3a',dir:'Across',row:2,col:1,answer:'TEN',clue:'Five plus five.'},
-      {id:'4a',dir:'Across',row:4,col:1,answer:'DOG',clue:'A loyal pet that barks.'},
-      {id:'1d',dir:'Down',row:0,col:1,answer:'CAT',clue:'A feline house companion.'},
-      {id:'2d',dir:'Down',row:0,col:2,answer:'ARE',clue:'A verb used with “you.”'},
-      {id:'3d',dir:'Down',row:0,col:3,answer:'TEN',clue:'The number after nine.'},
-      {id:'1x',dir:'Diagonal',row:0,col:1,answer:'CAT',clue:'A feline friend, read on a slant.'},
-      {id:'5a',dir:'Across',row:5,col:1,answer:'TREE',clue:'A tall plant with a trunk.'},
-      {id:'6a',dir:'Across',row:6,col:1,answer:'BOOK',clue:'A story you can read.'},
-      {id:'7a',dir:'Across',row:7,col:1,answer:'LAMP',clue:'A small light for a room.'},
-      {id:'8a',dir:'Across',row:8,col:1,answer:'HOUSE',clue:'A place where people live.'}
-    ]
-  },
-  {
-    title: 'Sunny side up',
-    rows: ['#SUN#', '#USE#', '#NET#', '#####', '#MAP#'],
-    entries: [
-      {id:'1a',dir:'Across',row:0,col:1,answer:'SUN',clue:'The star at the center of our sky.'},
-      {id:'2a',dir:'Across',row:1,col:1,answer:'USE',clue:'Put something to work.'},
-      {id:'3a',dir:'Across',row:2,col:1,answer:'NET',clue:'A mesh used to catch or hold things.'},
-      {id:'4a',dir:'Across',row:4,col:1,answer:'MAP',clue:'A drawing that helps you find your way.'},
-      {id:'1d',dir:'Down',row:0,col:1,answer:'SUN',clue:'It rises in the east.'},
-      {id:'2d',dir:'Down',row:0,col:2,answer:'USE',clue:'Employ; make practical.'},
-      {id:'3d',dir:'Down',row:0,col:3,answer:'NET',clue:'What remains after costs, sometimes.'},
-      {id:'1x',dir:'Diagonal',row:0,col:1,answer:'SUN',clue:'A bright word that travels diagonally.'},
-      {id:'5a',dir:'Across',row:5,col:1,answer:'FISH',clue:'An animal that swims.'},
-      {id:'6a',dir:'Across',row:6,col:1,answer:'MOON',clue:'It shines at night.'},
-      {id:'7a',dir:'Across',row:7,col:1,answer:'HAT',clue:'You can wear it on your head.'},
-      {id:'8a',dir:'Across',row:8,col:1,answer:'BED',clue:'A place to sleep.'}
-    ]
-  }
+  {title:'A little word square',entries:[]},
+  {title:'Sunny side up',entries:[]}
 ];
 
 function miniDateKey(date = new Date()) { return date.toISOString().slice(0, 10); }
@@ -65,67 +65,79 @@ function entryCells(entry) {
 function miniSeed() { let hash = 2166136261; for (const char of `${miniPuzzle.title}-${miniDateKey()}-${miniIndex}`) { hash ^= char.charCodeAt(0); hash = Math.imul(hash, 16777619); } return hash >>> 0; }
 function layoutMiniEntries() {
   let state = miniSeed();
-  const random = () => { state = (Math.imul(state, 1664525) + 1013904223) >>> 0; return state / 4294967296; };
-  const entries = miniPuzzle.entries.map(entry => ({...entry}));
+  const random = () => { state = (Math.imul(state,1664525)+1013904223) >>> 0; return state/4294967296; };
   const dirs = [{name:'Across',dr:0,dc:1},{name:'Down',dr:1,dc:0},{name:'Diagonal',dr:1,dc:1}];
-  let solved = false;
-  for (let restart=0; restart<160 && !solved; restart++) {
-    const order=[...entries].sort((a,b)=>b.answer.length-a.answer.length);
-    for(let i=order.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[order[i],order[j]]=[order[j],order[i]];}
-    const occupancy=new Map();
-    const cellsFor=(entry,row,col,dir)=>[...entry.answer].map((letter,i)=>({letter,row:row+dir.dr*i,col:col+dir.dc*i}));
-    const first=order[0],firstDir=dirs[Math.floor(random()*dirs.length)];
-    const maxRow=MINI_SIZE-1-(firstDir.dr?(first.answer.length-1):0);
-    const maxCol=MINI_SIZE-1-(firstDir.dc?(first.answer.length-1):0);
-    first.row=Math.floor(random()*(maxRow+1));first.col=Math.floor(random()*(maxCol+1));first.dir=firstDir.name;
-    cellsFor(first,first.row,first.col,firstDir).forEach(cell=>occupancy.set(`${cell.row},${cell.col}`,cell.letter));
-    const placeNext=index=>{
-      if(index===order.length)return true;
-      const entry=order[index], candidates=[];
-      for(const placed of order.slice(0,index)){
-        const oldDir=dirs.find(dir=>dir.name===placed.dir);
-        const oldCells=cellsFor(placed,placed.row,placed.col,oldDir);
-        for(const dir of dirs){
-          if(dir.name===placed.dir)continue;
-          for(const oldCell of oldCells){
-            for(let letterIndex=0;letterIndex<entry.answer.length;letterIndex++){
-              if(entry.answer[letterIndex]!==oldCell.letter)continue;
-              const row=oldCell.row-dir.dr*letterIndex,col=oldCell.col-dir.dc*letterIndex;
-              const cells=cellsFor(entry,row,col,dir);
-              if(cells.some(cell=>cell.row<0||cell.row>=MINI_SIZE||cell.col<0||cell.col>=MINI_SIZE))continue;
-              let crosses=0,valid=true;
-              for(const cell of cells){const key=`${cell.row},${cell.col}`;if(occupancy.has(key)){if(occupancy.get(key)!==cell.letter){valid=false;break;}crosses++;}}
-              if(valid&&crosses)candidates.push({row,col,dir,cells});
+  const key = (row,col) => `${row},${col}`;
+  const cellsFor = (word,row,col,dir) => [...word.answer].map((letter,i) => ({letter,row:row+dir.dr*i,col:col+dir.dc*i}));
+  const boundsArea = cells => {
+    const rows=cells.map(cell=>cell.row),cols=cells.map(cell=>cell.col);
+    return (Math.max(...rows)-Math.min(...rows)+1)*(Math.max(...cols)-Math.min(...cols)+1);
+  };
+  let best=[],bestScore=-Infinity;
+  // Bounded attempts keep generation quick; every addition joins the existing network.
+  for(let attempt=0;attempt<24;attempt++) {
+    const placed=[],occupied=new Map(),used=new Set();
+    const add=(word,row,col,dir,cells)=>{
+      placed.push({...word,row,col,dir:dir.name}); used.add(word.answer);
+      cells.forEach(cell=>occupied.set(key(cell.row,cell.col),cell));
+    };
+    const starters=MINI_WORDS.filter(word=>word.answer.length>=7);
+    const first=starters[Math.floor(random()*starters.length)],dir=dirs[Math.floor(random()*dirs.length)];
+    const row=Math.floor((MINI_SIZE-dir.dr*(first.answer.length-1))/2);
+    const col=Math.floor((MINI_SIZE-dir.dc*(first.answer.length-1))/2);
+    add(first,row,col,dir,cellsFor(first,row,col,dir));
+    while(placed.length<9) {
+      const candidates=[],seen=new Set(),oldCells=[...occupied.values()];
+      const lengths=new Set(placed.map(word=>word.answer.length));
+      for(const word of MINI_WORDS) {
+        if(used.has(word.answer))continue;
+        for(const dir of dirs) for(const cross of oldCells) {
+          for(let i=0;i<word.answer.length;i++) {
+            if(word.answer[i]!==cross.letter)continue;
+            const row=cross.row-dir.dr*i,col=cross.col-dir.dc*i;
+            const signature=`${word.answer}:${row},${col}:${dir.name}`;
+            if(seen.has(signature))continue; seen.add(signature);
+            const cells=cellsFor(word,row,col,dir);
+            if(cells.some(cell=>cell.row<0||cell.row>=MINI_SIZE||cell.col<0||cell.col>=MINI_SIZE))continue;
+            // One matching crossing prevents overlaps, duplicated routes, and crowded hubs.
+            const overlaps=cells.filter(cell=>occupied.has(key(cell.row,cell.col)));
+            if(overlaps.length!==1 || occupied.get(key(overlaps[0].row,overlaps[0].col)).letter!==overlaps[0].letter)continue;
+            if(placed.some(entry=>entry.dir===dir.name && entryCells(entry).some(cell=>cell.row===cross.row&&cell.col===cross.col)))continue;
+            if(occupied.has(key(row-dir.dr,col-dir.dc)) || occupied.has(key(row+dir.dr*word.answer.length,col+dir.dc*word.answer.length)))continue;
+            // Keep a black-cell gap between unrelated branches, allowing the crossing itself.
+            let crowded=false;
+            for(const cell of cells) {
+              if(Math.max(Math.abs(cell.row-cross.row),Math.abs(cell.col-cross.col))<=1)continue;
+              for(const [dr,dc] of [[0,1],[0,-1],[1,0],[-1,0]]) {
+                if(occupied.has(key(cell.row+dr,cell.col+dc)))crowded=true;
+              }
             }
+            if(crowded)continue;
+            const area=boundsArea([...oldCells,...cells]);
+            const lengthBonus=lengths.has(word.answer.length)?0:24;
+            const directionBonus=placed.some(entry=>entry.dir===dir.name)?0:18;
+            const score=area+lengthBonus+directionBonus+random()*22;
+            candidates.push({word,row,col,dir,cells,score});
           }
         }
       }
-      for(let i=candidates.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[candidates[i],candidates[j]]=[candidates[j],candidates[i]];}
-      const seen=new Set();
-      for(const candidate of candidates){
-        const signature=`${candidate.row},${candidate.col},${candidate.dir.name}`;
-        if(seen.has(signature))continue;seen.add(signature);
-        entry.row=candidate.row;entry.col=candidate.col;entry.dir=candidate.dir.name;
-        const added=[];
-        candidate.cells.forEach(cell=>{const key=`${cell.row},${cell.col}`;if(!occupancy.has(key)){occupancy.set(key,cell.letter);added.push(key);}});
-        if(placeNext(index+1))return true;
-        added.forEach(key=>occupancy.delete(key));
-      }
-      return false;
-    };
-    solved=placeNext(1);
+      if(!candidates.length)break;
+      candidates.sort((a,b)=>b.score-a.score);
+      const pick=candidates[0];
+      add(pick.word,pick.row,pick.col,pick.dir,pick.cells);
+    }
+    const score=placed.length*1000+new Set(placed.map(entry=>entry.answer.length)).size*30+boundsArea([...occupied.values()]);
+    if(score>bestScore){best=placed;bestScore=score;}
+    if(best.length===9 && new Set(best.map(entry=>entry.answer.length)).size>=5)break;
   }
-  if(!solved){
-    throw new Error('Could not generate a crossword where every answer crosses another.');
-  }
-  const starts = new Map(); let number=0;
-  entries.sort((a,b)=>a.row-b.row || a.col-b.col).forEach(entry=>{
-    const key=`${entry.row},${entry.col}`;
-    if (!starts.has(key)) starts.set(key,++number);
-    const suffix=entry.dir==='Across'?'a':entry.dir==='Down'?'d':'x';
-    entry.id=`${starts.get(key)}${suffix}`;
+  if(best.length<8)throw new Error('Could not generate a connected crossword.');
+  const starts=new Map(); let number=0;
+  best.sort((a,b)=>a.row-b.row||a.col-b.col).forEach(entry=>{
+    const start=key(entry.row,entry.col);
+    if(!starts.has(start))starts.set(start,++number);
+    entry.id=`${starts.get(start)}${entry.dir==='Across'?'a':entry.dir==='Down'?'d':'x'}`;
   });
-  miniPuzzle.entries=entries;
+  miniPuzzle.entries=best;
 }
 
 function renderMini() {
@@ -143,7 +155,7 @@ function renderMini() {
     const square = document.createElement('div');
     square.className = 'mini-square';
     const cell = document.createElement(value === ' ' ? 'span' : 'input');
-    cell.className = value === ' ' ? 'mini-empty' : 'mini-cell';
+    cell.className = value === ' ' ? 'mini-block' : 'mini-cell';
     cell.dataset.row = r;
     cell.dataset.col = c;
     const number = starts.get(`${r},${c}`);
@@ -195,7 +207,7 @@ function highlightEntryAt(row, col) {
 function renderMiniClues() {
   for (const direction of ['Across', 'Down', 'Diagonal']) {
     const list = document.getElementById(direction === 'Across' ? 'mini-across' : direction === 'Down' ? 'mini-down' : 'mini-diagonal');
-    list.innerHTML = miniPuzzle.entries.filter(entry => entry.dir === direction).map(entry => `<button class="mini-clue" type="button" data-entry="${entry.id}"><strong>${entry.id.replace(/[a-z]+$/i,'')}</strong> ${entry.clue}</button>`).join('');
+    list.innerHTML = miniPuzzle.entries.filter(entry => entry.dir === direction).map(entry => `<button class="mini-clue" type="button" data-entry="${entry.id}"><strong>${entry.id.replace(/[a-z]+$/i,'')}</strong> ${entry.clue} <span class="mini-length">(${entry.answer.length})</span></button>`).join('');
     list.querySelectorAll('.mini-clue').forEach(button => button.addEventListener('click', () => {
       const entry = miniPuzzle.entries.find(item => item.id === button.dataset.entry);
       highlightEntry(entry);
