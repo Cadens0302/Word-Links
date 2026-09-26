@@ -1,6 +1,6 @@
 'use strict';
 
-const MINI_SIZE = 20;
+const MINI_SIZE = 12;
 
 const MINI_PUZZLES = [
   {
