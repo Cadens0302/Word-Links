@@ -60,10 +60,14 @@ function renderMini() {
   miniPuzzle.entries.forEach(entry => starts.set(`${entry.row},${entry.col}`, entry.id));
   const rows = Array.from({length: MINI_SIZE}, (_, r) => (miniPuzzle.rows[r] || '').padEnd(MINI_SIZE, '#').slice(0, MINI_SIZE));
   rows.forEach((row, r) => [...row].forEach((value, c) => {
+    const square = document.createElement('div');
+    square.className = 'mini-square';
     const cell = document.createElement(value === '#' ? 'span' : 'input');
     cell.className = value === '#' ? 'mini-block' : 'mini-cell';
     cell.dataset.row = r;
     cell.dataset.col = c;
+    const number = starts.get(`${r},${c}`);
+    if (number) { const label = document.createElement('span'); label.className = 'mini-number'; label.textContent = number.replace(/[a-z]/, ''); square.append(label); }
     if (value !== '#') {
       cell.maxLength = 1;
       cell.autocomplete = 'off';
@@ -82,7 +86,8 @@ function renderMini() {
       cell.addEventListener('focus', () => highlightEntryAt(r, c));
       miniCells.push(cell);
     } else miniCells.push(null);
-    grid.append(cell);
+    square.append(cell);
+    grid.append(square);
   }));
   document.getElementById('mini-title').textContent = miniPuzzle.title;
   renderMiniClues();
