@@ -90,7 +90,7 @@ function renderMini() {
 
 function focusMiniCell(row, col, offset) {
   const start = row * MINI_SIZE + col;
-  for (let index = start + offset; index >= 0 && index < 25; index += offset) {
+  for (let index = start + offset; index >= 0 && index < MINI_SIZE * MINI_SIZE; index += offset) {
     if (miniCells[index]) { miniCells[index].focus(); return; }
   }
 }
