@@ -59,6 +59,7 @@ let miniIndex = miniDailyIndex();
 let miniPuzzle = MINI_PUZZLES[miniIndex];
 let miniCells = [];
 let selectedEntry = null;
+let lastMiniClickedCell = null;
 let miniMode = 'daily';
 let miniLevel = null;
 
@@ -176,17 +177,26 @@ function renderMini() {
       cell.setAttribute('aria-label', `Mini crossword ${String.fromCharCode(65+c)}${r+1}`);
       cell.addEventListener('input', () => {
         cell.value = cell.value.replace(/[^a-z]/gi, '').toUpperCase();
-        if (cell.value) focusMiniCell(r, c, 1);
+        if (cell.value) focusMiniEntryCell(r, c, 1);
         updateMiniProgress();
       });
       cell.addEventListener('keydown', event => {
-        if (event.key === 'Backspace' && !cell.value) focusMiniCell(r, c, -1);
+        if (event.key === 'Backspace' && !cell.value) focusMiniEntryCell(r, c, -1);
         if (event.key === 'ArrowRight') { event.preventDefault(); focusMiniCell(r, c, 1); }
         if (event.key === 'ArrowLeft') { event.preventDefault(); focusMiniCell(r, c, -1); }
         if (event.key === 'ArrowDown') { event.preventDefault(); focusMiniCell(r, c, MINI_SIZE); }
         if (event.key === 'ArrowUp') { event.preventDefault(); focusMiniCell(r, c, -MINI_SIZE); }
       });
       cell.addEventListener('focus', () => highlightEntryAt(r, c));
+      cell.addEventListener('click', () => {
+        const key = r + ',' + c;
+        const entries = miniPuzzle.entries.filter(entry => entryCells(entry).some(point => point.row === r && point.col === c));
+        if (key === lastMiniClickedCell && entries.length > 1) {
+          const current = Math.max(0, entries.indexOf(selectedEntry));
+          highlightEntry(entries[(current + 1) % entries.length]);
+        }
+        lastMiniClickedCell = key;
+      });
       miniCells.push(cell);
     } else miniCells.push(null);
     square.append(cell);
@@ -209,6 +219,16 @@ function updateMiniProgress() {
   document.querySelector('.mini-progress-track').setAttribute('aria-valuenow', percent);
 }
 
+function focusMiniEntryCell(row, col, offset) {
+  if (selectedEntry) {
+    const cells = entryCells(selectedEntry);
+    const index = cells.findIndex(cell => cell.row === row && cell.col === col);
+    const next = cells[index + offset];
+    if (next) { miniCell(next.row,next.col)?.focus(); return; }
+  }
+  focusMiniCell(row,col,offset);
+}
+
 function focusMiniCell(row, col, offset) {
   const start = row * MINI_SIZE + col;
   for (let index = start + offset; index >= 0 && index < MINI_SIZE * MINI_SIZE; index += offset) {
@@ -224,7 +244,8 @@ function highlightEntry(entry) {
 }
 
 function highlightEntryAt(row, col) {
-  const entry = miniPuzzle.entries.find(candidate => entryCells(candidate).some(cell => cell.row === row && cell.col === col));
+  const candidates = miniPuzzle.entries.filter(candidate => entryCells(candidate).some(cell => cell.row === row && cell.col === col));
+  const entry = candidates.includes(selectedEntry) ? selectedEntry : candidates[0];
   if (entry) highlightEntry(entry);
 }
 
