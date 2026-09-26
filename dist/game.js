@@ -22,20 +22,45 @@ function validate(text,r,c,dir){
   if(!added)return {error:'Your word must add new letters.'};return {bridge,cost:10+text.length};
 }
 function feedback(message,type=''){ $('feedback').textContent=message;$('feedback').className='feedback '+type; }
+function sessionStorageKey(){if(window.DAILY_MODE)return `wordLinksSession:daily:${window.DAILY_SEED||'today'}`;if(window.EXTRA_LEVEL)return `wordLinksSession:level:${window.EXTRA_LEVEL}`;return `wordLinksSession:extra:${window.EXTRA_SEED||puzzleIndex}`;}
+function saveGameSession(){try{localStorage.setItem(sessionStorageKey(),JSON.stringify({name:$('puzzle-name').textContent,words,score,won,selected,direction,draft:$('word').value,clueRerolls,activeClue,clueOptions,clueIndex,feedback:$('feedback').textContent,feedbackClass:$('feedback').className}));}catch{}}
+function readGameSession(key,name){try{const saved=JSON.parse(localStorage.getItem(key)||'null');return saved?.name===name&&Array.isArray(saved.words)&&saved.words.length>=2?saved:null;}catch{return null;}}
 function render(){const map=boardMap();const preview=selected?cells({text:$('word').value.toUpperCase().replace(/[^A-Z]/g,''),...selected,dir:direction}):[];const pm=new Map(preview.map(p=>[p.r+','+p.c,p.letter]));
   const clueEnds=activeClue?new Set([`${activeClue.r},${activeClue.c}`,`${cells(activeClue).at(-1).r},${cells(activeClue).at(-1).c}`]):new Set();
   [...$('grid').children].forEach((button,i)=>{const r=Math.floor(i/15),c=i%15,key=r+','+c,old=map.get(key),letter=pm.get(key);button.className='cell';if(old)button.classList.add(old.ids.some(id=>id<2)?'start':'placed');if(letter)button.classList.add(old&&old.letter!==letter?'invalid':'preview');if(clueEnds.has(key))button.classList.add(key===`${activeClue.r},${activeClue.c}`?'clue-start':'clue-end');if(selected&&r===selected.r&&c===selected.c)button.classList.add('selected');button.textContent=old?.letter||letter||'';button.setAttribute('aria-label',`${String.fromCharCode(65+c)}${r+1}${old?', '+old.letter:letter?', preview '+letter:clueEnds.has(key)?', clue endpoint':', empty'}`);button.setAttribute('aria-pressed',String(Boolean(selected&&r===selected.r&&c===selected.c)));});
-  $('selection-label').textContent=selected?`Starts at ${String.fromCharCode(65+selected.c)}${selected.r+1}`:'Start at a square';$('cost').textContent=$('word').value?`${10+$('word').value.length} points`:'10 + letters';$('score').textContent=score;$('link-count').textContent=`${words.length-2} link${words.length===3?'':'s'} placed`;
+  $('selection-label').textContent=selected?`Starts at ${String.fromCharCode(65+selected.c)}${selected.r+1}`:'Start at a square';$('cost').textContent=$('word').value?`${10+$('word').value.length} points`:'10 + letters';$('score').textContent=score;$('link-count').textContent=`${words.length-2} link${words.length===3?'':'s'} placed`;saveGameSession();
 }
 function setDirection(dir){direction=dir;for(const [id,value]of [['horizontal','H'],['vertical','V']]){$(id).classList.toggle('active',dir===value);$(id).setAttribute('aria-pressed',String(dir===value));}render();}
 function submitWord(text,r,c,dir){if(!Number.isInteger(r)||!Number.isInteger(c)||!['H','V'].includes(dir))return {error:'Choose a starting square and direction.'};text=String(text).trim().toUpperCase();const result=validate(text,r,c,dir);if(result.error){feedback(result.error,'error');return result;}words.push({text,r,c,dir});score+=result.cost;won=result.bridge;$('word').value='';clearClue();feedback(won?`Connected! You joined ${words[0].text} and ${words[1].text} in ${score} points. ${window.DAILY_MODE?'Your daily result is saved below.':'Your level result is saved below.'}`:`${text} linked. +${result.cost} points. Keep the connection going.`, 'success');$('word').disabled=won;document.querySelector('.submit').disabled=won;$('clue').disabled=won;render();if(won&&typeof window.wordLinksCompleted==='function')window.wordLinksCompleted({score,words:words.map(w=>w.text),mode:window.DAILY_MODE?'daily':'extra',level:window.EXTRA_LEVEL||null});return {word:text,score,complete:won};}
 function seededRandom(seed){let state=2166136261;for(const char of String(seed)){state^=char.charCodeAt(0);state=Math.imul(state,16777619);}return()=>{state+=state<<13;state^=state>>>7;state+=state<<3;state^=state>>>17;state+=state<<5;return (state>>>0)/4294967296;};}
 function randomStartingWords(a,b,seed){const random=seed===undefined?Math.random:seededRandom(seed);for(let attempt=0;attempt<200;attempt++){const first={text:a,r:Math.floor(random()*15),c:Math.floor(random()*(16-a.length)),dir:'H'};const second={text:b,r:Math.floor(random()*15),c:Math.floor(random()*(16-b.length)),dir:'H'};const firstCells=cells(first),secondCells=cells(second);if(first.r===second.r&&firstCells.some(x=>secondCells.some(y=>x.c===y.c)))continue;if(firstCells.some(x=>secondCells.some(y=>Math.abs(x.r-y.r)<=1&&Math.abs(x.c-y.c)<=1)))continue;return [first,second];}return [{text:a,r:1,c:1,dir:'H'},{text:b,r:12,c:7,dir:'H'}];}
-function startGame(){puzzleIndex=(puzzleIndex+1)%PUZZLES.length;const puzzle=window.EXTRA_PUZZLE||window.DAILY_PUZZLE||PUZZLES[puzzleIndex];const[a,b,name]=puzzle;const seed=window.DAILY_MODE?window.DAILY_SEED:window.EXTRA_LEVEL?window.EXTRA_SEED:undefined;words=window.DAILY_MODE&&Array.isArray(window.DAILY_LAYOUT)?window.DAILY_LAYOUT.map(word=>({...word})):randomStartingWords(a,b,seed);window.STARTING_WORDS=words.map(word=>({...word}));score=0;won=false;selected=null;activeClue=null;clueRerolls=3;clueOptions=[];clueIndex=0;$('word').value='';$('word').disabled=false;document.querySelector('.submit').disabled=false;$('clue').disabled=false;clearClue();$('puzzle-name').textContent=name;$('puzzle-mode').textContent=window.DAILY_MODE?'DAILY CHALLENGE':window.EXTRA_LEVEL?'EXTRA LEVEL '+window.EXTRA_LEVEL:'EXTRA PUZZLE';$('start-one').textContent=a;$('start-two').textContent=b;feedback('Connect the two green words to finish.');setDirection('H');}
+function startGame(forceNew=false){
+  puzzleIndex=(puzzleIndex+1)%PUZZLES.length;
+  const puzzle=window.EXTRA_PUZZLE||window.DAILY_PUZZLE||PUZZLES[puzzleIndex], [a,b,name]=puzzle;
+  const seed=window.DAILY_MODE?window.DAILY_SEED:window.EXTRA_LEVEL?window.EXTRA_SEED:undefined;
+  const baseWords=window.DAILY_MODE&&Array.isArray(window.DAILY_LAYOUT)?window.DAILY_LAYOUT.map(word=>({...word})):randomStartingWords(a,b,seed);
+  const key=sessionStorageKey();
+  if(forceNew){try{localStorage.removeItem(key);}catch{}}
+  const saved=forceNew?null:readGameSession(key,name);
+  words=saved?saved.words.map(word=>({...word})):baseWords;
+  window.STARTING_WORDS=words.slice(0,2).map(word=>({...word}));
+  score=saved?.score||0;won=Boolean(saved?.won);selected=saved?.selected||null;direction=saved?.direction||'H';activeClue=saved?.activeClue||null;
+  clueRerolls=saved?.clueRerolls??3;clueOptions=saved?.clueOptions||[];clueIndex=saved?.clueIndex||0;
+  $('word').value=saved?.draft||'';$('word').disabled=won;document.querySelector('.submit').disabled=won;$('clue').disabled=won;
+  $('puzzle-name').textContent=name;$('puzzle-mode').textContent=window.DAILY_MODE?'DAILY CHALLENGE':window.EXTRA_LEVEL?'EXTRA LEVEL '+window.EXTRA_LEVEL:'EXTRA PUZZLE';
+  $('start-one').textContent=a;$('start-two').textContent=b;
+  $('horizontal').classList.toggle('active',direction==='H');$('vertical').classList.toggle('active',direction==='V');
+  $('horizontal').setAttribute('aria-pressed',String(direction==='H'));$('vertical').setAttribute('aria-pressed',String(direction==='V'));
+  clearClue();
+  if(saved){clueOptions=saved.clueOptions||[];clueIndex=saved.clueIndex||0;}
+  if(saved?.activeClue){activeClue=saved.activeClue;$('clue-text').textContent=clueMessage(activeClue);$('clue-text').hidden=false;$('easier-clue').hidden=false;$('reroll-clue').hidden=false;$('reroll-clue').textContent=`↻ Reroll clue (${clueRerolls} left)`;$('clue').setAttribute('aria-expanded','true');}
+  feedback(saved?.feedback||(won?'Connection complete.': 'Connect the two green words to finish.'),saved?.feedbackClass?.split(' ').at(-1)||'');
+  render();
+}
 for(let i=0;i<15;i++){$('column-labels').append(Object.assign(document.createElement('span'),{textContent:String.fromCharCode(65+i)}));$('row-labels').append(Object.assign(document.createElement('span'),{textContent:i+1}));}
 for(let i=0;i<225;i++){const b=document.createElement('button');b.type='button';b.addEventListener('click',()=>{if(won)return;selected={r:Math.floor(i/15),c:i%15};render();$('word').focus();});b.addEventListener('keydown',e=>{const offset={ArrowLeft:-1,ArrowRight:1,ArrowUp:-15,ArrowDown:15}[e.key];if(offset!==undefined){e.preventDefault();$('grid').children[Math.max(0,Math.min(224,i+offset))].focus();}});$('grid').append(b);}
 $('horizontal').addEventListener('click',()=>setDirection('H'));$('vertical').addEventListener('click',()=>setDirection('V'));$('word').addEventListener('input',render);$('word-form').addEventListener('submit',e=>{e.preventDefault();if(!selected){feedback('Click the square where your word should begin.','error');return;}submitWord($('word').value,selected.r,selected.c,direction);});
-document.querySelectorAll('.replay').forEach(b=>b.addEventListener('click',startGame));
+document.querySelectorAll('.replay').forEach(b=>b.addEventListener('click',()=>startGame(true)));
 function clearClue() {
   activeClue = null;
   clueOptions = [];

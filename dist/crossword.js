@@ -62,6 +62,53 @@ let selectedEntry = null;
 let lastMiniClickedCell = null;
 let miniMode = 'daily';
 let miniLevel = null;
+let miniRevealUsed = false;
+let miniResumeState = null;
+function miniSessionKey(mode = miniMode, level = miniLevel) { return mode === 'level' ? `wordLinksMiniSession:level:${level}` : `wordLinksMiniSession:daily:${miniDateKey()}`; }
+function readMiniSession(mode, level, title) {
+  try {
+    const saved = JSON.parse(localStorage.getItem(miniSessionKey(mode, level)) || 'null');
+    return saved?.title === title && Array.isArray(saved.entries) && Array.isArray(saved.answers) ? saved : null;
+  } catch { return null; }
+}
+function saveMiniSession() {
+  if (!miniPuzzle?.entries?.length) return;
+  const answers = miniPuzzle.entries.flatMap(entry => entryCells(entry).map(({row, col}) => {
+    const value = miniCell(row, col)?.value;
+    return value ? {row, col, value} : null;
+  }).filter(Boolean));
+  try {
+    localStorage.setItem(miniSessionKey(), JSON.stringify({title:miniPuzzle.title,entries:miniPuzzle.entries,answers,selectedEntryId:selectedEntry?.id||null,revealUsed:miniRevealUsed,feedback:document.getElementById('mini-feedback').textContent}));
+  } catch {}
+}
+const miniRevealButton = document.createElement('button');
+miniRevealButton.type = 'button';
+miniRevealButton.className = 'secondary';
+miniRevealButton.textContent = 'Reveal a word · 1 use';
+miniRevealButton.style.cssText = 'width:100%;margin-top:4px;padding:9px 12px;border:1px solid #c9c0ae;border-radius:6px;background:rgba(255,254,250,.55);color:var(--ink);cursor:pointer;font-size:12px';
+document.querySelector('.mini-hint-actions').append(miniRevealButton);
+
+function resetMiniReveal() {
+  miniRevealUsed = false;
+  miniRevealButton.disabled = false;
+  miniRevealButton.textContent = 'Reveal a word · 1 use';
+}
+
+miniRevealButton.addEventListener('click', () => {
+  if (miniRevealUsed) return;
+  const entry = selectedEntry || miniPuzzle.entries[0];
+  if (!entry) return;
+  entryCells(entry).forEach(({row, col}, index) => {
+    const cell = miniCell(row, col);
+    if (cell) { cell.value = entry.answer[index]; cell.classList.remove('mini-wrong'); }
+  });
+  miniRevealUsed = true;
+  miniRevealButton.disabled = true;
+  miniRevealButton.textContent = 'Word revealed · used';
+  updateMiniProgress();
+  updateMiniClueChecks();
+  saveMiniSession();
+});
 
 function miniCell(row, col) { return miniCells[row * MINI_SIZE + col]; }
 
@@ -155,6 +202,7 @@ function layoutMiniEntries() {
 }
 
 function renderMini() {
+  resetMiniReveal();
   if (!miniPuzzle._laidOut) { layoutMiniEntries(); miniPuzzle._laidOut = true; }
   const grid = document.getElementById('mini-grid');
   grid.innerHTML = '';
@@ -182,6 +230,8 @@ function renderMini() {
         cell.value = cell.value.replace(/[^a-z]/gi, '').toUpperCase();
         if (cell.value) focusMiniEntryCell(r, c, 1);
         updateMiniProgress();
+        updateMiniClueChecks();
+        saveMiniSession();
       });
       cell.addEventListener('keydown', event => {
         if (event.key === 'Backspace' && !cell.value) focusMiniEntryCell(r, c, -1);
@@ -199,6 +249,7 @@ function renderMini() {
           highlightEntry(entries[(current + 1) % entries.length]);
         }
         lastMiniClickedCell = key;
+        saveMiniSession();
       });
       miniCells.push(cell);
     } else miniCells.push(null);
@@ -207,7 +258,19 @@ function renderMini() {
   }));
   document.getElementById('mini-title').textContent = miniPuzzle.title;
   renderMiniClues();
+  if (miniResumeState) {
+    miniResumeState.answers.forEach(({row, col, value}) => { const cell = miniCell(row, col); if (cell) cell.value = value; });
+    miniRevealUsed = Boolean(miniResumeState.revealUsed);
+    miniRevealButton.disabled = miniRevealUsed;
+    miniRevealButton.textContent = miniRevealUsed ? 'Word revealed · used' : 'Reveal a word · 1 use';
+    selectedEntry = miniPuzzle.entries.find(entry => entry.id === miniResumeState.selectedEntryId) || null;
+    if (selectedEntry) highlightEntry(selectedEntry);
+    if (miniResumeState.feedback) document.getElementById('mini-feedback').textContent = miniResumeState.feedback;
+    miniResumeState = null;
+  }
   updateMiniProgress();
+  updateMiniClueChecks();
+  saveMiniSession();
 }
 
 function updateMiniProgress() {
@@ -255,22 +318,38 @@ function highlightEntryAt(row, col) {
 function renderMiniClues() {
   for (const direction of ['Across', 'Down']) {
     const list = document.getElementById(direction === 'Across' ? 'mini-across' : 'mini-down');
-    list.innerHTML = miniPuzzle.entries.filter(entry => entry.dir === direction).map(entry => `<div class="mini-clue-row"><button class="mini-clue" type="button" data-entry="${entry.id}"><strong>${entry.id.replace(/[a-z]+$/i,'')}</strong> ${entry.clue} <span class="mini-length">(${entry.answer.length})</span></button><button class="mini-clue-toggle" type="button" aria-label="Show a better hint for clue ${entry.id.replace(/[a-z]+$/i,'')}" aria-expanded="false">▸</button><span class="mini-better-hint" hidden>It starts with ${entry.answer[0]} and has ${entry.answer.length} letters.</span></div>`).join('');
+    list.innerHTML = miniPuzzle.entries.filter(entry => entry.dir === direction).map(entry => `<div class="mini-clue-row" style="grid-template-columns:minmax(0,1fr) 32px 20px"><button class="mini-clue" type="button" data-entry="${entry.id}"><strong>${entry.id.replace(/[a-z]+$/i,'')}</strong> ${entry.clue} <span class="mini-length">(${entry.answer.length})</span></button><button class="mini-clue-toggle" type="button" aria-label="Show a better hint for clue ${entry.id.replace(/[a-z]+$/i,'')}" aria-expanded="false">▸</button><span class="mini-clue-check" style="display:none;place-items:center;width:20px;height:30px;color:#5c7837;font-size:17px;font-weight:bold" data-entry-check="${entry.id}" role="img" aria-label="Completed">✓</span><span class="mini-better-hint" hidden>It starts with ${entry.answer[0]} and has ${entry.answer.length} letters.</span></div>`).join('');
     list.querySelectorAll('.mini-clue').forEach(button => button.addEventListener('click', () => {
       const entry = miniPuzzle.entries.find(item => item.id === button.dataset.entry);
       highlightEntry(entry);
       miniCell(entry.row, entry.col)?.focus();
+      saveMiniSession();
     }));
     list.querySelectorAll('.mini-clue-toggle').forEach(button => button.addEventListener('click', () => {
       const row = button.closest('.mini-clue-row');
       const hint = row.querySelector('.mini-better-hint');
       const expanded = button.getAttribute('aria-expanded') === 'true';
+      document.querySelectorAll('.mini-clue-toggle[aria-expanded="true"]').forEach(openButton => {
+        if (openButton === button) return;
+        openButton.setAttribute('aria-expanded', 'false');
+        openButton.textContent = '▸';
+        openButton.closest('.mini-clue-row').querySelector('.mini-better-hint').hidden = true;
+      });
       button.setAttribute('aria-expanded', String(!expanded));
       button.textContent = expanded ? '▸' : '▾';
       hint.hidden = expanded;
     }));
   }
   document.getElementById('mini-daily-date').textContent = `Shared puzzle · ${miniDateKey()}`;
+  updateMiniClueChecks();
+}
+
+function updateMiniClueChecks() {
+  miniPuzzle.entries.forEach(entry => {
+    const complete = entryCells(entry).every(({row, col}, index) => miniCell(row, col)?.value === entry.answer[index]);
+    const check = document.querySelector(`[data-entry-check="${entry.id}"]`);
+    if (check) check.style.display = complete ? 'grid' : 'none';
+  });
 }
 
 function checkMini() {
@@ -284,6 +363,7 @@ function checkMini() {
   if (complete && miniMode === 'level') { const progress=miniLevelProgress(); progress.completed=progress.completed||{}; progress.best=progress.best||{}; progress.history=progress.history||[]; progress.completed[miniLevel]=true; progress.best[miniLevel]=Math.min(progress.best[miniLevel]??Infinity,filledMiniCells()); progress.history.push({date:miniDateKey(),level:miniLevel,title:miniPuzzle.title}); saveMiniLevelProgress(progress); feedback.textContent=`Congratulations! Level ${miniLevel} complete. ${miniLevel<MINI_LEVELS.length?'The next level is unlocked.':'You completed every crossword level!'} Your daily mini streak is ${miniStreak()} day${miniStreak()===1?'':'s'}.`; renderMiniLevels(); } else if (complete) { const streak = recordMiniSolved(); feedback.textContent = `Congratulations! You solved today’s crossword. Your daily streak is ${streak} day${streak===1?'':'s'}.`; } else feedback.textContent = 'Keep going—red squares need another look.';
   feedback.className = `mini-feedback${complete ? ' success' : ''}`;
   renderMiniHistory();
+  saveMiniSession();
 }
 
 function showMiniHint(easier = false) {
@@ -316,7 +396,9 @@ function startMiniLevel(number) {
   const level=MINI_LEVELS[number-1], progress=miniLevelProgress();
   if(!level || (number>1&&!progress.completed?.[number-1]))return;
   miniMode='level'; miniLevel=number; miniIndex=0;
-  miniPuzzle={title:`Level ${number} · ${level.name}`,entries:[],_laidOut:false}; selectedEntry=null;
+  const title=`Level ${number} · ${level.name}`;
+  miniResumeState=readMiniSession('level',number,title);
+  miniPuzzle={title,entries:miniResumeState?miniResumeState.entries:[],_laidOut:Boolean(miniResumeState)}; selectedEntry=null;
   document.getElementById('mini-levels-modal').hidden=true;
   document.getElementById('mini-feedback').textContent=`Level ${number} · ${level.difficulty} · ${level.minLength}–${level.maxLength} letters`;
   renderMini();
@@ -330,19 +412,27 @@ function showMiniLevels() {
 
 function startMiniDaily() {
   miniMode='daily'; miniLevel=null; miniIndex=miniDailyIndex();
-  miniPuzzle={...MINI_PUZZLES[miniIndex],entries:MINI_PUZZLES[miniIndex].entries.map(entry=>({...entry}))};
-  miniPuzzle._laidOut=false; selectedEntry=null;
+  const puzzle=MINI_PUZZLES[miniIndex];
+  miniResumeState=readMiniSession('daily',null,puzzle.title);
+  miniPuzzle={...puzzle,entries:miniResumeState?miniResumeState.entries:puzzle.entries.map(entry=>({...entry}))};
+  miniPuzzle._laidOut=Boolean(miniResumeState); selectedEntry=null;
   document.getElementById('mini-levels-modal').hidden=true;
   document.getElementById('mini-welcome').hidden=true;
+  const resumed=Boolean(miniResumeState);
   renderMini();
-  document.getElementById('mini-feedback').textContent=`Daily challenge · ${miniStreak()} day streak`;
+  if(!resumed) document.getElementById('mini-feedback').textContent=`Daily challenge · ${miniStreak()} day streak`;
+  saveMiniSession();
 }
 
 
 function openMiniGame() {
   miniMode='daily'; miniLevel=null; miniIndex=miniDailyIndex();
-  miniPuzzle={...MINI_PUZZLES[miniIndex],entries:[] ,_laidOut:false};
+  const puzzle=MINI_PUZZLES[miniIndex];
+  miniResumeState=readMiniSession('daily',null,puzzle.title);
+  miniPuzzle={...puzzle,entries:miniResumeState?miniResumeState.entries:[],_laidOut:Boolean(miniResumeState)};
   renderMini();
+  const streak = miniStreak();
+  document.getElementById('mini-welcome-streak').textContent = `Your daily crossword streak is ${streak} day${streak === 1 ? '' : 's'}.`;
   document.getElementById('mini-modal').hidden = false;
   document.getElementById('mini-welcome').hidden = false;
   document.getElementById('game-selector').hidden = true;
