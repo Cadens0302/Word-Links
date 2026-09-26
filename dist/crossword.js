@@ -66,21 +66,57 @@ function miniSeed() { let hash = 2166136261; for (const char of `${miniPuzzle.ti
 function layoutMiniEntries() {
   let state = miniSeed();
   const random = () => { state = (Math.imul(state, 1664525) + 1013904223) >>> 0; return state / 4294967296; };
-  const occupied = new Set();
-  const entries = miniPuzzle.entries.map(entry => ({...entry})).sort((a,b) => b.answer.length-a.answer.length);
-  const dirs = ['Across','Down','Diagonal'];
-  for (const entry of entries) {
-    let placed = false;
-    for (let attempt=0; attempt<1200 && !placed; attempt++) {
-      const dir = dirs[Math.floor(random()*dirs.length)], length=entry.answer.length;
-      const dr = dir === 'Across' ? 0 : 1, dc = dir === 'Down' ? 0 : 1;
-      const row=Math.floor(random()*(MINI_SIZE-(dr ? length-1 : 0)));
-      const col=Math.floor(random()*(MINI_SIZE-(dc ? length-1 : 0)));
-      const cells=Array.from({length},(_,i)=>`${row+dr*i},${col+dc*i}`);
-      if (cells.some(key=>occupied.has(key))) continue;
-      entry.row=row; entry.col=col; entry.dir=dir; cells.forEach(key=>occupied.add(key)); placed=true;
-    }
-    if (!placed) { entry.row=0; entry.col=0; entry.dir='Across'; }
+  const entries = miniPuzzle.entries.map(entry => ({...entry}));
+  const dirs = [{name:'Across',dr:0,dc:1},{name:'Down',dr:1,dc:0},{name:'Diagonal',dr:1,dc:1}];
+  let solved = false;
+  for (let restart=0; restart<160 && !solved; restart++) {
+    const order=[...entries].sort((a,b)=>b.answer.length-a.answer.length);
+    for(let i=order.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[order[i],order[j]]=[order[j],order[i]];}
+    const occupancy=new Map();
+    const cellsFor=(entry,row,col,dir)=>[...entry.answer].map((letter,i)=>({letter,row:row+dir.dr*i,col:col+dir.dc*i}));
+    const first=order[0],firstDir=dirs[Math.floor(random()*dirs.length)];
+    const maxRow=MINI_SIZE-1-(firstDir.dr?(first.answer.length-1):0);
+    const maxCol=MINI_SIZE-1-(firstDir.dc?(first.answer.length-1):0);
+    first.row=Math.floor(random()*(maxRow+1));first.col=Math.floor(random()*(maxCol+1));first.dir=firstDir.name;
+    cellsFor(first,first.row,first.col,firstDir).forEach(cell=>occupancy.set(`${cell.row},${cell.col}`,cell.letter));
+    const placeNext=index=>{
+      if(index===order.length)return true;
+      const entry=order[index], candidates=[];
+      for(const placed of order.slice(0,index)){
+        const oldDir=dirs.find(dir=>dir.name===placed.dir);
+        const oldCells=cellsFor(placed,placed.row,placed.col,oldDir);
+        for(const dir of dirs){
+          if(dir.name===placed.dir)continue;
+          for(const oldCell of oldCells){
+            for(let letterIndex=0;letterIndex<entry.answer.length;letterIndex++){
+              if(entry.answer[letterIndex]!==oldCell.letter)continue;
+              const row=oldCell.row-dir.dr*letterIndex,col=oldCell.col-dir.dc*letterIndex;
+              const cells=cellsFor(entry,row,col,dir);
+              if(cells.some(cell=>cell.row<0||cell.row>=MINI_SIZE||cell.col<0||cell.col>=MINI_SIZE))continue;
+              let crosses=0,valid=true;
+              for(const cell of cells){const key=`${cell.row},${cell.col}`;if(occupancy.has(key)){if(occupancy.get(key)!==cell.letter){valid=false;break;}crosses++;}}
+              if(valid&&crosses)candidates.push({row,col,dir,cells});
+            }
+          }
+        }
+      }
+      for(let i=candidates.length-1;i>0;i--){const j=Math.floor(random()*(i+1));[candidates[i],candidates[j]]=[candidates[j],candidates[i]];}
+      const seen=new Set();
+      for(const candidate of candidates){
+        const signature=`${candidate.row},${candidate.col},${candidate.dir.name}`;
+        if(seen.has(signature))continue;seen.add(signature);
+        entry.row=candidate.row;entry.col=candidate.col;entry.dir=candidate.dir.name;
+        const added=[];
+        candidate.cells.forEach(cell=>{const key=`${cell.row},${cell.col}`;if(!occupancy.has(key)){occupancy.set(key,cell.letter);added.push(key);}});
+        if(placeNext(index+1))return true;
+        added.forEach(key=>occupancy.delete(key));
+      }
+      return false;
+    };
+    solved=placeNext(1);
+  }
+  if(!solved){
+    throw new Error('Could not generate a crossword where every answer crosses another.');
   }
   const starts = new Map(); let number=0;
   entries.sort((a,b)=>a.row-b.row || a.col-b.col).forEach(entry=>{
