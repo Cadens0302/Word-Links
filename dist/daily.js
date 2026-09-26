@@ -183,7 +183,8 @@ function recordCompletion(result) {
     levelHistory.push({date: todayKey(), level: window.EXTRA_LEVEL, score: result.score, words: result.words});
     writeExtraHistory(levelHistory);
     const level = EXTRA_LEVELS[window.EXTRA_LEVEL - 1];
-    feedback(`Level ${window.EXTRA_LEVEL} complete! You scored ${result.score} points. ${isBest ? 'New personal best. ' : ''}Target: ${level.target} points.`, 'success');
+    const streak=streakFor(readHistory());
+    feedback(`Congratulations! Level ${window.EXTRA_LEVEL} complete. You scored ${result.score} points. ${isBest ? 'New personal best. ' : ''}Target: ${level.target} points. Your daily streak is ${streak} day${streak===1?'':'s'}.`, 'success');
     renderLevels();
     return;
   }
@@ -195,7 +196,7 @@ function recordCompletion(result) {
   writeHistory(history);
   const streak = streakFor(history, date);
   updateStreakLabels();
-  feedback(`Good job finishing today’s daily puzzle! You now have a ${streak} day${streak === 1 ? '' : 's'} streak. Your score: ${result.score} points.`, 'success');
+  feedback(`Congratulations! You finished today’s daily puzzle. Your streak is ${streak} day${streak === 1 ? '' : 's'}. Your score: ${result.score} points.`, 'success');
 }
 
 window.wordLinksCompleted = recordCompletion;
