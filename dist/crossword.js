@@ -207,13 +207,22 @@ function highlightEntryAt(row, col) {
 function renderMiniClues() {
   for (const direction of ['Across', 'Down']) {
     const list = document.getElementById(direction === 'Across' ? 'mini-across' : 'mini-down');
-    list.innerHTML = miniPuzzle.entries.filter(entry => entry.dir === direction).map(entry => `<button class="mini-clue" type="button" data-entry="${entry.id}"><strong>${entry.id.replace(/[a-z]+$/i,'')}</strong> ${entry.clue} <span class="mini-length">(${entry.answer.length})</span></button>`).join('');
+    list.innerHTML = miniPuzzle.entries.filter(entry => entry.dir === direction).map(entry => `<div class="mini-clue-row"><button class="mini-clue" type="button" data-entry="${entry.id}"><strong>${entry.id.replace(/[a-z]+$/i,'')}</strong> ${entry.clue} <span class="mini-length">(${entry.answer.length})</span></button><button class="mini-clue-toggle" type="button" aria-label="Show a better hint for clue ${entry.id.replace(/[a-z]+$/i,'')}" aria-expanded="false">▸</button><span class="mini-better-hint" hidden>It starts with ${entry.answer[0]} and has ${entry.answer.length} letters.</span></div>`).join('');
     list.querySelectorAll('.mini-clue').forEach(button => button.addEventListener('click', () => {
       const entry = miniPuzzle.entries.find(item => item.id === button.dataset.entry);
       highlightEntry(entry);
       miniCell(entry.row, entry.col)?.focus();
     }));
+    list.querySelectorAll('.mini-clue-toggle').forEach(button => button.addEventListener('click', () => {
+      const row = button.closest('.mini-clue-row');
+      const hint = row.querySelector('.mini-better-hint');
+      const expanded = button.getAttribute('aria-expanded') === 'true';
+      button.setAttribute('aria-expanded', String(!expanded));
+      button.textContent = expanded ? '▸' : '▾';
+      hint.hidden = expanded;
+    }));
   }
+  document.getElementById('mini-daily-date').textContent = `Shared puzzle · ${miniDateKey()}`;
 }
 
 function checkMini() {
@@ -272,7 +281,8 @@ document.getElementById('mini-daily').addEventListener('click', () => {
   miniPuzzle = {...MINI_PUZZLES[miniIndex], entries:MINI_PUZZLES[miniIndex].entries.map(entry=>({...entry}))};
   miniPuzzle._laidOut = false;
   renderMini();
-  document.getElementById('mini-feedback').textContent = `Today’s mini · ${miniStreak()} day streak`;
+  document.getElementById('mini-feedback').textContent = `Daily challenge · ${miniStreak()} day streak`;
+  document.getElementById('mini-daily-date').textContent = `Shared puzzle · ${miniDateKey()}`;
 });
 document.getElementById('mini-hint').addEventListener('click', () => showMiniHint(false));
 document.getElementById('mini-easier-hint').addEventListener('click', () => showMiniHint(true));
