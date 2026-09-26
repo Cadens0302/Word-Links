@@ -14,7 +14,11 @@ const MINI_PUZZLES = [
       {id:'1d',dir:'Down',row:0,col:1,answer:'CAT',clue:'A feline house companion.'},
       {id:'2d',dir:'Down',row:0,col:2,answer:'ARE',clue:'A verb used with “you.”'},
       {id:'3d',dir:'Down',row:0,col:3,answer:'TEN',clue:'The number after nine.'},
-      {id:'1x',dir:'Diagonal',row:0,col:1,answer:'CAT',clue:'A feline friend, read on a slant.'}
+      {id:'1x',dir:'Diagonal',row:0,col:1,answer:'CAT',clue:'A feline friend, read on a slant.'},
+      {id:'5a',dir:'Across',row:5,col:1,answer:'SUN',clue:'The bright star in our sky.'},
+      {id:'6a',dir:'Across',row:6,col:1,answer:'MAP',clue:'A drawing that shows where to go.'},
+      {id:'7a',dir:'Across',row:7,col:1,answer:'PEN',clue:'A tool for writing.'},
+      {id:'8a',dir:'Across',row:8,col:1,answer:'BOX',clue:'A container with four sides.'}
     ]
   },
   {
@@ -28,7 +32,11 @@ const MINI_PUZZLES = [
       {id:'1d',dir:'Down',row:0,col:1,answer:'SUN',clue:'It rises in the east.'},
       {id:'2d',dir:'Down',row:0,col:2,answer:'USE',clue:'Employ; make practical.'},
       {id:'3d',dir:'Down',row:0,col:3,answer:'NET',clue:'What remains after costs, sometimes.'},
-      {id:'1x',dir:'Diagonal',row:0,col:1,answer:'SUN',clue:'A bright word that travels diagonally.'}
+      {id:'1x',dir:'Diagonal',row:0,col:1,answer:'SUN',clue:'A bright word that travels diagonally.'},
+      {id:'5a',dir:'Across',row:5,col:1,answer:'CAT',clue:'A small pet that purrs.'},
+      {id:'6a',dir:'Across',row:6,col:1,answer:'DOG',clue:'A friendly pet that barks.'},
+      {id:'7a',dir:'Across',row:7,col:1,answer:'HAT',clue:'You can wear it on your head.'},
+      {id:'8a',dir:'Across',row:8,col:1,answer:'BED',clue:'A place to sleep.'}
     ]
   }
 ];
