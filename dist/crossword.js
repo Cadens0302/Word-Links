@@ -62,19 +62,34 @@ function entryCells(entry) {
   }));
 }
 
-function miniSeed() { let hash = 2166136261; for (const char of `${miniPuzzle.title}-${miniDateKey()}`) { hash ^= char.charCodeAt(0); hash = Math.imul(hash, 16777619); } return hash >>> 0; }
+function miniSeed() { let hash = 2166136261; for (const char of `${miniPuzzle.title}-${miniDateKey()}-${miniIndex}`) { hash ^= char.charCodeAt(0); hash = Math.imul(hash, 16777619); } return hash >>> 0; }
 function layoutMiniEntries() {
-  let state = miniSeed(); const random = () => { state = Math.imul(state ^ state >>> 13, 1274126177); return ((state >>> 0) % 100000) / 100000; };
-  const occupied = new Set(); const dirs = ['Across', 'Down', 'Diagonal'];
-  miniPuzzle.entries.forEach(entry => {
-    for (let attempt = 0; attempt < 200; attempt++) {
-      const dir = dirs[Math.floor(random() * dirs.length)]; const length = entry.answer.length;
-      const row = Math.floor(random() * (MINI_SIZE - (dir === 'Across' ? 1 : length - 1)));
-      const col = Math.floor(random() * (MINI_SIZE - (dir === 'Down' ? 1 : length - 1)));
-      const cells = entry.answer.split('').map((_, i) => `${row + (dir !== 'Across' ? i : 0)},${col + (dir !== 'Down' ? i : 0)}`);
-      if (cells.every(cell => !occupied.has(cell))) { entry.row = row; entry.col = col; entry.dir = dir; cells.forEach(cell => occupied.add(cell)); break; }
+  let state = miniSeed();
+  const random = () => { state = (Math.imul(state, 1664525) + 1013904223) >>> 0; return state / 4294967296; };
+  const occupied = new Set();
+  const entries = miniPuzzle.entries.map(entry => ({...entry})).sort((a,b) => b.answer.length-a.answer.length);
+  const dirs = ['Across','Down','Diagonal'];
+  for (const entry of entries) {
+    let placed = false;
+    for (let attempt=0; attempt<1200 && !placed; attempt++) {
+      const dir = dirs[Math.floor(random()*dirs.length)], length=entry.answer.length;
+      const dr = dir === 'Across' ? 0 : 1, dc = dir === 'Down' ? 0 : 1;
+      const row=Math.floor(random()*(MINI_SIZE-(dr ? length-1 : 0)));
+      const col=Math.floor(random()*(MINI_SIZE-(dc ? length-1 : 0)));
+      const cells=Array.from({length},(_,i)=>`${row+dr*i},${col+dc*i}`);
+      if (cells.some(key=>occupied.has(key))) continue;
+      entry.row=row; entry.col=col; entry.dir=dir; cells.forEach(key=>occupied.add(key)); placed=true;
     }
+    if (!placed) { entry.row=0; entry.col=0; entry.dir='Across'; }
+  }
+  const starts = new Map(); let number=0;
+  entries.sort((a,b)=>a.row-b.row || a.col-b.col).forEach(entry=>{
+    const key=`${entry.row},${entry.col}`;
+    if (!starts.has(key)) starts.set(key,++number);
+    const suffix=entry.dir==='Across'?'a':entry.dir==='Down'?'d':'x';
+    entry.id=`${starts.get(key)}${suffix}`;
   });
+  miniPuzzle.entries=entries;
 }
 
 function renderMini() {
@@ -83,18 +98,21 @@ function renderMini() {
   grid.innerHTML = '';
   miniCells = [];
   const starts = new Map();
-  miniPuzzle.entries.forEach(entry => starts.set(`${entry.row},${entry.col}`, entry.id));
-  const rows = Array.from({length: MINI_SIZE}, (_, r) => (miniPuzzle.rows[r] || '').padEnd(MINI_SIZE, ' ').slice(0, MINI_SIZE));
-  rows.forEach((row, r) => [...row].forEach((value, c) => {
+  const rows = Array.from({length:MINI_SIZE},()=>Array(MINI_SIZE).fill(' '));
+  miniPuzzle.entries.forEach(entry=>{
+    starts.set(`${entry.row},${entry.col}`,entry.id);
+    entryCells(entry).forEach(({row,col},i)=>{ if(row>=0&&row<MINI_SIZE&&col>=0&&col<MINI_SIZE) rows[row][col]=entry.answer[i]; });
+  });
+  rows.forEach((row, r) => row.forEach((value, c) => {
     const square = document.createElement('div');
     square.className = 'mini-square';
-    const cell = document.createElement(value === '#' ? 'span' : 'input');
-    cell.className = value === '#' ? 'mini-block' : 'mini-cell';
+    const cell = document.createElement(value === ' ' ? 'span' : 'input');
+    cell.className = value === ' ' ? 'mini-empty' : 'mini-cell';
     cell.dataset.row = r;
     cell.dataset.col = c;
     const number = starts.get(`${r},${c}`);
-    if (number) { const label = document.createElement('span'); label.className = 'mini-number'; label.textContent = number.replace(/[a-z]/, ''); square.append(label); }
-    if (value !== '#') {
+    if (number) { const label = document.createElement('span'); label.className = 'mini-number'; label.textContent = number.replace(/[a-z]+$/i, ''); square.append(label); }
+    if (value !== ' ') {
       cell.maxLength = 1;
       cell.autocomplete = 'off';
       cell.setAttribute('aria-label', `Mini crossword ${String.fromCharCode(65+c)}${r+1}`);
@@ -141,7 +159,7 @@ function highlightEntryAt(row, col) {
 function renderMiniClues() {
   for (const direction of ['Across', 'Down', 'Diagonal']) {
     const list = document.getElementById(direction === 'Across' ? 'mini-across' : direction === 'Down' ? 'mini-down' : 'mini-diagonal');
-    list.innerHTML = miniPuzzle.entries.filter(entry => entry.dir === direction).map(entry => `<button class="mini-clue" type="button" data-entry="${entry.id}"><strong>${entry.id.replace(/[a-z]/,'')}</strong> ${entry.clue}</button>`).join('');
+    list.innerHTML = miniPuzzle.entries.filter(entry => entry.dir === direction).map(entry => `<button class="mini-clue" type="button" data-entry="${entry.id}"><strong>${entry.id.replace(/[a-z]+$/i,'')}</strong> ${entry.clue}</button>`).join('');
     list.querySelectorAll('.mini-clue').forEach(button => button.addEventListener('click', () => {
       const entry = miniPuzzle.entries.find(item => item.id === button.dataset.entry);
       highlightEntry(entry);
@@ -174,7 +192,7 @@ function showMiniHint(easier = false) {
 
 function newMiniPuzzle() {
   miniIndex = (miniIndex + 1) % MINI_PUZZLES.length;
-  miniPuzzle = MINI_PUZZLES[miniIndex];
+  miniPuzzle = {...MINI_PUZZLES[miniIndex], entries:MINI_PUZZLES[miniIndex].entries.map(entry=>({...entry}))};
   miniPuzzle._laidOut = false;
   selectedEntry = null;
   renderMini();
@@ -203,7 +221,7 @@ document.getElementById('mini-check').addEventListener('click', checkMini);
 document.getElementById('mini-new').addEventListener('click', newMiniPuzzle);
 document.getElementById('mini-daily').addEventListener('click', () => {
   miniIndex = miniDailyIndex();
-  miniPuzzle = MINI_PUZZLES[miniIndex];
+  miniPuzzle = {...MINI_PUZZLES[miniIndex], entries:MINI_PUZZLES[miniIndex].entries.map(entry=>({...entry}))};
   miniPuzzle._laidOut = false;
   renderMini();
   document.getElementById('mini-feedback').textContent = `Today’s mini · ${miniStreak()} day streak`;
