@@ -167,6 +167,7 @@ function renderMini() {
       cell.addEventListener('input', () => {
         cell.value = cell.value.replace(/[^a-z]/gi, '').toUpperCase();
         if (cell.value) focusMiniCell(r, c, 1);
+        updateMiniProgress();
       });
       cell.addEventListener('keydown', event => {
         if (event.key === 'Backspace' && !cell.value) focusMiniCell(r, c, -1);
@@ -183,6 +184,19 @@ function renderMini() {
   }));
   document.getElementById('mini-title').textContent = miniPuzzle.title;
   renderMiniClues();
+  updateMiniProgress();
+}
+
+function updateMiniProgress() {
+  const cells = new Set(miniPuzzle.entries.flatMap(entry => entryCells(entry).map(cell => String(cell.row) + ',' + cell.col)));
+  const filled = [...cells].filter(key => {
+    const parts = key.split(',').map(Number);
+    return Boolean(miniCell(parts[0],parts[1])?.value);
+  }).length;
+  const percent = cells.size ? Math.round(filled / cells.size * 100) : 0;
+  document.getElementById('mini-progress-count').textContent = filled + ' of ' + cells.size;
+  document.getElementById('mini-progress-bar').style.width = percent + '%';
+  document.querySelector('.mini-progress-track').setAttribute('aria-valuenow', percent);
 }
 
 function focusMiniCell(row, col, offset) {
