@@ -57,8 +57,8 @@ function miniCell(row, col) { return miniCells[row * MINI_SIZE + col]; }
 
 function entryCells(entry) {
   return [...entry.answer].map((_, index) => ({
-    row: entry.row + (entry.dir === 'Down' || entry.dir === 'Diagonal' ? index : 0),
-    col: entry.col + (entry.dir === 'Across' || entry.dir === 'Diagonal' ? index : 0)
+    row: entry.row + (entry.dir === 'Down' ? index : 0),
+    col: entry.col + (entry.dir === 'Across' ? index : 0)
   }));
 }
 
@@ -66,7 +66,7 @@ function miniSeed() { let hash = 2166136261; for (const char of `${miniPuzzle.ti
 function layoutMiniEntries() {
   let state = miniSeed();
   const random = () => { state = (Math.imul(state,1664525)+1013904223) >>> 0; return state/4294967296; };
-  const dirs = [{name:'Across',dr:0,dc:1},{name:'Down',dr:1,dc:0},{name:'Diagonal',dr:1,dc:1}];
+  const dirs = [{name:'Across',dr:0,dc:1},{name:'Down',dr:1,dc:0}];
   const key = (row,col) => `${row},${col}`;
   const cellsFor = (word,row,col,dir) => [...word.answer].map((letter,i) => ({letter,row:row+dir.dr*i,col:col+dir.dc*i}));
   const boundsArea = cells => {
@@ -135,7 +135,7 @@ function layoutMiniEntries() {
   best.sort((a,b)=>a.row-b.row||a.col-b.col).forEach(entry=>{
     const start=key(entry.row,entry.col);
     if(!starts.has(start))starts.set(start,++number);
-    entry.id=`${starts.get(start)}${entry.dir==='Across'?'a':entry.dir==='Down'?'d':'x'}`;
+    entry.id=`${starts.get(start)}${entry.dir==='Across'?'a':'d'}`;
   });
   miniPuzzle.entries=best;
 }
@@ -205,8 +205,8 @@ function highlightEntryAt(row, col) {
 }
 
 function renderMiniClues() {
-  for (const direction of ['Across', 'Down', 'Diagonal']) {
-    const list = document.getElementById(direction === 'Across' ? 'mini-across' : direction === 'Down' ? 'mini-down' : 'mini-diagonal');
+  for (const direction of ['Across', 'Down']) {
+    const list = document.getElementById(direction === 'Across' ? 'mini-across' : 'mini-down');
     list.innerHTML = miniPuzzle.entries.filter(entry => entry.dir === direction).map(entry => `<button class="mini-clue" type="button" data-entry="${entry.id}"><strong>${entry.id.replace(/[a-z]+$/i,'')}</strong> ${entry.clue} <span class="mini-length">(${entry.answer.length})</span></button>`).join('');
     list.querySelectorAll('.mini-clue').forEach(button => button.addEventListener('click', () => {
       const entry = miniPuzzle.entries.find(item => item.id === button.dataset.entry);
