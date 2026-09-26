@@ -338,14 +338,6 @@ function startMiniDaily() {
   document.getElementById('mini-feedback').textContent=`Daily challenge · ${miniStreak()} day streak`;
 }
 
-function newMiniPuzzle() {
-  miniMode='free'; miniLevel=null;
-  miniIndex = (miniIndex + 1) % MINI_PUZZLES.length;
-  miniPuzzle = {...MINI_PUZZLES[miniIndex], entries:MINI_PUZZLES[miniIndex].entries.map(entry=>({...entry}))};
-  miniPuzzle._laidOut = false;
-  selectedEntry = null;
-  renderMini();
-}
 
 function openMiniGame() {
   miniMode='daily'; miniLevel=null; miniIndex=miniDailyIndex();
@@ -370,7 +362,6 @@ document.getElementById('game-menu').addEventListener('click', showGameSelector)
 document.getElementById('mini-game-menu').addEventListener('click', showGameSelector);
 document.getElementById('mini-close').addEventListener('click', () => { document.getElementById('mini-modal').hidden = true; });
 document.getElementById('mini-check').addEventListener('click', checkMini);
-document.getElementById('mini-new').addEventListener('click', newMiniPuzzle);
 document.getElementById('mini-daily').addEventListener('click', startMiniDaily);
 document.getElementById('mini-levels-open').addEventListener('click', showMiniLevels);
 document.getElementById('mini-levels-close').addEventListener('click',()=>{document.getElementById('mini-levels-modal').hidden=true;});
