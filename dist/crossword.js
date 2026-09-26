@@ -13,7 +13,8 @@ const MINI_PUZZLES = [
       {id:'4a',dir:'Across',row:4,col:1,answer:'DOG',clue:'A loyal pet that barks.'},
       {id:'1d',dir:'Down',row:0,col:1,answer:'CAT',clue:'A feline house companion.'},
       {id:'2d',dir:'Down',row:0,col:2,answer:'ARE',clue:'A verb used with “you.”'},
-      {id:'3d',dir:'Down',row:0,col:3,answer:'TEN',clue:'The number after nine.'}
+      {id:'3d',dir:'Down',row:0,col:3,answer:'TEN',clue:'The number after nine.'},
+      {id:'1x',dir:'Diagonal',row:0,col:1,answer:'CAT',clue:'A feline friend, read on a slant.'}
     ]
   },
   {
@@ -26,7 +27,8 @@ const MINI_PUZZLES = [
       {id:'4a',dir:'Across',row:4,col:1,answer:'MAP',clue:'A drawing that helps you find your way.'},
       {id:'1d',dir:'Down',row:0,col:1,answer:'SUN',clue:'It rises in the east.'},
       {id:'2d',dir:'Down',row:0,col:2,answer:'USE',clue:'Employ; make practical.'},
-      {id:'3d',dir:'Down',row:0,col:3,answer:'NET',clue:'What remains after costs, sometimes.'}
+      {id:'3d',dir:'Down',row:0,col:3,answer:'NET',clue:'What remains after costs, sometimes.'},
+      {id:'1x',dir:'Diagonal',row:0,col:1,answer:'SUN',clue:'A bright word that travels diagonally.'}
     ]
   }
 ];
@@ -47,8 +49,8 @@ function miniCell(row, col) { return miniCells[row * MINI_SIZE + col]; }
 
 function entryCells(entry) {
   return [...entry.answer].map((_, index) => ({
-    row: entry.row + (entry.dir === 'Down' ? index : 0),
-    col: entry.col + (entry.dir === 'Across' ? index : 0)
+    row: entry.row + (entry.dir === 'Down' || entry.dir === 'Diagonal' ? index : 0),
+    col: entry.col + (entry.dir === 'Across' || entry.dir === 'Diagonal' ? index : 0)
   }));
 }
 
@@ -58,7 +60,7 @@ function renderMini() {
   miniCells = [];
   const starts = new Map();
   miniPuzzle.entries.forEach(entry => starts.set(`${entry.row},${entry.col}`, entry.id));
-  const rows = Array.from({length: MINI_SIZE}, (_, r) => (miniPuzzle.rows[r] || '').padEnd(MINI_SIZE, '#').slice(0, MINI_SIZE));
+  const rows = Array.from({length: MINI_SIZE}, (_, r) => (miniPuzzle.rows[r] || '').padEnd(MINI_SIZE, ' ').slice(0, MINI_SIZE));
   rows.forEach((row, r) => [...row].forEach((value, c) => {
     const square = document.createElement('div');
     square.className = 'mini-square';
@@ -113,8 +115,8 @@ function highlightEntryAt(row, col) {
 }
 
 function renderMiniClues() {
-  for (const direction of ['Across', 'Down']) {
-    const list = document.getElementById(direction === 'Across' ? 'mini-across' : 'mini-down');
+  for (const direction of ['Across', 'Down', 'Diagonal']) {
+    const list = document.getElementById(direction === 'Across' ? 'mini-across' : direction === 'Down' ? 'mini-down' : 'mini-diagonal');
     list.innerHTML = miniPuzzle.entries.filter(entry => entry.dir === direction).map(entry => `<button class="mini-clue" type="button" data-entry="${entry.id}"><strong>${entry.id.replace(/[a-z]/,'')}</strong> ${entry.clue}</button>`).join('');
     list.querySelectorAll('.mini-clue').forEach(button => button.addEventListener('click', () => {
       const entry = miniPuzzle.entries.find(item => item.id === button.dataset.entry);
@@ -135,6 +137,15 @@ function checkMini() {
   if (complete) { const streak = recordMiniSolved(); feedback.textContent = `Solved! Nice little crossword. You have a ${streak} day mini streak.`; } else feedback.textContent = 'Keep going—red squares need another look.';
   feedback.className = `mini-feedback${complete ? ' success' : ''}`;
   renderMiniHistory();
+}
+
+function showMiniHint(easier = false) {
+  const entry = selectedEntry || miniPuzzle.entries[0];
+  const hint = easier ? `Easier hint: the answer starts with “${entry.answer[0]}” and has ${entry.answer.length} letters. Follow the highlighted ${entry.dir.toLowerCase()} route.` : `Hint: start with the ${entry.dir.toLowerCase()} clue “${entry.clue}” and fill its ${entry.answer.length} squares.`;
+  document.getElementById('mini-hint-text').textContent = hint;
+  document.getElementById('mini-hint-text').hidden = false;
+  document.getElementById('mini-easier-hint').hidden = !easier;
+  highlightEntry(entry);
 }
 
 function newMiniPuzzle() {
@@ -171,6 +182,8 @@ document.getElementById('mini-daily').addEventListener('click', () => {
   renderMini();
   document.getElementById('mini-feedback').textContent = `Today’s mini · ${miniStreak()} day streak`;
 });
+document.getElementById('mini-hint').addEventListener('click', () => showMiniHint(false));
+document.getElementById('mini-easier-hint').addEventListener('click', () => showMiniHint(true));
 document.getElementById('mini-history-button').addEventListener('click', () => {
   const panel = document.getElementById('mini-history-panel');
   renderMiniHistory();
