@@ -15,10 +15,10 @@ const MINI_PUZZLES = [
       {id:'2d',dir:'Down',row:0,col:2,answer:'ARE',clue:'A verb used with “you.”'},
       {id:'3d',dir:'Down',row:0,col:3,answer:'TEN',clue:'The number after nine.'},
       {id:'1x',dir:'Diagonal',row:0,col:1,answer:'CAT',clue:'A feline friend, read on a slant.'},
-      {id:'5a',dir:'Across',row:5,col:1,answer:'SUN',clue:'The bright star in our sky.'},
-      {id:'6a',dir:'Across',row:6,col:1,answer:'MAP',clue:'A drawing that shows where to go.'},
-      {id:'7a',dir:'Across',row:7,col:1,answer:'PEN',clue:'A tool for writing.'},
-      {id:'8a',dir:'Across',row:8,col:1,answer:'BOX',clue:'A container with four sides.'}
+      {id:'5a',dir:'Across',row:5,col:1,answer:'TREE',clue:'A tall plant with a trunk.'},
+      {id:'6a',dir:'Across',row:6,col:1,answer:'BOOK',clue:'A story you can read.'},
+      {id:'7a',dir:'Across',row:7,col:1,answer:'LAMP',clue:'A small light for a room.'},
+      {id:'8a',dir:'Across',row:8,col:1,answer:'HOUSE',clue:'A place where people live.'}
     ]
   },
   {
@@ -33,8 +33,8 @@ const MINI_PUZZLES = [
       {id:'2d',dir:'Down',row:0,col:2,answer:'USE',clue:'Employ; make practical.'},
       {id:'3d',dir:'Down',row:0,col:3,answer:'NET',clue:'What remains after costs, sometimes.'},
       {id:'1x',dir:'Diagonal',row:0,col:1,answer:'SUN',clue:'A bright word that travels diagonally.'},
-      {id:'5a',dir:'Across',row:5,col:1,answer:'CAT',clue:'A small pet that purrs.'},
-      {id:'6a',dir:'Across',row:6,col:1,answer:'DOG',clue:'A friendly pet that barks.'},
+      {id:'5a',dir:'Across',row:5,col:1,answer:'FISH',clue:'An animal that swims.'},
+      {id:'6a',dir:'Across',row:6,col:1,answer:'MOON',clue:'It shines at night.'},
       {id:'7a',dir:'Across',row:7,col:1,answer:'HAT',clue:'You can wear it on your head.'},
       {id:'8a',dir:'Across',row:8,col:1,answer:'BED',clue:'A place to sleep.'}
     ]
@@ -62,7 +62,23 @@ function entryCells(entry) {
   }));
 }
 
+function miniSeed() { let hash = 2166136261; for (const char of `${miniPuzzle.title}-${miniDateKey()}`) { hash ^= char.charCodeAt(0); hash = Math.imul(hash, 16777619); } return hash >>> 0; }
+function layoutMiniEntries() {
+  let state = miniSeed(); const random = () => { state = Math.imul(state ^ state >>> 13, 1274126177); return ((state >>> 0) % 100000) / 100000; };
+  const occupied = new Set(); const dirs = ['Across', 'Down', 'Diagonal'];
+  miniPuzzle.entries.forEach(entry => {
+    for (let attempt = 0; attempt < 200; attempt++) {
+      const dir = dirs[Math.floor(random() * dirs.length)]; const length = entry.answer.length;
+      const row = Math.floor(random() * (MINI_SIZE - (dir === 'Across' ? 1 : length - 1)));
+      const col = Math.floor(random() * (MINI_SIZE - (dir === 'Down' ? 1 : length - 1)));
+      const cells = entry.answer.split('').map((_, i) => `${row + (dir !== 'Across' ? i : 0)},${col + (dir !== 'Down' ? i : 0)}`);
+      if (cells.every(cell => !occupied.has(cell))) { entry.row = row; entry.col = col; entry.dir = dir; cells.forEach(cell => occupied.add(cell)); break; }
+    }
+  });
+}
+
 function renderMini() {
+  if (!miniPuzzle._laidOut) { layoutMiniEntries(); miniPuzzle._laidOut = true; }
   const grid = document.getElementById('mini-grid');
   grid.innerHTML = '';
   miniCells = [];
@@ -159,6 +175,7 @@ function showMiniHint(easier = false) {
 function newMiniPuzzle() {
   miniIndex = (miniIndex + 1) % MINI_PUZZLES.length;
   miniPuzzle = MINI_PUZZLES[miniIndex];
+  miniPuzzle._laidOut = false;
   selectedEntry = null;
   renderMini();
 }
@@ -187,6 +204,7 @@ document.getElementById('mini-new').addEventListener('click', newMiniPuzzle);
 document.getElementById('mini-daily').addEventListener('click', () => {
   miniIndex = miniDailyIndex();
   miniPuzzle = MINI_PUZZLES[miniIndex];
+  miniPuzzle._laidOut = false;
   renderMini();
   document.getElementById('mini-feedback').textContent = `Today’s mini · ${miniStreak()} day streak`;
 });
