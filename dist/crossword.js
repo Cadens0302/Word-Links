@@ -238,7 +238,27 @@ function renderMini() {
         saveMiniSession();
       });
       cell.addEventListener('keydown', event => {
-        if (event.key === 'Backspace' && !cell.value) focusMiniEntryCell(r, c, -1);
+        if (/^[a-z]$/i.test(event.key) && !event.metaKey && !event.ctrlKey && !event.altKey) {
+          event.preventDefault();
+          cell.value = event.key.toUpperCase();
+          cell.classList.remove('mini-wrong');
+          focusMiniEntryCell(r, c, 1);
+          updateMiniProgress();
+          updateMiniClueChecks();
+          saveMiniSession();
+          return;
+        }
+        if (event.key === 'Backspace') {
+          event.preventDefault();
+          if (cell.value) {
+            cell.value = '';
+            cell.classList.remove('mini-wrong');
+            updateMiniProgress();
+            updateMiniClueChecks();
+            saveMiniSession();
+          } else focusMiniEntryCell(r, c, -1);
+          return;
+        }
         if (event.key === 'ArrowRight') { event.preventDefault(); focusMiniCell(r, c, 1); }
         if (event.key === 'ArrowLeft') { event.preventDefault(); focusMiniCell(r, c, -1); }
         if (event.key === 'ArrowDown') { event.preventDefault(); focusMiniCell(r, c, MINI_SIZE); }
@@ -374,15 +394,6 @@ function checkMini() {
   saveMiniSession();
 }
 
-function showMiniHint(easier = false) {
-  const entry = selectedEntry || miniPuzzle.entries[0];
-  const hint = easier ? `Easier hint: the answer starts with “${entry.answer[0]}” and has ${entry.answer.length} letters. Follow the highlighted ${entry.dir.toLowerCase()} route.` : `Hint: start with the ${entry.dir.toLowerCase()} clue “${entry.clue}” and fill its ${entry.answer.length} squares.`;
-  document.getElementById('mini-hint-text').textContent = hint;
-  document.getElementById('mini-hint-text').hidden = false;
-  document.getElementById('mini-easier-hint').hidden = !easier;
-  highlightEntry(entry);
-}
-
 function filledMiniCells() {
   return [...new Set(miniPuzzle.entries.flatMap(entry=>entryCells(entry).map(cell=>`${cell.row},${cell.col}`)))].filter(key=>{
     const [row,col]=key.split(',').map(Number); return Boolean(miniCell(row,col)?.value);
@@ -457,8 +468,6 @@ function restartMiniPuzzle() {
     document.getElementById('mini-feedback').textContent = `Daily crossword restarted · ${miniStreak()} day streak`;
   }
   document.getElementById('mini-feedback').className = 'mini-feedback';
-  document.getElementById('mini-hint-text').hidden = true;
-  document.getElementById('mini-easier-hint').hidden = true;
   saveMiniSession();
   document.querySelector('.mini-cell')?.focus();
 }
@@ -511,8 +520,6 @@ document.getElementById('mini-levels-modal').addEventListener('click',event=>{if
 document.getElementById('mini-welcome-start').addEventListener('click',startMiniDaily);
 document.getElementById('mini-welcome-close').addEventListener('click', () => { document.getElementById('mini-welcome').hidden = true; animateGameEntrance('mini'); });
 document.getElementById('mini-welcome-levels').addEventListener('click',showMiniLevels);
-document.getElementById('mini-hint').addEventListener('click', () => showMiniHint(false));
-document.getElementById('mini-easier-hint').addEventListener('click', () => showMiniHint(true));
 document.getElementById('mini-history-button').addEventListener('click', () => {
   const panel = document.getElementById('mini-history-panel');
   renderMiniHistory();
