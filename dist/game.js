@@ -5,6 +5,7 @@ const WORDS = new Set(`am an as at be by do go he hi if in is it me my no of on 
 for (const word of WORD_LINKS_DICTIONARY.split(" ")) WORDS.add(word);
 if (typeof WORD_LINKS_EXTRA !== 'undefined') for (const word of WORD_LINKS_EXTRA) WORDS.add(word);
 for (const word of WORD_LINKS_WEBSTER) WORDS.add(word);
+for (const word of WORD_LINKS_EXPANDED.split(/\s+/)) WORDS.add(word);
 const PUZZLES = [['LIGHT','SOUND','THE FIRST CONNECTION'],['NIGHT','SHORE','AFTER HOURS'],['SIGHT','STONE','A DIFFERENT PERSPECTIVE'],['RIVER','GARDEN','GREEN THINGS'],['BRIDGE','STONE','CROSSING OVER'],['MUSIC','DANCE','THE RHYTHM'],['OCEAN','ISLAND','OPEN WATER'],['PAPER','PENCIL','ON THE PAGE']];
 let words=[], selected=null, direction='R', score=0, won=false, puzzleIndex=-1, activeClue=null, clueRerolls=3, clueOptions=[], clueIndex=0;
 const $ = id => document.getElementById(id);
@@ -25,7 +26,9 @@ restartWordLinks.type = 'button';
 restartWordLinks.innerHTML = '↻ <span>Restart puzzle</span>';
 restartWordLinks.setAttribute('aria-label', 'Restart the current Word Links puzzle');
 document.querySelector('.intro-actions')?.append(restartWordLinks);
-const streakLine = document.querySelector('.streak-line');
+// The welcome dialog has its own streak label; attach the next-puzzle control
+// to the playable mission card so it remains visible during level play.
+const streakLine = document.querySelector('.mission .streak-line');
 if (streakLine) {
   const missionActions = document.createElement('div');
   missionActions.className = 'mission-actions';
@@ -44,7 +47,17 @@ const directionVector = dir => DIRECTIONS[dir] || DIRECTIONS.R;
 const isVertical = dir => directionVector(dir)[0] !== 0;
 const cells = word => {const [dr,dc]=directionVector(word.dir);return [...word.text].map((letter,i)=>({r:word.r+dr*i,c:word.c+dc*i,letter}));};
 function boardMap(){const map=new Map();words.forEach((w,id)=>cells(w).forEach(p=>{const key=p.r+','+p.c;const v=map.get(key)||{letter:p.letter,ids:[]};v.ids.push(id);map.set(key,v);}));return map;}
-function components(){const parents=words.map((_,i)=>i);const root=i=>parents[i]===i?i:(parents[i]=root(parents[i]));for(const p of boardMap().values())for(const id of p.ids)parents[root(id)]=root(p.ids[0]);return words.map((_,i)=>root(i));}
+function components(){
+  const parents=words.map((_,i)=>i);
+  const root=i=>parents[i]===i?i:(parents[i]=root(parents[i]));
+  const map=boardMap();
+  for(const [key,p] of map){
+    const [r,c]=key.split(',').map(Number);
+    const neighbors=[p,map.get(`${r+1},${c}`),map.get(`${r},${c+1}`)].filter(Boolean);
+    for(const cell of neighbors)for(const id of cell.ids)parents[root(id)]=root(p.ids[0]);
+  }
+  return words.map((_,i)=>root(i));
+}
 function validate(text,r,c,dir){
   if(won)return {error:'Connection complete! Replay for a new puzzle.'};
   if(!/^[A-Z]{2,15}$/.test(text))return {error:'Enter a word with 2–15 letters.'};
@@ -53,10 +66,16 @@ function validate(text,r,c,dir){
   if(words.some(w=>w.text===text))return {error:'That word is already on the board.'};
   const map=boardMap(),path=cells({text,r,c,dir}),crossed=new Set();let added=0;
   if(path.some(p=>p.r<0||p.r>14||p.c<0||p.c>14))return {error:'That word extends beyond the board. Choose another starting square.'};
-  for(const p of path){const old=map.get(p.r+','+p.c);if(old){if(old.letter!==p.letter)return {error:`At ${String.fromCharCode(65+p.c)}${p.r+1}, your word has ${p.letter}, but the board has ${old.letter}. Cross only matching letters.`};for(const id of old.ids){if(isVertical(words[id].dir)===isVertical(dir))return {error:`This word overlaps ${words[id].text} in the same direction. Cross it from the opposite direction instead.`};crossed.add(id);}}else{added++;const neighbors=isVertical(dir)?[[p.r,p.c-1],[p.r,p.c+1]]:[[p.r-1,p.c],[p.r+1,p.c]];const adjacent=new Set();for(const [rr,cc] of neighbors){const neighbor=map.get(rr+','+cc);if(neighbor)neighbor.ids.forEach(id=>adjacent.add(id));}if(adjacent.size){const names=[...adjacent].map(id=>words[id].text);return {error:`This placement touches ${names.join(' and ')} without crossing a matching letter. Choose a square on a shared letter, or use Get a clue to find a legal link.`};}}}
+  for(const p of path){const old=map.get(p.r+','+p.c);if(old){if(old.letter!==p.letter)return {error:`At ${String.fromCharCode(65+p.c)}${p.r+1}, your word has ${p.letter}, but the board has ${old.letter}. Cross only matching letters.`};for(const id of old.ids){if(isVertical(words[id].dir)===isVertical(dir))return {error:`This word overlaps ${words[id].text} in the same direction. Cross it from the opposite direction instead.`};crossed.add(id);}}else{added++;const neighbors=isVertical(dir)?[[p.r,p.c-1],[p.r,p.c+1]]:[[p.r-1,p.c],[p.r+1,p.c]];for(const [rr,cc] of neighbors){const neighbor=map.get(rr+','+cc);if(neighbor)neighbor.ids.forEach(id=>crossed.add(id));}}}
+  // Every side contact must create a complete, real perpendicular word.
+  // This prevents a move from merely touching another answer (for example OL).
+  const proposed=new Map(map);
+  path.forEach(p=>proposed.set(`${p.r},${p.c}`,{letter:p.letter,ids:map.get(`${p.r},${p.c}`)?.ids||[]}));
+  const sideDr=isVertical(dir)?0:1,sideDc=isVertical(dir)?1:0,checkedRuns=new Set();
+  for(const p of path){if(map.has(`${p.r},${p.c}`))continue;const adjacent=isVertical(dir)?[[p.r,p.c-1],[p.r,p.c+1]]:[[p.r-1,p.c],[p.r+1,p.c]];if(!adjacent.some(([rr,cc])=>map.has(`${rr},${cc}`)))continue;let rr=p.r,cc=p.c;while(proposed.has(`${rr-sideDr},${cc-sideDc}`)){rr-=sideDr;cc-=sideDc;}let letters='',keys=[];while(proposed.has(`${rr},${cc}`)){keys.push(`${rr},${cc}`);letters+=proposed.get(`${rr},${cc}`).letter;rr+=sideDr;cc+=sideDc;}const runKey=keys.join('|');if(checkedRuns.has(runKey))continue;checkedRuns.add(runKey);if(letters.length<3||(!WORDS.has(letters)&&!WORDS.has([...letters].reverse().join(''))))return {error:`This placement would also form ${letters}, which is not in the word list. Side connections must form complete, valid words.`};}
   const last=path[path.length-1],[dr,dc]=directionVector(dir);if(map.has((r-dr)+','+(c-dc))||map.has((last.r+dr)+','+(last.c+dc)))return {error:'Leave a blank square before and after your word.'};
   const roots=components(),groups=new Set([...crossed].map(id=>roots[id]));const bridge=crossed.size===2&&groups.size===2&&groups.has(roots[0])&&groups.has(roots[1]);
-  if(crossed.size!==1&&!bridge)return {error:'Cross exactly one existing word, or cross one word from each group to finish.'};
+  if(crossed.size!==1&&!bridge)return {error:'Connect to one existing word, or one word from each group to finish. Side connections must form valid words.'};
   if(!added)return {error:'Your word must add new letters.'};return {bridge,cost:text.length};
 }
 function alignSelectedStart(text){

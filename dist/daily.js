@@ -50,7 +50,9 @@ function updateNextExtraPuzzleButton() {
   const completed = Boolean(readExtraCompleted()[level]);
   const isFinalLevel = level >= EXTRA_LEVELS.length;
   button.textContent = isFinalLevel && completed ? 'All extra puzzles complete' : 'Move on to next puzzle';
-  button.disabled = !completed || isFinalLevel;
+  // Keep the control visually consistent while locked; clicking it explains
+  // what is needed instead of making it look like a broken or missing action.
+  button.disabled = false;
   button.title = completed
     ? isFinalLevel ? 'You completed every extra puzzle.' : `Open Level ${level + 1}`
     : 'Complete this level to unlock the next puzzle.';
@@ -223,7 +225,15 @@ function recordCompletion(result) {
 window.wordLinksCompleted = recordCompletion;
 document.getElementById('next-extra-puzzle')?.addEventListener('click', () => {
   const level = Number(window.EXTRA_LEVEL);
-  if (!level || level >= EXTRA_LEVELS.length || !readExtraCompleted()[level]) return;
+  if (!level) return;
+  if (!readExtraCompleted()[level]) {
+    feedback(`Finish Level ${level} first to unlock the next puzzle.`, 'error');
+    return;
+  }
+  if (level >= EXTRA_LEVELS.length) {
+    feedback('You have completed every extra puzzle.', 'success');
+    return;
+  }
   startExtraLevel(level + 1);
 });
 
@@ -249,6 +259,19 @@ function openWelcome() {
     : 'A new daily puzzle is ready. Keep your run going with today’s connection.';
   document.getElementById('welcome-modal').hidden = false;
 }
+
+const welcomeLevelsButton = document.createElement('button');
+welcomeLevelsButton.id = 'welcome-levels';
+welcomeLevelsButton.className = 'secondary mini-welcome-secondary';
+welcomeLevelsButton.type = 'button';
+welcomeLevelsButton.textContent = 'Choose a level';
+document.getElementById('play-daily').after(welcomeLevelsButton);
+welcomeLevelsButton.addEventListener('click', () => {
+  renderLevels();
+  document.getElementById('welcome-modal').hidden = true;
+  document.getElementById('levels-modal').hidden = false;
+  document.getElementById('level-grid')?.querySelector('[data-level]')?.focus({preventScroll:true});
+});
 
 document.getElementById('extra-puzzles').addEventListener('click', () => { renderLevels(); document.getElementById('levels-modal').hidden = false; });
 document.getElementById('daily-challenge-button').addEventListener('click', () => {

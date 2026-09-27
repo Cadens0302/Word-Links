@@ -27,3 +27,28 @@ for (const level of EXTRA_LEVELS) {
     for (const word of pair) WORDS.add(word);
   }
 }
+
+// Additional level openings keep the 50-level path varied while using the
+// same validated dictionary and deterministic level assignment system.
+const ADDITIONAL_LEVEL_OPENINGS = [
+  ['CANDLE','FLAME'],['PILLOW','BLANKET'],['BOTTLE','WATER'],['POCKET','JACKET'],
+  ['MARKET','BASKET'],['PAINTING','DRAWING'],['HARVEST','GARDENS'],['SEASIDE','COUNTRY'],
+  ['THUNDER','LIGHTNING'],['SUNRISE','SUNSET'],['KEYBOARD','NOTEBOOK'],['JOURNEY','BACKPACK'],
+  ['CAMPFIRE','FOREST'],['WILDLIFE','RAINFOREST'],['VANILLA','CHOCOLATE'],['BREAKFAST','SANDWICH'],
+  ['DRAGONFLY','BUTTERFLY'],['EXPLORING','ADVENTURE'],['TOGETHER','COMMUNITY'],['DISCOVERY','KNOWLEDGE'],
+  ['BIRTHDAY','CELEBRATION'],['CHILDREN','PLAYGROUND'],['CREATIVITY','IMAGINATION'],['STARGAZING','CONSTELLATION'],
+  ['COMPASSION','UNDERSTANDING'],['FRIENDSHIP','CONVERSATION'],['MEMORIES','PHOTOGRAPHY'],['ENGINEERING','ARCHITECTURE'],
+  ['SUSTAINABLE','ENVIRONMENTAL'],['IMPOSSIBLE','EXTRAORDINARY'],['BEGINNING','TRANSFORMATION'],['GENEROSITY','RESPONSIBILITY'],
+  ['PERSEVERANCE','DETERMINATION'],['COMMUNICATION','COLLABORATION'],['ADVENTUROUS','INTERNATIONAL'],['IMAGINATIVE','INDEPENDENCE'],
+  ['CONNECTIONS','CELEBRATION'],['LANDMARK','KEYSTONE'],['WATERFALL','TREASURE'],['TELEPHONE','COMPUTER']
+];
+const ADDITIONAL_LEVEL_NAMES = ['Lantern trail','Quiet crossing','Open road','Hidden hinge','Market square','Painter’s path','Harvest route','Coastal turn','Storm signal','Morning bridge','Keyed route','Packed trail','Ember crossing','Wild passage','Sweet pairing','Morning table','Winged route','Explorer’s map','Shared ground','Discovery lane','Birthday bridge','Playground path','Bright ideas','Sky watcher','Kindred route','Conversation lane','Memory map','Built to last','Green horizon','Rare route','First light','Giving back','Steady climb','Teamwork trail','World traveler','Independent route','Final connection','Stone marker','Falling water','Signal path'];
+for (let index = EXTRA_LEVELS.length; index < 50; index++) {
+  const opening = ADDITIONAL_LEVEL_OPENINGS[index - 15];
+  const puzzles = Array.from({length:5}, (_, offset) => {
+    const pair = ADDITIONAL_LEVEL_OPENINGS[(index - 15 + offset * 7) % ADDITIONAL_LEVEL_OPENINGS.length];
+    return [...pair];
+  });
+  const difficulty = index < 25 ? 'Hard' : index < 40 ? 'Expert' : 'Master';
+  EXTRA_LEVELS.push({name:ADDITIONAL_LEVEL_NAMES[index - 15], difficulty, target:50 + (index - 14) * 3, puzzles});
+}
