@@ -8,6 +8,8 @@ for (const word of WORD_LINKS_WEBSTER) WORDS.add(word);
 const PUZZLES = [['LIGHT','SOUND','THE FIRST CONNECTION'],['NIGHT','SHORE','AFTER HOURS'],['SIGHT','STONE','A DIFFERENT PERSPECTIVE'],['RIVER','GARDEN','GREEN THINGS'],['BRIDGE','STONE','CROSSING OVER'],['MUSIC','DANCE','THE RHYTHM'],['OCEAN','ISLAND','OPEN WATER'],['PAPER','PENCIL','ON THE PAGE']];
 let words=[], selected=null, direction='R', score=0, won=false, puzzleIndex=-1, activeClue=null, clueRerolls=3, clueOptions=[], clueIndex=0;
 const $ = id => document.getElementById(id);
+const scoringRule = document.querySelector('.rules article:nth-of-type(2) p');
+if (scoringRule) scoringRule.textContent = 'Each letter costs 1 point. Shorter words give you a lower total.';
 const selectorSubtitle = document.querySelector('#game-selector .modal-subtitle');
 if (selectorSubtitle && !document.getElementById('game-word-count')) {
   const total = document.createElement('p');
@@ -41,7 +43,7 @@ function validate(text,r,c,dir){
   const last=path[path.length-1],[dr,dc]=directionVector(dir);if(map.has((r-dr)+','+(c-dc))||map.has((last.r+dr)+','+(last.c+dc)))return {error:'Leave a blank square before and after your word.'};
   const roots=components(),groups=new Set([...crossed].map(id=>roots[id]));const bridge=crossed.size===2&&groups.size===2&&groups.has(roots[0])&&groups.has(roots[1]);
   if(crossed.size!==1&&!bridge)return {error:'Cross exactly one existing word, or cross one word from each group to finish.'};
-  if(!added)return {error:'Your word must add new letters.'};return {bridge,cost:10+text.length};
+  if(!added)return {error:'Your word must add new letters.'};return {bridge,cost:text.length};
 }
 function alignSelectedStart(text){
   if(!selected||!WORDS.has(text))return;
@@ -62,7 +64,7 @@ function readGameSession(key,name){try{const raw=localStorage.getItem(key)||(win
 function render(){const inputText=$('word').value.toUpperCase().replace(/[^A-Z]/g,'');alignSelectedStart(inputText);const map=boardMap();const preview=selected?cells({text:inputText,...selected,dir:direction}):[];const pm=new Map(preview.map(p=>[p.r+','+p.c,p.letter]));
   const clueEnds=activeClue?new Set([`${activeClue.r},${activeClue.c}`,`${cells(activeClue).at(-1).r},${cells(activeClue).at(-1).c}`]):new Set();
   [...$('grid').children].forEach((button,i)=>{const r=Math.floor(i/15),c=i%15,key=r+','+c,old=map.get(key),letter=pm.get(key);button.className='cell';if(old)button.classList.add(old.ids.some(id=>id<2)?'start':'placed');if(letter)button.classList.add(old&&old.letter!==letter?'invalid':'preview');if(clueEnds.has(key))button.classList.add(key===`${activeClue.r},${activeClue.c}`?'clue-start':'clue-end');if(selected&&r===selected.r&&c===selected.c)button.classList.add('selected');button.textContent=old?.letter||letter||'';button.setAttribute('aria-label',`${String.fromCharCode(65+c)}${r+1}${old?', '+old.letter:letter?', preview '+letter:clueEnds.has(key)?', clue endpoint':', empty'}`);button.setAttribute('aria-pressed',String(Boolean(selected&&r===selected.r&&c===selected.c)));});
-  $('selection-label').textContent=selected?`Starts at ${String.fromCharCode(65+selected.c)}${selected.r+1}`:'Start at a square';$('cost').textContent=$('word').value?`${10+$('word').value.length} points`:'10 + letters';$('score').textContent=score;$('link-count').textContent=`${words.length-2} link${words.length===3?'':'s'} placed`;saveGameSession();
+  $('selection-label').textContent=selected?`Starts at ${String.fromCharCode(65+selected.c)}${selected.r+1}`:'Start at a square';$('cost').textContent=$('word').value?`${$('word').value.length} point${$('word').value.length===1?'':'s'}`:'1 point per letter';$('score').textContent=score;$('link-count').textContent=`${words.length-2} link${words.length===3?'':'s'} placed`;saveGameSession();
 }
 function setDirection(dir){if(!DIRECTIONS[dir])return;direction=dir;for(const value of ['U','D','L','R']){$(`direction-${value}`).classList.toggle('active',dir===value);$(`direction-${value}`).setAttribute('aria-pressed',String(dir===value));}render();}
 function submitWord(text,r,c,dir){if(!Number.isInteger(r)||!Number.isInteger(c)||!DIRECTIONS[dir])return {error:'Choose a starting square and direction.'};text=String(text).trim().toUpperCase();alignSelectedStart(text);if(selected){r=selected.r;c=selected.c;}const result=validate(text,r,c,dir);if(result.error){feedback(result.error,'error');return result;}words.push({text,r,c,dir});score+=result.cost;won=result.bridge;$('word').value='';clearClue();feedback(won?`Connected! You joined ${words[0].text} and ${words[1].text} in ${score} points. ${window.DAILY_MODE?'Your daily result is saved below.':'Your level result is saved below.'}`:`${text} linked. +${result.cost} points. Keep the connection going.`, 'success');$('word').disabled=won;document.querySelector('.submit').disabled=won;$('clue').disabled=won;render();if(won&&typeof window.wordLinksCompleted==='function')window.wordLinksCompleted({score,words:words.map(w=>w.text),mode:window.DAILY_MODE?'daily':'extra',level:window.EXTRA_LEVEL||null});return {word:text,score,complete:won};}
@@ -78,7 +80,7 @@ function startGame(forceNew=false){
   const saved=forceNew?null:readGameSession(key,name);
   words=saved?saved.words.map(word=>({...word})):baseWords;
   window.STARTING_WORDS=words.slice(0,2).map(word=>({...word}));
-  score=saved?.score||0;won=Boolean(saved?.won);selected=saved?.selected||null;direction=({H:'R',V:'D'})[saved?.direction]||saved?.direction||'R';activeClue=saved?.activeClue||null;
+  score=saved?saved.words.slice(2).reduce((total,word)=>total+word.text.length,0):0;won=Boolean(saved?.won);selected=saved?.selected||null;direction=({H:'R',V:'D'})[saved?.direction]||saved?.direction||'R';activeClue=saved?.activeClue||null;
   clueRerolls=saved?.clueRerolls??3;clueOptions=saved?.clueOptions||[];clueIndex=saved?.clueIndex||0;
   $('word').value=saved?.draft||'';$('word').disabled=won;document.querySelector('.submit').disabled=won;$('clue').disabled=won;
   $('puzzle-name').textContent=name;$('puzzle-mode').textContent=window.DAILY_MODE?'DAILY CHALLENGE':window.EXTRA_LEVEL?'EXTRA LEVEL '+window.EXTRA_LEVEL:'EXTRA PUZZLE';

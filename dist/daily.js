@@ -2,7 +2,7 @@
 
 // Daily state is intentionally device-local: no account or personal data is needed.
 const DAILY_STORAGE_KEY = 'wordLinksDailyHistoryV1';
-const EXTRA_BEST_STORAGE_KEY = 'wordLinksExtraBestV1';
+const EXTRA_BEST_STORAGE_KEY = 'wordLinksExtraBestV2';
 const EXTRA_COMPLETED_STORAGE_KEY = 'wordLinksExtraCompletedV1';
 const EXTRA_HISTORY_STORAGE_KEY = 'wordLinksExtraHistoryV1';
 const PUZZLE_ASSIGNMENTS_STORAGE_KEY = 'wordLinksPuzzleAssignmentsV1';
@@ -155,6 +155,8 @@ function startExtraLevel(levelNumber) {
 
 function renderLevels() {
   const target = document.getElementById('level-grid');
+  const note = document.querySelector('#levels-modal .level-note');
+  if (note) note.textContent = 'Recommended scores match the 1-point-per-letter system. Lower scores are better.';
   const best = readExtraBest();
   const completed = readExtraCompleted();
   target.innerHTML = EXTRA_LEVELS.map((level, index) => {
@@ -162,7 +164,7 @@ function renderLevels() {
     const score = best[number];
     const unlocked = number === 1 || Boolean(completed[number - 1]);
     const status = completed[number] ? '✓ Completed' : unlocked ? 'Not completed' : `🔒 Complete level ${number - 1} first`;
-    return `<button class="level-card${completed[number] ? ' completed' : ''}${unlocked ? '' : ' locked'}" type="button" data-level="${number}"${unlocked ? '' : ' disabled'}><span class="level-number">${number}</span><span class="level-name">${level.name}</span><span class="level-difficulty">${level.difficulty}</span><span class="level-status">${status}</span><span class="level-best">Best: ${score === undefined ? '—' : `${score} pts`}</span><span class="level-target">Target: ≤ ${level.target} pts</span></button>`;
+    return `<button class="level-card${completed[number] ? ' completed' : ''}${unlocked ? '' : ' locked'}" type="button" data-level="${number}"${unlocked ? '' : ' disabled'}><span class="level-number">${number}</span><span class="level-name">${level.name}</span><span class="level-difficulty">${level.difficulty}</span><span class="level-status">${status}</span><span class="level-best">Best: ${score === undefined ? '—' : `${score} pts`}</span><span class="level-target">Recommended: ≤ ${level.target} pts</span></button>`;
   }).join('');
   target.querySelectorAll('[data-level]').forEach(button => {
     button.addEventListener('click', () => startExtraLevel(Number(button.dataset.level)));
@@ -183,7 +185,7 @@ function recordCompletion(result) {
     writeExtraHistory(levelHistory);
     const level = EXTRA_LEVELS[window.EXTRA_LEVEL - 1];
     const streak=streakFor(readHistory());
-    feedback(`Congratulations! Level ${window.EXTRA_LEVEL} complete. You scored ${result.score} points. ${isBest ? 'New personal best. ' : ''}Target: ${level.target} points. Your daily streak is ${streak} day${streak===1?'':'s'}.`, 'success');
+    feedback(`Congratulations! Level ${window.EXTRA_LEVEL} complete. You scored ${result.score} points. ${isBest ? 'New personal best. ' : ''}Recommended score: ${level.target} points. Your daily streak is ${streak} day${streak===1?'':'s'}.`, 'success');
     renderLevels();
     return;
   }
