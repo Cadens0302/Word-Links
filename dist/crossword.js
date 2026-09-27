@@ -433,6 +433,36 @@ function startMiniDaily() {
   saveMiniSession();
 }
 
+function restartMiniPuzzle() {
+  const currentKey = miniSessionKey();
+  try {
+    localStorage.removeItem(currentKey);
+    if (miniMode === 'daily') localStorage.removeItem(`wordLinksMiniSession:daily:${miniPuzzleDate}`);
+  } catch {}
+  miniResumeState = null;
+  selectedEntry = null;
+  lastMiniClickedCell = null;
+  miniRevealUsed = false;
+  if (miniMode === 'level') {
+    const level = MINI_LEVELS[miniLevel - 1];
+    miniIndex = 0;
+    miniPuzzle = {title:`Level ${miniLevel} · ${level.name}`, entries:[], _laidOut:false};
+    renderMini();
+    document.getElementById('mini-feedback').textContent = `Level ${miniLevel} restarted · ${level.difficulty} · ${level.minLength}–${level.maxLength} letters`;
+  } else {
+    miniPuzzleDate = miniDateKey();
+    miniIndex = miniDailyIndex();
+    miniPuzzle = {...miniDailyPuzzle(miniPuzzleDate), entries:[], _laidOut:false};
+    renderMini();
+    document.getElementById('mini-feedback').textContent = `Daily crossword restarted · ${miniStreak()} day streak`;
+  }
+  document.getElementById('mini-feedback').className = 'mini-feedback';
+  document.getElementById('mini-hint-text').hidden = true;
+  document.getElementById('mini-easier-hint').hidden = true;
+  saveMiniSession();
+  document.querySelector('.mini-cell')?.focus();
+}
+
 
 function openMiniGame() {
   miniPuzzleDate = miniDateKey();
@@ -467,6 +497,14 @@ document.getElementById('mini-game-menu').addEventListener('click', showGameSele
 document.getElementById('mini-close').addEventListener('click', () => { document.getElementById('mini-modal').hidden = true; });
 document.getElementById('mini-check').addEventListener('click', checkMini);
 document.getElementById('mini-daily').addEventListener('click', startMiniDaily);
+const miniRestartButton = document.createElement('button');
+miniRestartButton.id = 'mini-restart';
+miniRestartButton.className = 'secondary restart-puzzle';
+miniRestartButton.type = 'button';
+miniRestartButton.textContent = '↻ Restart puzzle';
+miniRestartButton.setAttribute('aria-label', 'Restart the current Mini Crossword puzzle');
+document.querySelector('.mini-actions')?.append(miniRestartButton);
+miniRestartButton.addEventListener('click', restartMiniPuzzle);
 document.getElementById('mini-levels-open').addEventListener('click', showMiniLevels);
 document.getElementById('mini-levels-close').addEventListener('click',()=>{document.getElementById('mini-levels-modal').hidden=true;});
 document.getElementById('mini-levels-modal').addEventListener('click',event=>{if(event.target.id==='mini-levels-modal')event.currentTarget.hidden=true;});

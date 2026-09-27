@@ -16,6 +16,13 @@ if (selectorSubtitle && !document.getElementById('game-word-count')) {
   total.innerHTML = `<strong>${WORDS.size.toLocaleString()}</strong> words in the Word Links dictionary`;
   selectorSubtitle.insertAdjacentElement('afterend', total);
 }
+const restartWordLinks = document.createElement('button');
+restartWordLinks.id = 'restart-word-links';
+restartWordLinks.className = 'secondary replay restart-puzzle';
+restartWordLinks.type = 'button';
+restartWordLinks.innerHTML = '↻ <span>Restart puzzle</span>';
+restartWordLinks.setAttribute('aria-label', 'Restart the current Word Links puzzle');
+document.querySelector('.intro-actions')?.append(restartWordLinks);
 const DIRECTIONS={R:[0,1],D:[1,0],L:[0,-1],U:[-1,0],H:[0,1],V:[1,0]};
 const directionVector = dir => DIRECTIONS[dir] || DIRECTIONS.R;
 const isVertical = dir => directionVector(dir)[0] !== 0;
