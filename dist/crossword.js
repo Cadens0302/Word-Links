@@ -36,6 +36,13 @@ const MINI_WORDS = [
   ['SUNFLOWER','A tall flower with a large yellow head.'], ['PINEAPPLE','A tropical fruit with spiky leaves on top.']
 ].map(([answer,clue]) => ({answer,clue}));
 
+// Daily crossword answers come from the site's accepted-word dictionary and
+// use its authored clue bank, so every generated entry is both valid and fair.
+const MINI_DAILY_WORDS = Object.entries(WORD_CLUES)
+  .filter(([answer]) => WORDS.has(answer) && answer.length >= 3 && answer.length <= 6)
+  .map(([answer, clue]) => ({answer, clue}));
+const MINI_DAILY_GENERATOR_VERSION = 3;
+
 const MINI_LEVELS = [
   ['First steps','Easy',3,4],['Bright beginnings','Easy',3,4],['Little by little','Easy',3,5],['Word paths','Easy',3,5],['Crossing clues','Easy',4,5],
   ['A longer look','Medium',4,6],['Steady solver','Medium',4,6],['More to discover','Medium',5,6],['Clever crossings','Medium',5,7],['The word trail','Medium',5,7],
@@ -46,6 +53,25 @@ function miniDateKey(date = new Date()) { return puzzleDateKey(date); }
 function miniDailyIndex(date = miniDateKey()) { let hash = 2166136261; for (const char of date) { hash ^= char.charCodeAt(0); hash = Math.imul(hash, 16777619); } return hash >>> 0; }
 function miniDailyPuzzle(date = miniDateKey()) {
   return {title:`Daily Crossword · ${miniDateLabel(date)}`,entries:[]};
+}
+function miniPreviousDailyAnswers(date) {
+  const saved = {mode:miniMode,level:miniLevel,date:miniPuzzleDate,index:miniIndex,puzzle:miniPuzzle};
+  try {
+    miniMode = 'daily';
+    miniLevel = null;
+    miniPuzzleDate = previousPuzzleDate(date);
+    miniIndex = miniDailyIndex(miniPuzzleDate);
+    miniPuzzle = miniDailyPuzzle(miniPuzzleDate);
+    layoutMiniEntries(MINI_DAILY_WORDS);
+    return miniPuzzle.entries.map(entry => entry.answer);
+  } catch { return []; }
+  finally {
+    miniMode = saved.mode;
+    miniLevel = saved.level;
+    miniPuzzleDate = saved.date;
+    miniIndex = saved.index;
+    miniPuzzle = saved.puzzle;
+  }
 }
 function miniDateLabel(date) {
   return new Date(`${date}T12:00:00`).toLocaleDateString(undefined, {
@@ -69,11 +95,11 @@ let miniPuzzleDate = miniDateKey();
 let miniLevel = null;
 let miniRevealUsed = false;
 let miniResumeState = null;
-function miniSessionKey(mode = miniMode, level = miniLevel, date = miniPuzzleDate, title = miniPuzzle?.title) { return mode === 'level' ? `wordLinksMiniSession:level:${level}` : `dailyChallenge:Mini Crossword:${title||'Daily Crossword'}:${date}`; }
+function miniSessionKey(mode = miniMode, level = miniLevel, date = miniPuzzleDate, title = miniPuzzle?.title) { return mode === 'level' ? `wordLinksMiniSession:level:${level}` : `dailyChallenge:Mini Crossword:v${MINI_DAILY_GENERATOR_VERSION}:${title||'Daily Crossword'}:${date}`; }
 function readMiniSession(mode, level, title) {
   try {
-    const date=miniDateKey(), key=miniSessionKey(mode,level,date,title), legacyKey=`wordLinksMiniSession:daily:${date}`;
-    const saved = JSON.parse(localStorage.getItem(key) || (mode==='daily'?localStorage.getItem(legacyKey):null) || 'null');
+    const date=miniDateKey(), key=miniSessionKey(mode,level,date,title);
+    const saved = JSON.parse(localStorage.getItem(key) || 'null');
     return saved?.title === title && Array.isArray(saved.entries) && Array.isArray(saved.answers) ? saved : null;
   } catch { return null; }
 }
@@ -124,11 +150,27 @@ function entryCells(entry) {
 }
 
 function miniSeed() { let hash = 2166136261; const seedDate = miniMode === 'level' ? `level-${miniLevel}` : miniPuzzleDate; for (const char of `${miniPuzzle.title}-${seedDate}-${miniIndex}`) { hash ^= char.charCodeAt(0); hash = Math.imul(hash, 16777619); } return hash >>> 0; }
-function layoutMiniEntries() {
+function layoutMiniEntries(wordPoolOverride = null) {
   let state = miniSeed();
   const random = () => { state = (Math.imul(state,1664525)+1013904223) >>> 0; return state/4294967296; };
   const dirs = [{name:'Across',dr:0,dc:1},{name:'Down',dr:1,dc:0}];
-  const wordPool = miniMode === 'level' ? MINI_WORDS.filter(word => word.answer.length >= MINI_LEVELS[miniLevel-1].minLength && word.answer.length <= MINI_LEVELS[miniLevel-1].maxLength) : miniMode === 'daily' ? MINI_WORDS.filter(word => word.answer.length <= 6) : MINI_WORDS;
+  const wordPool = wordPoolOverride || (miniMode === 'level' ? MINI_WORDS.filter(word => word.answer.length >= MINI_LEVELS[miniLevel-1].minLength && word.answer.length <= MINI_LEVELS[miniLevel-1].maxLength) : miniMode === 'daily' ? MINI_DAILY_WORDS : MINI_WORDS);
+  if (miniMode === 'daily' && !wordPoolOverride) {
+    const previous = miniPreviousDailyAnswers(miniPuzzleDate);
+    if (previous.length) {
+      const previousSet = new Set(previous);
+      const fresh = MINI_DAILY_WORDS.filter(word => !previousSet.has(word.answer));
+      try { layoutMiniEntries(fresh); return; } catch {}
+      // Reuse at most one answer from yesterday, and only if fresh words cannot
+      // make a complete crossword in the available grid.
+      for (const answer of previous) {
+        const repeat = MINI_DAILY_WORDS.find(word => word.answer === answer);
+        if (!repeat) continue;
+        try { layoutMiniEntries([...fresh, repeat]); return; } catch {}
+      }
+      throw new Error('Could not generate a fresh connected crossword.');
+    }
+  }
   const targetCount = miniMode === 'daily' ? 8 : 9;
   const varietyTarget = miniMode === 'daily' ? 4 : 5;
   const key = (row,col) => `${row},${col}`;

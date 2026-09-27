@@ -62,6 +62,10 @@ function validate(text,r,c,dir){
 function alignSelectedStart(text){
   if(!selected||!WORDS.has(text))return;
   const anchor=boardMap().get(`${selected.r},${selected.c}`);
+  if(cells({text,...selected,dir:direction}).some(point=>point.r<0||point.r>14||point.c<0||point.c>14)){
+    feedback('That word will not fit in this direction from the selected square. Choose another starting square or a shorter word.','error');
+    return;
+  }
   if(!anchor||!validate(text,selected.r,selected.c,direction).error)return;
   for(let index=1;index<text.length;index++){
     if(text[index]!==anchor.letter)continue;
@@ -80,7 +84,18 @@ function render(){const inputText=$('word').value.toUpperCase().replace(/[^A-Z]/
   [...$('grid').children].forEach((button,i)=>{const r=Math.floor(i/15),c=i%15,key=r+','+c,old=map.get(key),letter=pm.get(key);button.className='cell';if(old)button.classList.add(old.ids.some(id=>id<2)?'start':'placed');if(letter)button.classList.add(old&&old.letter!==letter?'invalid':'preview');if(clueEnds.has(key))button.classList.add(key===`${activeClue.r},${activeClue.c}`?'clue-start':'clue-end');if(selected&&r===selected.r&&c===selected.c)button.classList.add('selected');button.textContent=old?.letter||letter||'';button.setAttribute('aria-label',`${String.fromCharCode(65+c)}${r+1}${old?', '+old.letter:letter?', preview '+letter:clueEnds.has(key)?', clue endpoint':', empty'}`);button.setAttribute('aria-pressed',String(Boolean(selected&&r===selected.r&&c===selected.c)));});
   $('selection-label').textContent=selected?`Starts at ${String.fromCharCode(65+selected.c)}${selected.r+1}`:'Start at a square';$('cost').textContent=$('word').value?`${$('word').value.length} point${$('word').value.length===1?'':'s'}`:'1 point per letter';$('score').textContent=score;$('link-count').textContent=`${words.length-2} link${words.length===3?'':'s'} placed`;saveGameSession();
 }
-function setDirection(dir){if(!DIRECTIONS[dir])return;direction=dir;for(const value of ['U','D','L','R']){$(`direction-${value}`).classList.toggle('active',dir===value);$(`direction-${value}`).setAttribute('aria-pressed',String(dir===value));}render();}
+function setDirection(dir){
+  if(!DIRECTIONS[dir])return;
+  const text=$('word').value.toUpperCase().replace(/[^A-Z]/g,'');
+  if(selected&&text&&cells({text,...selected,dir}).some(point=>point.r<0||point.r>14||point.c<0||point.c>14)){
+    feedback('You can’t place this word in that direction from this square because it would go past the edge. Choose another starting square or a shorter word.','error');
+    return;
+  }
+  direction=dir;
+  for(const value of ['U','D','L','R']){$(`direction-${value}`).classList.toggle('active',dir===value);$(`direction-${value}`).setAttribute('aria-pressed',String(dir===value));}
+  feedback('','');
+  render();
+}
 function submitWord(text,r,c,dir){if(!Number.isInteger(r)||!Number.isInteger(c)||!DIRECTIONS[dir])return {error:'Choose a starting square and direction.'};text=String(text).trim().toUpperCase();alignSelectedStart(text);if(selected){r=selected.r;c=selected.c;}const result=validate(text,r,c,dir);if(result.error){feedback(result.error,'error');return result;}words.push({text,r,c,dir});score+=result.cost;won=result.bridge;$('word').value='';clearClue();feedback(won?`Connected! You joined ${words[0].text} and ${words[1].text} in ${score} points. ${window.DAILY_MODE?'Your daily result is saved below.':'Your level result is saved below.'}`:`${text} linked. +${result.cost} points. Keep the connection going.`, 'success');$('word').disabled=won;document.querySelector('.submit').disabled=won;$('clue').disabled=won;render();if(won&&typeof window.wordLinksCompleted==='function')window.wordLinksCompleted({score,words:words.map(w=>w.text),mode:window.DAILY_MODE?'daily':'extra',level:window.EXTRA_LEVEL||null});return {word:text,score,complete:won};}
 function seededRandom(seed){let state=2166136261;for(const char of String(seed)){state^=char.charCodeAt(0);state=Math.imul(state,16777619);}return()=>{state+=state<<13;state^=state>>>7;state+=state<<3;state^=state>>>17;state+=state<<5;return (state>>>0)/4294967296;};}
 function randomStartingWords(a,b,seed){const random=seed===undefined?Math.random:seededRandom(seed);for(let attempt=0;attempt<200;attempt++){const first={text:a,r:Math.floor(random()*15),c:Math.floor(random()*(16-a.length)),dir:'H'};const second={text:b,r:Math.floor(random()*15),c:Math.floor(random()*(16-b.length)),dir:'H'};const firstCells=cells(first),secondCells=cells(second);if(first.r===second.r&&firstCells.some(x=>secondCells.some(y=>x.c===y.c)))continue;if(firstCells.some(x=>secondCells.some(y=>Math.abs(x.r-y.r)<=1&&Math.abs(x.c-y.c)<=1)))continue;return [first,second];}return [{text:a,r:1,c:1,dir:'H'},{text:b,r:12,c:7,dir:'H'}];}

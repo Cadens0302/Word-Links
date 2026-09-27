@@ -6,21 +6,10 @@ const EXTRA_BEST_STORAGE_KEY = 'wordLinksExtraBestV2';
 const EXTRA_COMPLETED_STORAGE_KEY = 'wordLinksExtraCompletedV1';
 const EXTRA_HISTORY_STORAGE_KEY = 'wordLinksExtraHistoryV1';
 const PUZZLE_ASSIGNMENTS_STORAGE_KEY = 'wordLinksPuzzleAssignmentsV1';
-const DAILY_LAYOUT_STORAGE_KEY = 'wordLinksDailyLayoutsV1';
-const DAILY_PUZZLES = [
-  ['LIGHT','SOUND','THE FIRST CONNECTION'],
-  ['NIGHT','SHORE','AFTER HOURS'],
-  ['RIVER','GARDEN','GREEN THINGS'],
-  ['BRIDGE','STONE','CROSSING OVER'],
-  ['MUSIC','DANCE','THE RHYTHM'],
-  ['OCEAN','ISLAND','OPEN WATER'],
-  ['PAPER','PENCIL','ON THE PAGE'],
-  ['SIGHT','STONE','A DIFFERENT PERSPECTIVE'],
-  ['CLOUD','WATER','WEATHER WATCH'],
-  ['FOREST','TRAIL','OUT IN THE WOODS'],
-  ['APPLE','BREAD','KITCHEN TABLE'],
-  ['TRAIN','BRIDGE','A JOURNEY BEGINS']
-];
+const DAILY_LAYOUT_STORAGE_KEY = 'wordLinksDailyLayoutsV2';
+const DAILY_STARTER_WORDS = Object.keys(WORD_CLUES)
+  .filter(word => WORDS.has(word) && word.length >= 3 && word.length <= 8)
+  .sort();
 
 function todayKey() { return puzzleDateKey(); }
 
@@ -94,12 +83,24 @@ function writeDailyLayouts(layouts) {
   try { localStorage.setItem(DAILY_LAYOUT_STORAGE_KEY, JSON.stringify(layouts)); } catch {}
 }
 
-function dailyPuzzleFor(date) {
+function dailyPuzzleWordsFor(date, avoid = []) {
   let hash = 0;
   for (const char of date) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
-  // A date-seeded pick creates a fresh, shared pair without changing during the day.
-  hash = Math.imul(hash ^ 0x9e3779b9, 1664525) + 1013904223;
-  const [first, second] = DAILY_PUZZLES[(hash >>> 0) % DAILY_PUZZLES.length];
+  let state = (Math.imul(hash ^ 0x9e3779b9, 1664525) + 1013904223) >>> 0;
+  const random = () => { state = (Math.imul(state, 1664525) + 1013904223) >>> 0; return state / 4294967296; };
+  const words = [...DAILY_STARTER_WORDS];
+  for (let i = words.length - 1; i > 0; i--) {
+    const j = Math.floor(random() * (i + 1));
+    [words[i], words[j]] = [words[j], words[i]];
+  }
+  // Avoid both of yesterday's starters, so every fresh daily board has a new pair.
+  const fresh = words.filter(word => !avoid.includes(word));
+  return fresh.length >= 2 ? fresh.slice(0, 2) : words.slice(0, 2);
+}
+
+function dailyPuzzleFor(date) {
+  const yesterday = dailyPuzzleWordsFor(previousPuzzleDate(date));
+  const [first, second] = dailyPuzzleWordsFor(date, yesterday);
   return [first, second, `Daily Connection · ${dailyDateLabel(date)}`];
 }
 
@@ -131,7 +132,7 @@ function startDaily() {
   window.DAILY_MODE = true;
   const date = todayKey();
   window.DAILY_PUZZLE = dailyPuzzleFor(date);
-  window.DAILY_SEED = `daily-${date}`;
+  window.DAILY_SEED = `daily-v2-${date}`;
   const layouts = readDailyLayouts();
   window.DAILY_LAYOUT = Array.isArray(layouts[date]) ? layouts[date] : null;
   window.EXTRA_LEVEL = null;
