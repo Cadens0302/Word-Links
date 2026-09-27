@@ -25,6 +25,20 @@ restartWordLinks.type = 'button';
 restartWordLinks.innerHTML = '↻ <span>Restart puzzle</span>';
 restartWordLinks.setAttribute('aria-label', 'Restart the current Word Links puzzle');
 document.querySelector('.intro-actions')?.append(restartWordLinks);
+const streakLine = document.querySelector('.streak-line');
+if (streakLine) {
+  const missionActions = document.createElement('div');
+  missionActions.className = 'mission-actions';
+  streakLine.replaceWith(missionActions);
+  missionActions.append(streakLine);
+  const nextPuzzle = document.createElement('button');
+  nextPuzzle.id = 'next-extra-puzzle';
+  nextPuzzle.className = 'next-extra-puzzle';
+  nextPuzzle.type = 'button';
+  nextPuzzle.textContent = 'Move on to next puzzle';
+  nextPuzzle.hidden = true;
+  missionActions.append(nextPuzzle);
+}
 const DIRECTIONS={R:[0,1],D:[1,0],L:[0,-1],U:[-1,0],H:[0,1],V:[1,0]};
 const directionVector = dir => DIRECTIONS[dir] || DIRECTIONS.R;
 const isVertical = dir => directionVector(dir)[0] !== 0;

@@ -51,6 +51,22 @@ function writeExtraCompleted(completed) {
   try { localStorage.setItem(EXTRA_COMPLETED_STORAGE_KEY, JSON.stringify(completed)); } catch {}
 }
 
+function updateNextExtraPuzzleButton() {
+  const button = document.getElementById('next-extra-puzzle');
+  if (!button) return;
+  const level = Number(window.EXTRA_LEVEL);
+  const isExtraLevel = !window.DAILY_MODE && level > 0;
+  button.hidden = !isExtraLevel;
+  if (!isExtraLevel) return;
+  const completed = Boolean(readExtraCompleted()[level]);
+  const isFinalLevel = level >= EXTRA_LEVELS.length;
+  button.textContent = isFinalLevel && completed ? 'All extra puzzles complete' : 'Move on to next puzzle';
+  button.disabled = !completed || isFinalLevel;
+  button.title = completed
+    ? isFinalLevel ? 'You completed every extra puzzle.' : `Open Level ${level + 1}`
+    : 'Complete this level to unlock the next puzzle.';
+}
+
 function readExtraHistory() {
   try { return JSON.parse(localStorage.getItem(EXTRA_HISTORY_STORAGE_KEY) || '[]'); }
   catch { return []; }
@@ -122,6 +138,7 @@ function startDaily() {
   window.EXTRA_PUZZLE = null;
   window.EXTRA_SEED = null;
   startGame();
+  updateNextExtraPuzzleButton();
   if (!layouts[date] && Array.isArray(window.STARTING_WORDS)) {
     layouts[date] = window.STARTING_WORDS;
     writeDailyLayouts(layouts);
@@ -147,6 +164,7 @@ function startExtraLevel(levelNumber) {
   window.EXTRA_PUZZLE = [...level.puzzles[puzzleIndex], level.name];
   window.EXTRA_SEED = `level-${levelNumber}`;
   startGame();
+  updateNextExtraPuzzleButton();
   document.getElementById('levels-modal').hidden = true;
   document.getElementById('history-modal').hidden = true;
   document.getElementById('welcome-modal').hidden = true;
@@ -187,6 +205,7 @@ function recordCompletion(result) {
     const streak=streakFor(readHistory());
     feedback(`Congratulations! Level ${window.EXTRA_LEVEL} complete. You scored ${result.score} points. ${isBest ? 'New personal best. ' : ''}Recommended score: ${level.target} points. Your daily streak is ${streak} day${streak===1?'':'s'}.`, 'success');
     renderLevels();
+    updateNextExtraPuzzleButton();
     return;
   }
   if (!window.DAILY_MODE) return;
@@ -201,6 +220,11 @@ function recordCompletion(result) {
 }
 
 window.wordLinksCompleted = recordCompletion;
+document.getElementById('next-extra-puzzle')?.addEventListener('click', () => {
+  const level = Number(window.EXTRA_LEVEL);
+  if (!level || level >= EXTRA_LEVELS.length || !readExtraCompleted()[level]) return;
+  startExtraLevel(level + 1);
+});
 
 function renderHistory(section = 'all') {
   const target = document.getElementById('history-list');
