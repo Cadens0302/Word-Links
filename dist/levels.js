@@ -52,3 +52,15 @@ for (let index = EXTRA_LEVELS.length; index < 50; index++) {
   const difficulty = index < 25 ? 'Hard' : index < 40 ? 'Expert' : 'Master';
   EXTRA_LEVELS.push({name:ADDITIONAL_LEVEL_NAMES[index - 15], difficulty, target:50 + (index - 14) * 3, puzzles});
 }
+
+// Register vocabulary introduced by all 50 levels before crossword setup and
+// refresh the choose-screen count after the complete Word Links bank exists.
+for (const level of EXTRA_LEVELS) {
+  for (const pair of level.puzzles) {
+    for (const word of pair) WORDS.add(word);
+  }
+}
+if (typeof document !== 'undefined') {
+  const dictionaryCount = document.querySelector('#game-word-count strong');
+  if (dictionaryCount) dictionaryCount.textContent = WORDS.size.toLocaleString();
+}
