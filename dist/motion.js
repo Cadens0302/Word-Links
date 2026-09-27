@@ -17,3 +17,28 @@ function animateGameEntrance(game) {
     gameEntranceAnimations.set(element, animation);
   });
 }
+
+function replayMotion(element, className) {
+  if (!element || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  element.classList.remove(className);
+  void element.offsetWidth;
+  element.classList.add(className);
+}
+
+document.addEventListener('click', event => {
+  const control = event.target.closest('button:not(:disabled), a, summary, .cell, .mini-cell');
+  if (control) replayMotion(control, 'motion-pop');
+});
+
+document.addEventListener('input', event => {
+  if (event.target.matches('.mini-cell')) replayMotion(event.target, 'motion-fill');
+});
+
+const motionObserver = new MutationObserver(records => {
+  for (const record of records) {
+    const element = record.target.nodeType === Node.TEXT_NODE ? record.target.parentElement : record.target;
+    const message = element.closest?.('.feedback, .mini-feedback, .score-line strong, .mini-progress-line strong');
+    if (message) replayMotion(message, 'motion-update');
+  }
+});
+motionObserver.observe(document.body, { subtree: true, childList: true, characterData: true });
