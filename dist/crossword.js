@@ -49,6 +49,17 @@ const MINI_LEVELS = [
   ['Brain stretch','Hard',6,7],['Thoughtful links','Hard',6,8],['Expert eyes','Hard',7,8],['Deep crossword','Hard',7,9],['Master puzzle','Expert',8,9]
 ].map(([name,difficulty,minLength,maxLength])=>({name,difficulty,minLength,maxLength}));
 
+// Easier hints explain the answer in everyday language without spelling it out.
+const MINI_EASY_HINTS = {
+  GARDEN:"People plant tomatoes, pull weeds, and water flower beds here.", GARDENS:"Carrots and roses are often grown in these plots.", STAR:"Astronomers group these into patterns called constellations.", ALSO:"In “I like the book, and I ___ like the film,” fill in this word.", HAT:"A cap, beanie, or sunhat is one.", KEY:"Turn this in a lock when you want to open a door.", MAP:"It may show a compass rose and a scale for measuring distance.",
+  RIVER:"A bridge may take you over one, and it may flow into a sea.", FLOWER:"A bee may visit one, and a bouquet is made of them.", TREE:"Birds may nest among its branches; its trunk has bark.", LEAF:"In autumn, many turn yellow, orange, or red.", ROOT:"Carrots and beets are examples of edible ones.", SEED:"Put one in soil and water it to start a plant.", STEM:"A florist trims this part before putting a bloom in a vase.", ROSE:"Its stem often has thorns, and red is a familiar color for it.", TULIP:"This spring bloom is strongly associated with the Netherlands.", DAISY:"People sometimes pluck its petals while saying “loves me, loves me not.”", GRASS:"You might mow it on a weekend.", FOREST:"Deer, birds, and squirrels may all live among its trees.", OCEAN:"Whales, coral reefs, and deep-sea trenches are found here.", LAKE:"People may go boating or fishing on one, with land all around.", POND:"A lily pad or a frog may float in one.", STREAM:"You might hear this trickling beside a hiking path.", BEACH:"People build sandcastles and look for shells here.", ISLAND:"A boat or plane may be the only way to reach one.", HILL:"You may roll down one or climb to its top.", VALLEY:"A river often winds through the low ground between the slopes.", CLOUD:"A plane can fly through one, and it may bring rain.", RAIN:"People carry umbrellas to avoid getting wet from this.", SNOW:"Children may make a snowman after this falls.", WIND:"It can turn a pinwheel or fill a sail.", STORM:"Lightning and thunder may arrive with this weather.", SUN:"Earth orbits this, and plants need its light.", MOON:"It changes shape in the sky over the course of a month.", SPACE:"Astronauts travel here in rockets.", EARTH:"It is the third planet from the Sun.", FIRE:"A campfire can toast marshmallows, but never leave one unattended.", WATER:"A glass of this is often offered when someone is thirsty.", ICE:"Skates glide across this when a pond freezes.", AIR:"A balloon fills with this invisible mixture.", SAND:"A handful of this slips between your fingers at the shore.", STONE:"You might skip a flat one across a pond.",
+  BRIDGE:"The Golden Gate is a famous example of this structure.", ROAD:"Drivers follow painted lanes along this route.", PATH:"A garden may have a stepping-stone one winding through it.", TRAIL:"Hikers follow colored markers along one in a park.", TRAIN:"It stops at stations and pulls a line of passenger cars.", BOAT:"It may have oars, a sail, or a motor.", SHIP:"A captain steers this large vessel across the ocean.", PLANE:"Passengers buckle their seat belts before takeoff in one.", CAR:"A steering wheel and pedals help you control one.", BIKE:"A helmet and two wheels are clues to this ride.", HOUSE:"It may have a front porch, a chimney, and several rooms.", HOME:"People often say “there’s no place like ___.”", DOOR:"A knob or handle helps you open this.", WINDOW:"Curtains hang on either side of this opening.", ROOF:"Rain runs off this top part into gutters.", ROOM:"A bedroom and kitchen are each one of these.", CHAIR:"A table is often surrounded by several of these seats.", TABLE:"People gather around this for dinner or homework.", BED:"A pillow and blanket usually go on this.", LAMP:"A switch turns this bedside object on and off.", BOOK:"A library lends these, and a reader turns their pages.", PAGE:"An author’s words fill one side of this sheet.", STORY:"It may begin “Once upon a time.”", POEM:"Its lines may rhyme, though they do not have to.", PEN:"A signature is often written with this ink tool.", PENCIL:"A sharpener makes its point ready for writing.", PAPER:"A printer feeds sheets of this into its tray.", WORD:"A sentence is made from several of these.", LETTER:"A mailbox may deliver one written to you.", MUSIC:"A melody and beat combine to make this sound.", SONG:"A chorus is the part people often sing along to.", DANCE:"At a wedding, guests may move to the band’s rhythm.", PIANO:"A pianist presses keys with both hands.", DRUM:"A drummer keeps the beat by striking this instrument.", BELL:"A school may ring this to signal the end of class.", CLOCK:"Its hands may point to the hour and minute.", TIME:"A calendar and a watch help people keep track of this.", DAY:"It starts at midnight and ends at the next midnight.", NIGHT:"Stars are easiest to spot during this part of the day.", YEAR:"People celebrate a birthday once during each of these.", SPRING:"This season follows winter; many trees begin to bud.", SUMMER:"School vacations and long sunny afternoons often happen then.", WINTER:"Coats, scarves, and hot cocoa are common during this season.",
+  APPLE:"A pie made with cinnamon often uses this fruit.", PEAR:"Its shape is wide at the bottom and narrow at the top.", PEACH:"Its fuzzy skin surrounds a large stone-like pit.", GRAPE:"A bunch of these can be green or purple; dried ones are raisins.", LEMON:"A wedge of this sour fruit is often served with tea or fish.", BREAD:"Toast and sandwiches are commonly made from slices of this.", CAKE:"Candles are often placed on top at a birthday party.", SOUP:"People may dip crackers or bread into a bowl of this.", SALT:"A tiny pinch of this can bring out the flavor in food.", SUGAR:"People stir this into coffee to make it sweeter.", HONEY:"A bear in a story might look for a jar of this.", MILK:"Cows produce this; people often pour it over cereal.", TEA:"A tea bag steeps in hot water to make this drink.", CUP:"A handle often helps you hold this while drinking.", SPOON:"This utensil has a rounded bowl at one end.", FORK:"Its tines help pick up pieces of food.", PLATE:"A dinner setting usually puts one at each seat.",
+  CAT:"It may chase a ball of yarn and nap in a sunny spot.", DOG:"It may fetch a stick when you throw it.", BIRD:"A nest is where many of these lay their eggs.", FISH:"Gills help it breathe underwater.", HORSE:"A saddle is placed on its back for a rider.", SHEEP:"A shepherd may care for a flock of these.", GOAT:"It may climb rocky slopes and nibble anything nearby.", DUCK:"It may paddle across a pond and say “quack.”", FROG:"It catches insects with a long, sticky tongue.", BEAR:"It may hibernate in a den during winter.", FOX:"In fables, this clever animal often outsmarts others.", WOLF:"Its howl can be heard across a forest at night.", LION:"In a zoo, you may recognize the male by his mane.", TIGER:"Its striped coat helps it blend into tall grasses.", OWL:"Its large eyes help it hunt after dark.", EAGLE:"This bird’s nest is called an eyrie.", BEE:"It carries pollen between blossoms and makes honey.", ANT:"A picnic crumb can attract a whole trail of these insects.", WORM:"After rain, one may wriggle across the sidewalk.", SHELL:"A beachcomber might find one left behind by a snail.", WING:"Birds flap these; airplanes have them too.", TAIL:"A dog may wag this when it is excited.", HAND:"You clap by bringing these together.", FOOT:"A shoe goes on this body part.", EYE:"You blink this body part to keep it moist.", EAR:"An earring may hang from this part of your head.", NOSE:"A tissue may be used to wipe this part of your face.", HEART:"A doctor listens to this organ with a stethoscope.", SMILE:"People often show this in a happy photograph.", DREAM:"The strange scenes in your sleep may be one of these.", HOPE:"“I think it will work out” expresses this feeling.", LOVE:"A heart symbol is often used to represent this feeling.", FRIEND:"You might invite this person over to play or talk.", KIND:"Someone who shares and helps others is acting this way.", BRAVE:"A firefighter entering a rescue is showing this quality.", CALM:"Take a slow breath to feel more like this.", HAPPY:"A celebration may leave you feeling this way.", QUIET:"A library asks visitors to keep their voices this way.", QUICK:"A rabbit is known for moving this way.", SLOW:"A turtle is famous for moving this way.",
+  GREEN:"A traffic light uses this color to say “go.”", BLUE:"Mixing this color with yellow makes green.", RED:"A stop sign is usually painted this color.", GOLD:"Olympic winners often receive a medal made to look like this metal.", SILVER:"A second-place medal is often made to look like this metal.", WHITE:"A blank sheet and a wedding dress are often this color.", BLACK:"A chalkboard or a raven is often this color.", LIGHT:"A lamp produces this so you can read after dark.", SOUND:"A bell ringing or a dog barking makes this.", SHORE:"Waves break against the edge of land here.", SIGHT:"A person who can use their eyes has this sense.", NORTH:"On most maps, this direction is at the top.", SOUTH:"On a U.S. map, Florida is far in this direction.", EAST:"On a map of the U.S., the Atlantic coast is on this side.", WEST:"On a map of the U.S., California is on this side.",
+  KITE:"A long string keeps this toy from blowing away.", BOOKS:'You read these collections of pages.', ORANGE:"Peel this fruit before eating its juicy segments.", RABBIT:"It may thump the ground with its back feet.", WINDOW:"Curtains hang on either side of this opening.", TURTLE:"It can pull its head and legs inside its shell.", BASKET:"A handle makes this container easy to carry.", RAINBOW:"Its arc can show red, orange, yellow, green, blue, and violet.", BALLOON:"At a party, these are often tied to a chair with ribbon.", BICYCLE:"Pedaling turns its chain and rear wheel.", DOLPHIN:"It leaps above waves and communicates with clicks.", KITCHEN:"A stove, sink, and refrigerator are usually found here.", PENGUIN:"It cannot fly, but it can swim quickly in icy water.", GIRAFFE:"Its long neck helps it reach leaves high in trees.", LIBRARY:"Visitors can borrow books and return them here.", PANCAKE:"Maple syrup is often poured over a stack of these.", FEATHER:"It may drift down when a bird molts.", ELEPHANT:"Its trunk can pick up food and spray water.", UMBRELLA:"Open this over yourself before walking through a downpour.", SANDWICH:"A lunchbox favorite often has filling between two slices.", MOUNTAIN:"Climbers may need ropes and a base camp to reach its summit.", NOTEBOOK:"Students write class notes between its covers.", FOOTBALL:"A quarterback throws this oval ball to a teammate.", BACKPACK:"Shoulder straps help carry school supplies in this bag.", SNOWFLAKE:"Under a microscope, each one has a delicate icy pattern.", BUTTERFLY:"It begins as a caterpillar before growing colorful wings.", CHOCOLATE:"It may be eaten as a bar or melted into a cake.", SUNFLOWER:"Its large yellow head holds seeds that birds like to eat.", PINEAPPLE:"Twist off its leafy crown before slicing the tropical fruit."
+};
+
 function miniDateKey(date = new Date()) { return puzzleDateKey(date); }
 function miniDailyIndex(date = miniDateKey()) { let hash = 2166136261; for (const char of date) { hash ^= char.charCodeAt(0); hash = Math.imul(hash, 16777619); } return hash >>> 0; }
 function miniDailyPuzzle(date = miniDateKey()) {
@@ -82,6 +93,10 @@ function miniHistory() { try { return JSON.parse(localStorage.getItem('wordLinks
 function miniLevelProgress() { try { return JSON.parse(localStorage.getItem('wordLinksMiniLevelProgress') || '{}'); } catch { return {}; } }
 function saveMiniLevelProgress(progress) { localStorage.setItem('wordLinksMiniLevelProgress', JSON.stringify(progress)); }
 function miniStreak() { return streakFor(miniHistory(), miniDateKey()); }
+function updateMiniChallengeStreak() {
+  const line = document.getElementById('mini-challenge-streak');
+  if (line) line.textContent = `${miniStreak()} day streak`;
+}
 function recordMiniSolved() { const date = miniPuzzleDate; const history = miniHistory(); if (!history.some(item => item.date === date)) { history.unshift({date, gameType:'Mini Crossword', challengeName:miniPuzzle.title, title:miniPuzzle.title}); localStorage.setItem('wordLinksMiniHistory', JSON.stringify(history.slice(0, 60))); } return miniStreak(); }
 function renderMiniHistory() { const panel = document.getElementById('mini-history-panel'); const daily = miniHistory().map(item => ({...item, label:item.gameType||'Mini Crossword'})); const levels = (miniLevelProgress().history || []).map(item => ({...item, label:`Mini Crossword · Level ${item.level}`})); const history = [...daily,...levels].sort((a,b)=>b.date.localeCompare(a.date)); panel.innerHTML = history.length ? `<strong>Crossword history</strong><br>${history.slice(0, 10).map(item => `${item.date} · ${item.label} · ${item.challengeName||item.title}`).join('<br>')}<br><strong>${miniStreak()} day daily streak</strong>` : 'No completed mini puzzles yet.'; }
 
@@ -247,16 +262,27 @@ function layoutMiniEntries(wordPoolOverride = null) {
   miniPuzzle.entries=best;
 }
 
+function numberMiniEntries(entries) {
+  const ordered = [...entries].sort((a,b) => a.row-b.row || a.col-b.col || (a.dir === b.dir ? 0 : a.dir === 'Across' ? -1 : 1));
+  ordered.forEach((entry,index) => { entry.number = index + 1; });
+}
+
+function miniDirectionArrow(entry) { return entry.dir === 'Left' ? '←' : entry.dir === 'Across' || entry.dir === 'Right' ? '→' : '↓'; }
+function miniArrowPlacement(entry) { return entry.dir === 'Left' ? 'left' : entry.dir === 'Across' || entry.dir === 'Right' ? 'right' : 'down'; }
+
 function renderMini() {
   resetMiniReveal();
   if (!miniPuzzle._laidOut) { layoutMiniEntries(); miniPuzzle._laidOut = true; }
+  numberMiniEntries(miniPuzzle.entries);
   const grid = document.getElementById('mini-grid');
   grid.innerHTML = '';
   miniCells = [];
   const starts = new Map();
   const rows = Array.from({length:MINI_SIZE},()=>Array(MINI_SIZE).fill(' '));
   miniPuzzle.entries.forEach(entry=>{
-    starts.set(`${entry.row},${entry.col}`,entry.id);
+    const startKey = `${entry.row},${entry.col}`;
+    if (!starts.has(startKey)) starts.set(startKey, []);
+    starts.get(startKey).push(entry);
     entryCells(entry).forEach(({row,col},i)=>{ if(row>=0&&row<MINI_SIZE&&col>=0&&col<MINI_SIZE) rows[row][col]=entry.answer[i]; });
   });
   rows.forEach((row, r) => row.forEach((value, c) => {
@@ -266,8 +292,16 @@ function renderMini() {
     cell.className = value === ' ' ? 'mini-block' : 'mini-cell';
     cell.dataset.row = r;
     cell.dataset.col = c;
-    const number = starts.get(`${r},${c}`);
-    if (number) { const label = document.createElement('span'); label.className = 'mini-number'; label.textContent = number.replace(/[a-z]+$/i, ''); square.append(label); }
+    const startEntries = starts.get(`${r},${c}`) || [];
+    startEntries.forEach(entry => {
+      const label = document.createElement('span');
+      label.className = `mini-number mini-number-${entry.dir.toLowerCase()}`;
+      if (startEntries.length > 1 && entry.dir === 'Down') label.classList.add('mini-number-secondary');
+      label.dataset.direction = entry.dir;
+      label.dataset.arrow = miniArrowPlacement(entry);
+      label.innerHTML = `<span class="mini-number-value">${entry.number}</span><span class="mini-number-arrow" aria-hidden="true">${miniDirectionArrow(entry)}</span>`;
+      square.append(label);
+    });
     if (value !== ' ') {
       cell.maxLength = 1;
       cell.autocomplete = 'off';
@@ -381,10 +415,14 @@ function highlightEntryAt(row, col) {
   if (entry) highlightEntry(entry);
 }
 
+function miniEasyHint(entry) {
+  return MINI_EASY_HINTS[entry.answer] || entry.clue;
+}
+
 function renderMiniClues() {
   for (const direction of ['Across', 'Down']) {
     const list = document.getElementById(direction === 'Across' ? 'mini-across' : 'mini-down');
-    list.innerHTML = miniPuzzle.entries.filter(entry => entry.dir === direction).map(entry => `<div class="mini-clue-row" style="grid-template-columns:minmax(0,1fr) 32px 20px"><button class="mini-clue" type="button" data-entry="${entry.id}"><strong>${entry.id.replace(/[a-z]+$/i,'')}</strong> ${entry.clue} <span class="mini-length">(${entry.answer.length})</span></button><button class="mini-clue-toggle" type="button" aria-label="Show a better hint for clue ${entry.id.replace(/[a-z]+$/i,'')}" aria-expanded="false">▸</button><span class="mini-clue-check" style="display:none;place-items:center;width:20px;height:30px;color:#5c7837;font-size:17px;font-weight:bold" data-entry-check="${entry.id}" role="img" aria-label="Completed">✓</span><span class="mini-better-hint" hidden><span>It starts with ${entry.answer[0]} and has ${entry.answer.length} letters.</span><button class="mini-reveal-word secondary" type="button" data-mini-reveal="${entry.id}" hidden style="display:block;width:100%;margin-top:7px;padding:8px 10px;border:1px solid #c9c0ae;border-radius:6px;background:rgba(255,254,250,.55);color:var(--ink);cursor:pointer;font-size:11px">${miniRevealUsed?'Word reveal used for this puzzle':'Reveal this word · 1 use for this puzzle'}</button></span></div>`).join('');
+    list.innerHTML = miniPuzzle.entries.filter(entry => entry.dir === direction).map(entry => `<div class="mini-clue-row" style="grid-template-columns:minmax(0,1fr) 32px 20px"><button class="mini-clue" type="button" data-entry="${entry.id}" aria-label="${direction} clue ${entry.number}: ${entry.clue} (${entry.answer.length} letters)"><strong class="mini-clue-label" data-arrow="${miniArrowPlacement(entry)}"><span>${entry.number}</span><span class="mini-clue-arrow" aria-hidden="true">${miniDirectionArrow(entry)}</span></strong> ${entry.clue} <span class="mini-length">(${entry.answer.length})</span></button><button class="mini-clue-toggle" type="button" aria-label="Show a better hint for ${direction} clue ${entry.number}" aria-expanded="false">▸</button><span class="mini-clue-check" style="display:none;place-items:center;width:20px;height:30px;color:#5c7837;font-size:17px;font-weight:bold" data-entry-check="${entry.id}" role="img" aria-label="Completed">✓</span><span class="mini-better-hint" hidden><span class="mini-easy-hint"></span><button class="mini-reveal-word secondary" type="button" data-mini-reveal="${entry.id}" hidden style="display:block;width:100%;margin-top:7px;padding:8px 10px;border:1px solid #c9c0ae;border-radius:6px;background:rgba(255,254,250,.55);color:var(--ink);cursor:pointer;font-size:11px">${miniRevealUsed?'Word reveal used for this puzzle':'Reveal this word · 1 use for this puzzle'}</button></span></div>`).join('');
     list.querySelectorAll('.mini-clue').forEach(button => button.addEventListener('click', () => {
       const entry = miniPuzzle.entries.find(item => item.id === button.dataset.entry);
       highlightEntry(entry);
@@ -395,6 +433,11 @@ function renderMiniClues() {
       const row = button.closest('.mini-clue-row');
       const hint = row.querySelector('.mini-better-hint');
       const expanded = button.getAttribute('aria-expanded') === 'true';
+      if (!expanded) {
+        const clueId = row.querySelector('.mini-clue').dataset.entry;
+        const entry = miniPuzzle.entries.find(item => item.id === clueId);
+        if (entry) row.querySelector('.mini-easy-hint').textContent = `Hint: ${miniEasyHint(entry)}`;
+      }
       document.querySelectorAll('.mini-clue-toggle[aria-expanded="true"]').forEach(openButton => {
         if (openButton === button) return;
         openButton.setAttribute('aria-expanded', 'false');
@@ -430,7 +473,7 @@ function checkMini() {
     else cell?.classList.remove('mini-wrong');
   }));
   const feedback = document.getElementById('mini-feedback');
-  if (complete && miniMode === 'level') { const progress=miniLevelProgress(); progress.completed=progress.completed||{}; progress.best=progress.best||{}; progress.history=progress.history||[]; progress.completed[miniLevel]=true; progress.best[miniLevel]=Math.min(progress.best[miniLevel]??Infinity,filledMiniCells()); progress.history.push({date:miniDateKey(),level:miniLevel,title:miniPuzzle.title}); saveMiniLevelProgress(progress); feedback.textContent=`Congratulations! Level ${miniLevel} complete. ${miniLevel<MINI_LEVELS.length?'The next level is unlocked.':'You completed every crossword level!'} Your daily mini streak is ${miniStreak()} day${miniStreak()===1?'':'s'}.`; renderMiniLevels(); } else if (complete) { const streak = recordMiniSolved(); feedback.textContent = `Congratulations! You solved today’s crossword. Your daily streak is ${streak} day${streak===1?'':'s'}.`; } else feedback.textContent = 'Keep going—red squares need another look.';
+  if (complete && miniMode === 'level') { const progress=miniLevelProgress(); progress.completed=progress.completed||{}; progress.best=progress.best||{}; progress.history=progress.history||[]; progress.completed[miniLevel]=true; progress.best[miniLevel]=Math.min(progress.best[miniLevel]??Infinity,filledMiniCells()); progress.history.push({date:miniDateKey(),level:miniLevel,title:miniPuzzle.title}); saveMiniLevelProgress(progress); feedback.textContent=`Congratulations! Level ${miniLevel} complete. ${miniLevel<MINI_LEVELS.length?'The next level is unlocked.':'You completed every crossword level!'} Your daily mini streak is ${miniStreak()} day${miniStreak()===1?'':'s'}.`; renderMiniLevels(); } else if (complete) { const streak = recordMiniSolved(); updateMiniChallengeStreak(); feedback.textContent = `Congratulations! You solved today’s crossword. Your daily streak is ${streak} day${streak===1?'':'s'}.`; } else feedback.textContent = 'Keep going—red squares need another look.';
   feedback.className = `mini-feedback${complete ? ' success' : ''}`;
   renderMiniHistory();
   saveMiniSession();
@@ -523,6 +566,7 @@ function openMiniGame() {
   miniPuzzle={...puzzle,entries:miniResumeState?miniResumeState.entries:[],_laidOut:Boolean(miniResumeState)};
   renderMini();
   const streak = miniStreak();
+  updateMiniChallengeStreak();
   document.getElementById('mini-welcome-streak').textContent = `Your daily crossword streak is ${streak} day${streak === 1 ? '' : 's'}.`;
   document.getElementById('mini-modal').hidden = false;
   document.getElementById('mini-welcome').hidden = false;
@@ -545,7 +589,6 @@ function showGameSelector() {
 
 document.getElementById('game-menu').addEventListener('click', showGameSelector);
 document.getElementById('mini-game-menu').addEventListener('click', showGameSelector);
-document.getElementById('mini-close').addEventListener('click', () => { document.getElementById('mini-modal').hidden = true; });
 document.getElementById('mini-check').addEventListener('click', checkMini);
 document.getElementById('mini-daily').addEventListener('click', startMiniDaily);
 const miniRestartButton = document.createElement('button');
@@ -554,13 +597,13 @@ miniRestartButton.className = 'secondary restart-puzzle';
 miniRestartButton.type = 'button';
 miniRestartButton.textContent = '↻ Restart puzzle';
 miniRestartButton.setAttribute('aria-label', 'Restart the current Mini Crossword puzzle');
-document.querySelector('.mini-actions')?.append(miniRestartButton);
+document.querySelector('.mini-header-actions')?.append(miniRestartButton);
 miniRestartButton.addEventListener('click', restartMiniPuzzle);
 document.getElementById('mini-levels-open').addEventListener('click', showMiniLevels);
 document.getElementById('mini-levels-close').addEventListener('click',()=>{document.getElementById('mini-levels-modal').hidden=true;});
 document.getElementById('mini-levels-modal').addEventListener('click',event=>{if(event.target.id==='mini-levels-modal')event.currentTarget.hidden=true;});
 document.getElementById('mini-welcome-start').addEventListener('click',startMiniDaily);
-document.getElementById('mini-welcome-close').addEventListener('click', () => { document.getElementById('mini-welcome').hidden = true; animateGameEntrance('mini'); });
+document.getElementById('mini-welcome-close').addEventListener('click', () => { document.getElementById('mini-welcome').hidden = true; });
 document.getElementById('mini-welcome-levels').addEventListener('click',showMiniLevels);
 document.getElementById('mini-history-button').addEventListener('click', () => {
   const panel = document.getElementById('mini-history-panel');
@@ -583,5 +626,6 @@ window.addEventListener('daily-reset', () => {
     document.getElementById('mini-feedback').textContent = 'A new daily crossword is ready. Daily puzzles reset at 12:00 AM local time.';
   }
   const streak = miniStreak();
+  updateMiniChallengeStreak();
   document.getElementById('mini-welcome-streak').textContent = `Your daily crossword streak is ${streak} day${streak === 1 ? '' : 's'}.`;
 });

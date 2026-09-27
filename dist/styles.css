@@ -7,3 +7,4 @@
 #game-menu{position:absolute;right:48px;top:50%;transform:translateY(-50%);display:grid;place-items:center;width:42px;height:42px;padding:0;border:1px solid var(--ink);border-radius:50%;background:transparent;color:var(--ink);font-size:23px;line-height:1;letter-spacing:0;text-transform:none}
 #game-menu:hover,#game-menu:focus-visible{background:#eef1e5;border-color:#92a263}
 @media(max-width:800px){.masthead{display:flex;justify-content:center}#game-menu{right:18px}}
+
