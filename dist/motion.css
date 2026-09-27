@@ -1,0 +1,70 @@
+/* Hidden controls stay hidden even when a component uses display: flex/grid. */
+[hidden] { display: none !important; }
+.direction { gap: 3px; }
+.direction button { padding: 8px 2px; font-size: 11px; white-space: nowrap; }
+
+@keyframes room-appear {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes room-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes room-check {
+  from { opacity: 0; transform: scale(.65); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .masthead, .rules, .word-bank, footer {
+    animation: room-rise 360ms ease-out both;
+  }
+  .modal-backdrop, .game-selector-modal, .mini-modal {
+    animation: none;
+    opacity: 1;
+  }
+  .game-selector-modal > .eyebrow, .game-selector-modal > h2,
+  .game-selector-modal > .modal-subtitle {
+    animation: room-rise 280ms ease-out;
+  }
+  .modal:not(.game-selector-modal):not(.mini-modal) {
+    animation: room-rise 280ms ease-out;
+  }
+  .game-choice, .level-card, .history-row {
+    animation: room-rise 300ms ease-out both;
+  }
+  .game-choice:nth-child(2), .level-card:nth-child(3n + 2) { animation-delay: 45ms; }
+  .level-card:nth-child(3n) { animation-delay: 90ms; }
+  button, a, summary, input {
+    transition: background-color 160ms ease, border-color 160ms ease,
+      color 160ms ease, box-shadow 160ms ease, opacity 160ms ease;
+  }
+  .secondary, .submit, .game-choice, .level-card, .game-menu, .mini-menu {
+    transition: translate 160ms ease, box-shadow 160ms ease,
+      background-color 160ms ease, border-color 160ms ease;
+  }
+  .secondary:active:not(:disabled), .submit:active:not(:disabled),
+  .game-choice:active, .level-card:active:not(:disabled) { translate: 0 1px; }
+  .mini-better-hint:not([hidden]), .clue-text:not([hidden]),
+  .mini-hint-text:not([hidden]), .mini-history-panel:not([hidden]) {
+    animation: room-rise 200ms ease-out;
+  }
+  .mini-clue-check { animation: room-check 240ms ease-out; }
+  .mini-progress-track span { transition: width 300ms ease-out; }
+  @media (hover: hover) {
+    .secondary:hover:not(:disabled), .submit:hover:not(:disabled),
+    .game-choice:hover, .level-card:hover:not(:disabled) {
+      translate: 0 -2px;
+      box-shadow: 0 5px 12px #24393012;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

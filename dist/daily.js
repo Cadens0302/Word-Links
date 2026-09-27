@@ -22,10 +22,7 @@ const DAILY_PUZZLES = [
   ['TRAIN','BRIDGE','A JOURNEY BEGINS']
 ];
 
-function todayKey() {
-  const now = new Date();
-  return `${now.getUTCFullYear()}-${String(now.getUTCMonth()+1).padStart(2,'0')}-${String(now.getUTCDate()).padStart(2,'0')}`;
-}
+function todayKey() { return puzzleDateKey(); }
 
 function readHistory() {
   try { return JSON.parse(localStorage.getItem(DAILY_STORAGE_KEY) || '[]'); }
@@ -84,16 +81,23 @@ function writeDailyLayouts(layouts) {
 function dailyPuzzleFor(date) {
   let hash = 0;
   for (const char of date) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
-  const puzzle = DAILY_PUZZLES[hash % DAILY_PUZZLES.length];
-  return puzzle[2] ? puzzle : [puzzle[0], puzzle[1], `DAILY CONNECTION ${date}`];
+  // A date-seeded pick creates a fresh, shared pair without changing during the day.
+  hash = Math.imul(hash ^ 0x9e3779b9, 1664525) + 1013904223;
+  const [first, second] = DAILY_PUZZLES[(hash >>> 0) % DAILY_PUZZLES.length];
+  return [first, second, `Daily Connection · ${dailyDateLabel(date)}`];
+}
+
+function dailyDateLabel(date) {
+  return new Date(`${date}T12:00:00`).toLocaleDateString(undefined, {
+    weekday: 'short', month: 'long', day: 'numeric', year: 'numeric'
+  });
 }
 
 function streakFor(history, anchor = todayKey()) {
   const days = new Set(history.map(item => item.date));
-  let cursor = new Date(`${anchor}T12:00:00`);
-  if (!days.has(anchor)) cursor.setDate(cursor.getDate() - 1);
+  let cursor = days.has(anchor) ? anchor : previousPuzzleDate(anchor);
   let streak = 0;
-  while (days.has(cursor.toISOString().slice(0,10))) { streak++; cursor.setDate(cursor.getDate() - 1); }
+  while (days.has(cursor)) { streak++; cursor = previousPuzzleDate(cursor); }
   return streak;
 }
 
@@ -110,14 +114,7 @@ function updateStreakLabels() {
 function startDaily() {
   window.DAILY_MODE = true;
   const date = todayKey();
-  const assignments = readPuzzleAssignments();
-  const assignmentKey = `daily-${date}`;
-  if (!Number.isInteger(assignments[assignmentKey])) {
-    const generated = dailyPuzzleFor(date);
-    assignments[assignmentKey] = DAILY_PUZZLES.findIndex(puzzle => puzzle[0] === generated[0] && puzzle[1] === generated[1]);
-    writePuzzleAssignments(assignments);
-  }
-  window.DAILY_PUZZLE = DAILY_PUZZLES[assignments[assignmentKey]] || dailyPuzzleFor(date);
+  window.DAILY_PUZZLE = dailyPuzzleFor(date);
   window.DAILY_SEED = `daily-${date}`;
   const layouts = readDailyLayouts();
   window.DAILY_LAYOUT = Array.isArray(layouts[date]) ? layouts[date] : null;
@@ -130,6 +127,7 @@ function startDaily() {
     writeDailyLayouts(layouts);
   }
   updateStreakLabels();
+  animateGameEntrance('links');
 }
 
 function startExtraLevel(levelNumber) {
@@ -152,6 +150,7 @@ function startExtraLevel(levelNumber) {
   document.getElementById('levels-modal').hidden = true;
   document.getElementById('history-modal').hidden = true;
   document.getElementById('welcome-modal').hidden = true;
+  animateGameEntrance('links');
 }
 
 function renderLevels() {
@@ -183,19 +182,20 @@ function recordCompletion(result) {
     levelHistory.push({date: todayKey(), level: window.EXTRA_LEVEL, score: result.score, words: result.words});
     writeExtraHistory(levelHistory);
     const level = EXTRA_LEVELS[window.EXTRA_LEVEL - 1];
-    feedback(`Level ${window.EXTRA_LEVEL} complete! You scored ${result.score} points. ${isBest ? 'New personal best. ' : ''}Target: ${level.target} points.`, 'success');
+    const streak=streakFor(readHistory());
+    feedback(`Congratulations! Level ${window.EXTRA_LEVEL} complete. You scored ${result.score} points. ${isBest ? 'New personal best. ' : ''}Target: ${level.target} points. Your daily streak is ${streak} day${streak===1?'':'s'}.`, 'success');
     renderLevels();
     return;
   }
   if (!window.DAILY_MODE) return;
   const date = todayKey();
   const history = readHistory().filter(item => item.date !== date);
-  history.push({date, score: result.score, words: result.words, puzzle: window.DAILY_PUZZLE[2]});
+  history.push({date, gameType:'Word Links', challengeName:window.DAILY_PUZZLE[2], score: result.score, words: result.words, puzzle: window.DAILY_PUZZLE[2]});
   history.sort((a,b) => a.date.localeCompare(b.date));
   writeHistory(history);
   const streak = streakFor(history, date);
   updateStreakLabels();
-  feedback(`Good job finishing today’s daily puzzle! You now have a ${streak} day${streak === 1 ? '' : 's'} streak. Your score: ${result.score} points.`, 'success');
+  feedback(`Congratulations! You finished today’s daily puzzle. Your streak is ${streak} day${streak === 1 ? '' : 's'}. Your score: ${result.score} points.`, 'success');
 }
 
 window.wordLinksCompleted = recordCompletion;
@@ -209,7 +209,7 @@ function renderHistory(section = 'all') {
   if (!history.length) { target.innerHTML = `<div class="history-empty">No ${section === 'daily' ? 'daily challenges' : section === 'levels' ? 'level puzzles' : 'puzzles'} solved yet.</div>`; return; }
   target.innerHTML = history.map(item => {
     const date = new Date(`${item.date}T12:00:00`).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric',year:'numeric'});
-    const label = item.type === 'daily' ? `Daily challenge · ${item.puzzle || `Challenge ${item.date}`}` : `Level ${item.level} · ${EXTRA_LEVELS[item.level - 1]?.name || 'Extra puzzle'}`;
+    const label = item.type === 'daily' ? `${item.gameType || 'Word Links'} · ${item.challengeName || item.puzzle || `Challenge ${item.date}`}` : `Word Links · Level ${item.level} · ${EXTRA_LEVELS[item.level - 1]?.name || 'Extra puzzle'}`;
     return `<div class="history-row"><div><div class="history-date">${date}</div><div class="history-meta">${label} · ${item.words?.length || 0} links</div></div><div class="history-score">${item.score} pts</div></div>`;
   }).join('');
 }
@@ -224,6 +224,12 @@ function openWelcome() {
 }
 
 document.getElementById('extra-puzzles').addEventListener('click', () => { renderLevels(); document.getElementById('levels-modal').hidden = false; });
+document.getElementById('daily-challenge-button').addEventListener('click', () => {
+  startDaily();
+  document.getElementById('levels-modal').hidden = true;
+  document.getElementById('history-modal').hidden = true;
+  document.getElementById('welcome-modal').hidden = true;
+});
 document.getElementById('history-button').addEventListener('click', () => { renderHistory('all'); document.getElementById('history-modal').hidden = false; });
 document.querySelectorAll('[data-history-section]').forEach(button => button.addEventListener('click', () => renderHistory(button.dataset.historySection)));
 document.getElementById('history-close').addEventListener('click', () => { document.getElementById('history-modal').hidden = true; });
@@ -235,4 +241,12 @@ document.getElementById('history-modal').addEventListener('click', event => { if
 document.getElementById('levels-modal').addEventListener('click', event => { if (event.target.id === 'levels-modal') event.currentTarget.hidden = true; });
 
 startDaily();
-openWelcome();
+
+window.addEventListener('daily-reset', () => {
+  if (window.DAILY_MODE) {
+    startDaily();
+    feedback('A new daily challenge is ready. Daily puzzles reset at 12:00 AM local time.', 'success');
+  }
+  updateStreakLabels();
+  if (!document.getElementById('welcome-modal').hidden) openWelcome();
+});
