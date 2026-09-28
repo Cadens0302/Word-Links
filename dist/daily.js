@@ -44,7 +44,7 @@ function updateNextExtraPuzzleButton() {
   const button = document.getElementById('next-extra-puzzle');
   if (!button) return;
   const level = Number(window.EXTRA_LEVEL);
-  const isExtraLevel = !window.DAILY_MODE && level > 0;
+  const isExtraLevel = window.DAILY_MODE !== true && Number.isInteger(level) && level >= 1 && level <= EXTRA_LEVELS.length && Array.isArray(window.EXTRA_PUZZLE);
   button.hidden = !isExtraLevel;
   if (!isExtraLevel) return;
   const completed = Boolean(readExtraCompleted()[level]);
@@ -56,6 +56,13 @@ function updateNextExtraPuzzleButton() {
   button.title = completed
     ? isFinalLevel ? 'You completed every extra puzzle.' : `Open Level ${level + 1}`
     : 'Complete this level to unlock the next puzzle.';
+}
+
+function setExtraLevelsOpen(open) {
+  const modal = document.getElementById('levels-modal');
+  modal.hidden = !open;
+  document.body.classList.toggle('extra-levels-open', open);
+  if (open) document.getElementById('level-grid')?.querySelector('[data-level]')?.focus({preventScroll:true});
 }
 
 function readExtraHistory() {
@@ -168,7 +175,7 @@ function startExtraLevel(levelNumber) {
   window.EXTRA_SEED = `level-${levelNumber}`;
   startGame();
   updateNextExtraPuzzleButton();
-  document.getElementById('levels-modal').hidden = true;
+  setExtraLevelsOpen(false);
   document.getElementById('history-modal').hidden = true;
   document.getElementById('welcome-modal').hidden = true;
   animateGameEntrance('links');
@@ -269,26 +276,28 @@ document.getElementById('play-daily').after(welcomeLevelsButton);
 welcomeLevelsButton.addEventListener('click', () => {
   renderLevels();
   document.getElementById('welcome-modal').hidden = true;
-  document.getElementById('levels-modal').hidden = false;
-  document.getElementById('level-grid')?.querySelector('[data-level]')?.focus({preventScroll:true});
+  setExtraLevelsOpen(true);
 });
 
-document.getElementById('extra-puzzles').addEventListener('click', () => { renderLevels(); document.getElementById('levels-modal').hidden = false; });
+document.getElementById('extra-puzzles').addEventListener('click', () => { renderLevels(); setExtraLevelsOpen(true); });
 document.getElementById('daily-challenge-button').addEventListener('click', () => {
+  setExtraLevelsOpen(false);
   startDaily();
-  document.getElementById('levels-modal').hidden = true;
   document.getElementById('history-modal').hidden = true;
   document.getElementById('welcome-modal').hidden = true;
 });
 document.getElementById('history-button').addEventListener('click', () => { renderHistory('all'); document.getElementById('history-modal').hidden = false; });
 document.querySelectorAll('[data-history-section]').forEach(button => button.addEventListener('click', () => renderHistory(button.dataset.historySection)));
 document.getElementById('history-close').addEventListener('click', () => { document.getElementById('history-modal').hidden = true; });
-document.getElementById('levels-close').addEventListener('click', () => { document.getElementById('levels-modal').hidden = true; });
+document.getElementById('levels-close').addEventListener('click', () => setExtraLevelsOpen(false));
 document.getElementById('welcome-close').addEventListener('click', () => { document.getElementById('welcome-modal').hidden = true; });
 document.getElementById('play-daily').addEventListener('click', () => { startDaily(); document.getElementById('welcome-modal').hidden = true; });
 document.getElementById('welcome-modal').addEventListener('click', event => { if (event.target.id === 'welcome-modal') event.currentTarget.hidden = true; });
 document.getElementById('history-modal').addEventListener('click', event => { if (event.target.id === 'history-modal') event.currentTarget.hidden = true; });
-document.getElementById('levels-modal').addEventListener('click', event => { if (event.target.id === 'levels-modal') event.currentTarget.hidden = true; });
+document.getElementById('levels-modal').addEventListener('click', event => { if (event.target.id === 'levels-modal') setExtraLevelsOpen(false); });
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && !document.getElementById('levels-modal').hidden) setExtraLevelsOpen(false);
+});
 
 startDaily();
 

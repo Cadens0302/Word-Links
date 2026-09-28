@@ -49,9 +49,15 @@ for (let index = EXTRA_LEVELS.length; index < 50; index++) {
     const pair = ADDITIONAL_LEVEL_OPENINGS[(index - 15 + offset * 7) % ADDITIONAL_LEVEL_OPENINGS.length];
     return [...pair];
   });
-  const difficulty = index < 25 ? 'Hard' : index < 40 ? 'Expert' : 'Master';
+  const difficulty = index < 10 ? 'Easy' : index < 20 ? 'Medium' : index < 30 ? 'Hard' : index < 40 ? 'Expert' : 'Master';
   EXTRA_LEVELS.push({name:ADDITIONAL_LEVEL_NAMES[index - 15], difficulty, target:50 + (index - 14) * 3, puzzles});
 }
+
+// Apply one consistent difficulty progression across every level, including
+// the original levels whose earlier labels did not match their position.
+EXTRA_LEVELS.forEach((level, index) => {
+  level.difficulty = index < 10 ? 'Easy' : index < 20 ? 'Medium' : index < 30 ? 'Hard' : index < 40 ? 'Expert' : 'Master';
+});
 
 // Register vocabulary introduced by all 50 levels before crossword setup and
 // refresh the choose-screen count after the complete Word Links bank exists.
