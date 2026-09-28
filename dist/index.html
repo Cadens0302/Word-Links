@@ -95,7 +95,10 @@
 </style>
 <style>
 #mini-history-modal{z-index:10060}
-#mini-history-modal .modal{max-height:calc(100dvh - 40px);overflow:auto;overscroll-behavior:contain}
+#history-modal .history-modal,#mini-history-modal .history-modal{width:min(100%,600px);height:min(680px,calc(100dvh - 40px));max-height:calc(100dvh - 40px);display:flex;flex-direction:column;overflow:hidden;overscroll-behavior:contain}
+#history-modal .history-tabs,#mini-history-modal .history-tabs{flex:0 0 auto}
+#history-modal .history-meta strong,#mini-history-modal .history-meta strong{color:#172b23;font-weight:800}
+#history-modal .history-list,#mini-history-modal .history-list{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-gutter:stable}
 #mini-history-modal .history-tabs{flex-wrap:wrap}
 #mini-history-modal .history-row{grid-template-columns:minmax(0,1fr) auto}
 #mini-history-modal .history-date{overflow-wrap:anywhere}

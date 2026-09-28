@@ -253,7 +253,7 @@ function renderHistory(section = 'all') {
   if (!history.length) { target.innerHTML = `<div class="history-empty">No ${section === 'daily' ? 'daily challenges' : section === 'levels' ? 'level puzzles' : 'puzzles'} solved yet.</div>`; return; }
   target.innerHTML = history.map(item => {
     const date = new Date(`${item.date}T12:00:00`).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric',year:'numeric'});
-    const label = item.type === 'daily' ? `${item.gameType || 'Word Links'} · ${item.challengeName || item.puzzle || `Challenge ${item.date}`}` : `Word Links · Level ${item.level} · ${EXTRA_LEVELS[item.level - 1]?.name || 'Extra puzzle'}`;
+    const label = item.type === 'daily' ? `<strong>Daily challenge</strong> · ${item.gameType || 'Word Links'} · ${item.challengeName || item.puzzle || `Challenge ${item.date}`}` : `<strong>Level ${item.level}</strong> · Word Links · ${EXTRA_LEVELS[item.level - 1]?.name || 'Extra puzzle'}`;
     return `<div class="history-row"><div><div class="history-date">${date}</div><div class="history-meta">${label} · ${item.words?.length || 0} links</div></div><div class="history-score">${item.score} pts</div></div>`;
   }).join('');
 }

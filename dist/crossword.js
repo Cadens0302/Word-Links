@@ -165,7 +165,9 @@ function renderMiniHistory(section = 'all') {
     const title = document.createElement('div'); title.className = 'history-date';
     title.textContent = item.challengeName || item.title || (item.section === 'levels' ? `Level ${item.level}` : `Daily Crossword · ${miniDateLabel(item.date)}`);
     const meta = document.createElement('div'); meta.className = 'history-meta';
-    meta.textContent = `${item.section === 'levels' ? `Level ${item.level}` : 'Daily challenge'} · Completed ${miniDateLabel(item.date)}`;
+    const kind = document.createElement('strong');
+    kind.textContent = item.section === 'levels' ? `Level ${item.level}` : 'Daily challenge';
+    meta.append(kind, document.createTextNode(` · Completed ${miniDateLabel(item.date)}`));
     const status = document.createElement('span'); status.textContent = '✓ Solved'; status.className = 'level-status';
     details.append(title, meta); row.append(details, status); panel.append(row);
   }
