@@ -6,9 +6,9 @@ const EXTRA_BEST_STORAGE_KEY = 'wordLinksExtraBestV2';
 const EXTRA_COMPLETED_STORAGE_KEY = 'wordLinksExtraCompletedV1';
 const EXTRA_HISTORY_STORAGE_KEY = 'wordLinksExtraHistoryV1';
 const PUZZLE_ASSIGNMENTS_STORAGE_KEY = 'wordLinksPuzzleAssignmentsV1';
-const DAILY_LAYOUT_STORAGE_KEY = 'wordLinksDailyLayoutsV2';
+const DAILY_LAYOUT_STORAGE_KEY = 'wordLinksDailyLayoutsV4';
 const DAILY_STARTER_WORDS = Object.keys(WORD_CLUES)
-  .filter(word => WORDS.has(word) && word.length >= 3 && word.length <= 8)
+  .filter(word => WORDS.has(word) && word.length >= 3 && word.length <= 9)
   .sort();
 
 function todayKey() { return puzzleDateKey(); }
@@ -93,11 +93,14 @@ function writeDailyLayouts(layouts) {
 }
 
 function dailyPuzzleWordsFor(date, avoid = []) {
+  const ageGroup = window.currentWordAgeGroup();
   let hash = 0;
-  for (const char of date) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
+  for (const char of `${date}:${ageGroup.id}`) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
   let state = (Math.imul(hash ^ 0x9e3779b9, 1664525) + 1013904223) >>> 0;
   const random = () => { state = (Math.imul(state, 1664525) + 1013904223) >>> 0; return state / 4294967296; };
-  const words = [...DAILY_STARTER_WORDS];
+  const ageWords = window.filterWordsForAge(DAILY_STARTER_WORDS);
+  const familiarWords = ageWords.filter(word => window.isAgePreferredDailyWord?.(word));
+  const words = familiarWords.length >= 2 ? familiarWords : ageWords;
   for (let i = words.length - 1; i > 0; i--) {
     const j = Math.floor(random() * (i + 1));
     [words[i], words[j]] = [words[j], words[i]];
@@ -110,7 +113,7 @@ function dailyPuzzleWordsFor(date, avoid = []) {
 function dailyPuzzleFor(date) {
   const yesterday = dailyPuzzleWordsFor(previousPuzzleDate(date));
   const [first, second] = dailyPuzzleWordsFor(date, yesterday);
-  return [first, second, `Daily Connection · ${dailyDateLabel(date)}`];
+  return [first, second, `Daily Connection · ${window.currentWordAgeGroup().label} · ${dailyDateLabel(date)}`];
 }
 
 function dailyDateLabel(date) {
@@ -120,7 +123,8 @@ function dailyDateLabel(date) {
 }
 
 function streakFor(history, anchor = todayKey()) {
-  const days = new Set(history.map(item => item.date));
+  const ageGroup = window.currentWordAgeGroup().id;
+  const days = new Set(history.filter(item => (item.ageGroup || '18+') === ageGroup).map(item => item.date));
   let cursor = days.has(anchor) ? anchor : previousPuzzleDate(anchor);
   let streak = 0;
   while (days.has(cursor)) { streak++; cursor = previousPuzzleDate(cursor); }
@@ -129,11 +133,12 @@ function streakFor(history, anchor = todayKey()) {
 
 function updateStreakLabels() {
   const history = readHistory();
-  const streak = streakFor(history);
+  const ageHistory = history.filter(item => (item.ageGroup || '18+') === window.currentWordAgeGroup().id);
+  const streak = streakFor(ageHistory);
   document.getElementById('streak-count').textContent = `${streak} day${streak === 1 ? '' : 's'} streak`;
   document.getElementById('welcome-streak').textContent = `${streak} day${streak === 1 ? '' : 's'}`;
-  document.getElementById('welcome-solved').textContent = history.length;
-  const best = history.length ? Math.min(...history.map(item => item.score)) : null;
+  document.getElementById('welcome-solved').textContent = ageHistory.length;
+  const best = ageHistory.length ? Math.min(...ageHistory.map(item => item.score)) : null;
   document.getElementById('welcome-best').textContent = best === null ? '—' : best;
 }
 
@@ -141,16 +146,17 @@ function startDaily() {
   window.DAILY_MODE = true;
   const date = todayKey();
   window.DAILY_PUZZLE = dailyPuzzleFor(date);
-  window.DAILY_SEED = `daily-v2-${date}`;
+  window.DAILY_SEED = `daily-v4-${window.currentWordAgeGroup().id}-${date}`;
   const layouts = readDailyLayouts();
-  window.DAILY_LAYOUT = Array.isArray(layouts[date]) ? layouts[date] : null;
+  const layoutKey = `v5:${date}:${window.currentWordAgeGroup().id}`;
+  window.DAILY_LAYOUT = Array.isArray(layouts[layoutKey]) ? layouts[layoutKey] : null;
   window.EXTRA_LEVEL = null;
   window.EXTRA_PUZZLE = null;
   window.EXTRA_SEED = null;
   startGame();
   updateNextExtraPuzzleButton();
-  if (!layouts[date] && Array.isArray(window.STARTING_WORDS)) {
-    layouts[date] = window.STARTING_WORDS;
+  if (!layouts[layoutKey] && Array.isArray(window.STARTING_WORDS)) {
+    layouts[layoutKey] = window.STARTING_WORDS;
     writeDailyLayouts(layouts);
   }
   updateStreakLabels();
@@ -220,8 +226,9 @@ function recordCompletion(result) {
   }
   if (!window.DAILY_MODE) return;
   const date = todayKey();
-  const history = readHistory().filter(item => item.date !== date);
-  history.push({date, gameType:'Word Links', challengeName:window.DAILY_PUZZLE[2], score: result.score, words: result.words, puzzle: window.DAILY_PUZZLE[2]});
+  const ageGroup = window.currentWordAgeGroup().id;
+  const history = readHistory().filter(item => item.date !== date || (item.ageGroup || '18+') !== ageGroup);
+  history.push({date, ageGroup, gameType:'Word Links', challengeName:window.DAILY_PUZZLE[2], score: result.score, words: result.words, puzzle: window.DAILY_PUZZLE[2]});
   history.sort((a,b) => a.date.localeCompare(b.date));
   writeHistory(history);
   const streak = streakFor(history, date);
@@ -253,14 +260,15 @@ function renderHistory(section = 'all') {
   if (!history.length) { target.innerHTML = `<div class="history-empty">No ${section === 'daily' ? 'daily challenges' : section === 'levels' ? 'level puzzles' : 'puzzles'} solved yet.</div>`; return; }
   target.innerHTML = history.map(item => {
     const date = new Date(`${item.date}T12:00:00`).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric',year:'numeric'});
-    const label = item.type === 'daily' ? `<strong>Daily challenge</strong> · ${item.gameType || 'Word Links'} · ${item.challengeName || item.puzzle || `Challenge ${item.date}`}` : `<strong>Level ${item.level}</strong> · Word Links · ${EXTRA_LEVELS[item.level - 1]?.name || 'Extra puzzle'}`;
+    const age = item.ageGroup ? ` · ${window.WORD_AGE_GROUPS.find(group => group.id === item.ageGroup)?.label || item.ageGroup}` : '';
+    const label = item.type === 'daily' ? `<strong>Daily challenge</strong> · ${item.gameType || 'Word Links'} · ${item.challengeName || item.puzzle || `Challenge ${item.date}`}${age}` : `<strong>Level ${item.level}</strong> · Word Links · ${EXTRA_LEVELS[item.level - 1]?.name || 'Extra puzzle'}`;
     return `<div class="history-row"><div><div class="history-date">${date}</div><div class="history-meta">${label} · ${item.words?.length || 0} links</div></div><div class="history-score">${item.score} pts</div></div>`;
   }).join('');
 }
 
 function openWelcome() {
   updateStreakLabels();
-  const solvedToday = readHistory().some(item => item.date === todayKey());
+  const solvedToday = readHistory().some(item => item.date === todayKey() && (item.ageGroup || '18+') === window.currentWordAgeGroup().id);
   document.getElementById('welcome-copy').textContent = solvedToday
     ? 'You’ve solved today’s challenge already. You can revisit it or keep your streak ready for tomorrow.'
     : 'A new daily puzzle is ready. Keep your run going with today’s connection.';
@@ -300,6 +308,7 @@ document.addEventListener('keydown', event => {
 });
 
 startDaily();
+window.addEventListener('word-age-change', () => { if (window.DAILY_MODE) startDaily(); });
 
 window.addEventListener('daily-reset', () => {
   if (window.DAILY_MODE) {

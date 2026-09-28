@@ -38,9 +38,11 @@ const MINI_WORDS = [
 
 // Daily crossword answers come from the site's accepted-word dictionary and
 // use its authored clue bank, so every generated entry is both valid and fair.
-const MINI_DAILY_WORDS = Object.entries(WORD_CLUES)
-  .filter(([answer]) => WORDS.has(answer) && answer.length >= 3 && answer.length <= 6)
-  .map(([answer, clue]) => ({answer, clue}));
+const MINI_DAILY_WORDS = [...new Map([
+  ...Object.entries(WORD_CLUES).filter(([answer]) => WORDS.has(answer)).map(([answer, clue]) => ({answer, clue})),
+  ...MINI_WORDS
+].filter(word => word.answer.length >= 3 && word.answer.length <= 9)
+  .map(word => [word.answer, word])).values()];
 const MINI_LEVEL_EXTRA_WORDS = [
   {answer:'AIRPLANE',clue:'It carries passengers between airports.'},
   {answer:'BIRTHDAY',clue:'A special day that comes once each year.'},
@@ -74,7 +76,7 @@ const MINI_LEVEL_WORDS = [...new Map([
   ...MINI_LEVEL_EXTRA_WORDS
 ].filter(word => WORDS.has(word.answer) && word.answer.length >= 3 && word.answer.length <= 9)
   .map(word => [word.answer, word])).values()];
-const MINI_DAILY_GENERATOR_VERSION = 3;
+const MINI_DAILY_GENERATOR_VERSION = 6;
 
 const MINI_LEVELS = [
   ['First steps','Easy',3,4],['Bright beginnings','Easy',3,4],['Little by little','Easy',3,5],['Word paths','Easy',3,5],['Crossing clues','Easy',4,5],
@@ -92,7 +94,7 @@ MINI_LEVELS.push(...ADDITIONAL_MINI_LEVELS.map(([name,difficulty,minLength,maxLe
 
 // Easier hints explain the answer in everyday language without spelling it out.
 const MINI_EASY_HINTS = {
-  GARDEN:"People plant tomatoes, pull weeds, and water flower beds here.", GARDENS:"Carrots and roses are often grown in these plots.", STAR:"Astronomers group these into patterns called constellations.", ALSO:"In “I like the book, and I ___ like the film,” fill in this word.", HAT:"A cap, beanie, or sunhat is one.", KEY:"Turn this in a lock when you want to open a door.", MAP:"It may show a compass rose and a scale for measuring distance.",
+  GARDEN:"This is where flowers, vegetables, and other plants grow.", GARDENS:"These are places where flowers, vegetables, and other plants grow.", STAR:"Astronomers group these into patterns called constellations.", ALSO:"In “I like the book, and I ___ like the film,” fill in this word.", HAT:"A cap, beanie, or sunhat is one.", KEY:"Turn this in a lock when you want to open a door.", MAP:"It may show a compass rose and a scale for measuring distance.",
   RIVER:"A bridge may take you over one, and it may flow into a sea.", FLOWER:"A bee may visit one, and a bouquet is made of them.", TREE:"Birds may nest among its branches; its trunk has bark.", LEAF:"In autumn, many turn yellow, orange, or red.", ROOT:"Carrots and beets are examples of edible ones.", SEED:"Put one in soil and water it to start a plant.", STEM:"A florist trims this part before putting a bloom in a vase.", ROSE:"Its stem often has thorns, and red is a familiar color for it.", TULIP:"This spring bloom is strongly associated with the Netherlands.", DAISY:"People sometimes pluck its petals while saying “loves me, loves me not.”", GRASS:"You might mow it on a weekend.", FOREST:"Deer, birds, and squirrels may all live among its trees.", OCEAN:"Whales, coral reefs, and deep-sea trenches are found here.", LAKE:"People may go boating or fishing on one, with land all around.", POND:"A lily pad or a frog may float in one.", STREAM:"You might hear this trickling beside a hiking path.", BEACH:"People build sandcastles and look for shells here.", ISLAND:"A boat or plane may be the only way to reach one.", HILL:"You may roll down one or climb to its top.", VALLEY:"A river often winds through the low ground between the slopes.", CLOUD:"A plane can fly through one, and it may bring rain.", RAIN:"People carry umbrellas to avoid getting wet from this.", SNOW:"Children may make a snowman after this falls.", WIND:"It can turn a pinwheel or fill a sail.", STORM:"Lightning and thunder may arrive with this weather.", SUN:"Earth orbits this, and plants need its light.", MOON:"It changes shape in the sky over the course of a month.", SPACE:"Astronauts travel here in rockets.", EARTH:"It is the third planet from the Sun.", FIRE:"A campfire can toast marshmallows, but never leave one unattended.", WATER:"A glass of this is often offered when someone is thirsty.", ICE:"Skates glide across this when a pond freezes.", AIR:"A balloon fills with this invisible mixture.", SAND:"A handful of this slips between your fingers at the shore.", STONE:"You might skip a flat one across a pond.",
   BRIDGE:"The Golden Gate is a famous example of this structure.", ROAD:"Drivers follow painted lanes along this route.", PATH:"A garden may have a stepping-stone one winding through it.", TRAIL:"Hikers follow colored markers along one in a park.", TRAIN:"It stops at stations and pulls a line of passenger cars.", BOAT:"It may have oars, a sail, or a motor.", SHIP:"A captain steers this large vessel across the ocean.", PLANE:"Passengers buckle their seat belts before takeoff in one.", CAR:"A steering wheel and pedals help you control one.", BIKE:"A helmet and two wheels are clues to this ride.", HOUSE:"It may have a front porch, a chimney, and several rooms.", HOME:"People often say “there’s no place like ___.”", DOOR:"A knob or handle helps you open this.", WINDOW:"Curtains hang on either side of this opening.", ROOF:"Rain runs off this top part into gutters.", ROOM:"A bedroom and kitchen are each one of these.", CHAIR:"A table is often surrounded by several of these seats.", TABLE:"People gather around this for dinner or homework.", BED:"A pillow and blanket usually go on this.", LAMP:"A switch turns this bedside object on and off.", BOOK:"A library lends these, and a reader turns their pages.", PAGE:"An author’s words fill one side of this sheet.", STORY:"It may begin “Once upon a time.”", POEM:"Its lines may rhyme, though they do not have to.", PEN:"A signature is often written with this ink tool.", PENCIL:"A sharpener makes its point ready for writing.", PAPER:"A printer feeds sheets of this into its tray.", WORD:"A sentence is made from several of these.", LETTER:"A mailbox may deliver one written to you.", MUSIC:"A melody and beat combine to make this sound.", SONG:"A chorus is the part people often sing along to.", DANCE:"At a wedding, guests may move to the band’s rhythm.", PIANO:"A pianist presses keys with both hands.", DRUM:"A drummer keeps the beat by striking this instrument.", BELL:"A school may ring this to signal the end of class.", CLOCK:"Its hands may point to the hour and minute.", TIME:"A calendar and a watch help people keep track of this.", DAY:"It starts at midnight and ends at the next midnight.", NIGHT:"Stars are easiest to spot during this part of the day.", YEAR:"People celebrate a birthday once during each of these.", SPRING:"This season follows winter; many trees begin to bud.", SUMMER:"School vacations and long sunny afternoons often happen then.", WINTER:"Coats, scarves, and hot cocoa are common during this season.",
   APPLE:"A pie made with cinnamon often uses this fruit.", PEAR:"Its shape is wide at the bottom and narrow at the top.", PEACH:"Its fuzzy skin surrounds a large stone-like pit.", GRAPE:"A bunch of these can be green or purple; dried ones are raisins.", LEMON:"A wedge of this sour fruit is often served with tea or fish.", BREAD:"Toast and sandwiches are commonly made from slices of this.", CAKE:"Candles are often placed on top at a birthday party.", SOUP:"People may dip crackers or bread into a bowl of this.", SALT:"A tiny pinch of this can bring out the flavor in food.", SUGAR:"People stir this into coffee to make it sweeter.", HONEY:"A bear in a story might look for a jar of this.", MILK:"Cows produce this; people often pour it over cereal.", TEA:"A tea bag steeps in hot water to make this drink.", CUP:"A handle often helps you hold this while drinking.", SPOON:"This utensil has a rounded bowl at one end.", FORK:"Its tines help pick up pieces of food.", PLATE:"A dinner setting usually puts one at each seat.",
@@ -101,10 +103,21 @@ const MINI_EASY_HINTS = {
   KITE:"A long string keeps this toy from blowing away.", BOOKS:'You read these collections of pages.', ORANGE:"Peel this fruit before eating its juicy segments.", RABBIT:"It may thump the ground with its back feet.", WINDOW:"Curtains hang on either side of this opening.", TURTLE:"It can pull its head and legs inside its shell.", BASKET:"A handle makes this container easy to carry.", RAINBOW:"Its arc can show red, orange, yellow, green, blue, and violet.", BALLOON:"At a party, these are often tied to a chair with ribbon.", BICYCLE:"Pedaling turns its chain and rear wheel.", DOLPHIN:"It leaps above waves and communicates with clicks.", KITCHEN:"A stove, sink, and refrigerator are usually found here.", PENGUIN:"It cannot fly, but it can swim quickly in icy water.", GIRAFFE:"Its long neck helps it reach leaves high in trees.", LIBRARY:"Visitors can borrow books and return them here.", PANCAKE:"Maple syrup is often poured over a stack of these.", FEATHER:"It may drift down when a bird molts.", ELEPHANT:"Its trunk can pick up food and spray water.", UMBRELLA:"Open this over yourself before walking through a downpour.", SANDWICH:"A lunchbox favorite often has filling between two slices.", MOUNTAIN:"Climbers may need ropes and a base camp to reach its summit.", NOTEBOOK:"Students write class notes between its covers.", FOOTBALL:"A quarterback throws this oval ball to a teammate.", BACKPACK:"Shoulder straps help carry school supplies in this bag.", SNOWFLAKE:"Under a microscope, each one has a delicate icy pattern.", BUTTERFLY:"It begins as a caterpillar before growing colorful wings.", CHOCOLATE:"It may be eaten as a bar or melted into a cake.", SUNFLOWER:"Its large yellow head holds seeds that birds like to eat.", PINEAPPLE:"Twist off its leafy crown before slicing the tropical fruit."
 };
 
+Object.assign(MINI_EASY_HINTS, {
+  ANCHOR:"A boat drops this heavy object so it stays in one place.", COMPASS:"A hiker can use this to find north.", CRATER:"The moon has round, bowl-shaped marks made by impacts.", HABITAT:"An animal’s home in nature might be a forest, pond, or desert.", INSECT:"Ants, bees, and butterflies are examples of these tiny animals.", MAGNET:"This can pick up a paper clip from a table.", GLACIER:"A huge river of ice can slowly move down a mountain.", MIGRATE:"Some birds do this by flying to warmer places for winter.", MINERAL:"Quartz and salt are examples found in rocks and soil.", OBSERVE:"A scientist might do this by watching something closely.", PLANET:"Earth is one; it travels around the Sun.", PROTEIN:"Eggs, beans, and fish contain this nutrient.", REFLECT:"A mirror does this with light, sending it back.", REGION:"A map may divide a country into areas like this.", SPECIES:"Lions and tigers are different kinds of this group.", SURFACE:"The top or outside layer of something is its ___. ", THUNDER:"You hear this rumbling sound after lightning flashes.", JOURNEY:"A long trip to a new place can be called this.", PATTERN:"Stripes, polka dots, or a repeated sequence can form one.", CURRENT:"A river’s moving water can flow in this direction.", CURIOUS:"Someone who asks lots of questions may be this.", CAPTURE:"A camera can do this to a moment in a photograph.", CIRCUIT:"A battery, wires, and bulb can make a path like this.", CLIMATE:"A place’s usual weather over many years is its ___. ", COLLECT:"People do this when they gather stamps, shells, or rocks.",
+  BOUNDARY:"A fence can mark the edge between two yards.", EQUATION:"In math, this shows that two amounts are equal.", FRICTION:"This rubbing force can slow a sliding box.", GRAVITY:"This force makes a dropped ball fall to the ground.", VOLCANO:"Hot lava can pour out of the top of this mountain.", ELEMENT:"Oxygen and iron are examples of this kind of pure substance.", MEASURE:"A ruler helps you do this to find an object’s length.", WEATHER:"Look outside to see if today has sun, rain, or snow.", NATURAL:"A forest is this; a building is made by people.", CULTURE:"Food, music, celebrations, and customs are part of a community’s ___. ", HISTORY:"Museums and old documents can teach us about the past.", IMAGINE:"You do this when you picture a dragon or castle in your mind.", DESCRIBE:"Use details to tell someone what a place or object looks like.", COMPARE:"Put two shells side by side and look for what is alike.", CONTRAST:"Look for the differences between two things to do this.", EVIDENCE:"A footprint or photograph can be a clue that supports an idea.", CONCLUDE:"After checking the clues, a detective may do this to solve a case.", FRACTION:"One-half and three-quarters are examples used in math.", MULTIPLE:"12 is one of 3 because 3 × 4 = 12.", MATERIAL:"Wood, glass, and metal are examples used to make things.", ORGANISM:"A single tree, mushroom, or dog is a living one.", BEHAVIOR:"A dog wagging its tail is showing this kind of action.", LANGUAGE:"English, Spanish, and sign systems are ways to communicate.", SOLUTION:"In a mystery, this is the answer; in science, it can be a dissolved mixture.", SEQUENCE:"First, next, then, and last describe this kind of order.", CONTINENT:"Asia and Africa are two of Earth’s large land areas.",
+  ANALYSIS:"To solve a puzzle, you might break it into smaller parts and examine each one.", APPROACH:"A plan or method for tackling a tricky problem is one.", ARTIFACT:"An old tool or clay pot found at an excavation can be one.", AUDIENCE:"The people sitting in a theater to watch a play are this.", CALCULATE:"Use arithmetic to work out the answer to a problem.", CATEGORY:"Apples and pears fit into the same fruit group, or ___. ", CREDIBLE:"A source with trustworthy evidence is more likely to be this.", DECISION:"After weighing choices, you make one of these.", ESTIMATE:"Without counting every item, make a close, thoughtful guess.", EVALUATE:"A judge does this when comparing work against clear standards.", FAMILIAR:"A song you have heard many times may feel this way.", IDENTIFY:"Recognize a plant and name what kind it is to do this.", INFLUENCE:"A friend can have this effect on a choice you make.", INTERPRET:"A reader does this to explain what a poem or chart means.", METAPHOR:"“Time is a thief” is an example of this figure of speech.", PARALLEL:"Railway tracks run beside one another like this.", PERSUADE:"Give good reasons to try to convince someone; that is to ___. ", RESOURCE:"A library book or map can be a helpful one when learning.", STRATEGY:"A step-by-step plan for winning a game is this.", STRUCTURE:"A building’s beams and walls are part of its framework or ___. ", VARIABLE:"In an experiment, this is something that can change.", VIEWPOINT:"Two people may describe the same event from a different one.", TRANSFORM:"A caterpillar changes into a butterfly; it can ___ into one.", ABSTRACT:"A feeling like fairness is an idea, not a physical object, so it is ___. ", COMPOUND:"A word like “raincoat” joins two smaller words to make this.", CONSTRUCT:"Builders do this when they put materials together to make something.",
+  AMBIGUOUS:"A sentence with two possible meanings can be described this way.", ARTICULATE:"A speaker who explains an idea clearly is this.", ASSUMPTION:"Check this before trusting an idea that has not been proven.", COHERENT:"A well-organized explanation with connected ideas is this.", CRITERION:"One standard used to judge a project is a ___. ", DELIBERATE:"A careful choice made on purpose is this.", EMPIRICAL:"A claim supported by measurements and experiments is based on this kind of evidence.", HYPOTHESIS:"A scientist tests this proposed explanation with an experiment.", INFERENCE:"Use clues to reach this conclusion when it is not stated directly.", INTEGRITY:"Keeping promises and telling the truth show this quality.", INTRICATE:"A tiny watch mechanism with many detailed parts is this.", METICULOUS:"Someone who checks every small detail is being this.", OBJECTIVE:"A goal is one meaning; a fair report without personal bias is another.", PARADIGM:"A familiar model or framework that shapes how people think is this.", PLAUSIBLE:"An explanation that seems reasonable could be described this way.", PRAGMATIC:"A practical person focuses on what will work in real life.", PREVALENCE:"If many people have something, its frequency or this is high.", RECONCILE:"Compare two accounts and try to make them agree; then you ___. ", RESILIENT:"A person who bounces back after a setback is this.", RIGOROUS:"A careful investigation that checks every step is this.", SYNTHESIS:"Combine ideas from several sources to make a new whole; that is a ___. ", VERSATILE:"A tool that works for many different jobs is this.", BENEVOLENT:"A generous person who wants to help others is this.", CATALYST:"A spark can be this when it starts a much bigger change.", CONSENSUS:"After discussion, a group may reach a shared agreement called this.", HIERARCHY:"An organization chart can show this ranking from top to bottom.", IMPLICIT:"A message suggested without being said directly is this.", SCRUTINY:"A detective gives evidence this close attention.", UBIQUITOUS:"If something is found almost everywhere, it is this."
+});
+
+// These everyday and classroom words make the 12–14 daily crossword fairer:
+// each has a plain-language easier clue ready if a player needs it.
+window.isAgePreferredDailyWord = word => window.WORD_AGE_GROUP !== '12-14' || Boolean(MINI_EASY_HINTS[word]);
+
 function miniDateKey(date = new Date()) { return puzzleDateKey(date); }
-function miniDailyIndex(date = miniDateKey()) { let hash = 2166136261; for (const char of date) { hash ^= char.charCodeAt(0); hash = Math.imul(hash, 16777619); } return hash >>> 0; }
+function miniDailyIndex(date = miniDateKey()) { let hash = 2166136261; for (const char of `${window.WORD_AGE_GROUP}:${date}`) { hash ^= char.charCodeAt(0); hash = Math.imul(hash, 16777619); } return hash >>> 0; }
 function miniDailyPuzzle(date = miniDateKey()) {
-  return {title:`Daily Crossword · ${miniDateLabel(date)}`,entries:[]};
+  return {title:`Daily Crossword · ${window.currentWordAgeGroup().label} · ${miniDateLabel(date)}`,entries:[]};
 }
 function miniPreviousDailyAnswers(date) {
   const saved = {mode:miniMode,level:miniLevel,date:miniPuzzleDate,index:miniIndex,puzzle:miniPuzzle};
@@ -138,7 +151,7 @@ function updateMiniChallengeStreak() {
   const line = document.getElementById('mini-challenge-streak');
   if (line) line.textContent = `${miniStreak()} day streak`;
 }
-function recordMiniSolved() { const date = miniPuzzleDate; const history = miniHistory(); if (!history.some(item => item.date === date)) { history.unshift({date, gameType:'Mini Crossword', challengeName:miniPuzzle.title, title:miniPuzzle.title}); localStorage.setItem('wordLinksMiniHistory', JSON.stringify(history.slice(0, 60))); } return miniStreak(); }
+function recordMiniSolved() { const date = miniPuzzleDate; const ageGroup = window.WORD_AGE_GROUP; const history = miniHistory(); if (!history.some(item => item.date === date && (item.ageGroup || '18+') === ageGroup)) { history.unshift({date, ageGroup, gameType:'Mini Crossword', challengeName:miniPuzzle.title, title:miniPuzzle.title}); localStorage.setItem('wordLinksMiniHistory', JSON.stringify(history.slice(0, 60))); } return miniStreak(); }
 function renderMiniHistory(section = 'all') {
   const panel = document.getElementById('mini-history-list');
   const daily = miniHistory().map(item => ({...item, section:'daily'}));
@@ -167,7 +180,8 @@ function renderMiniHistory(section = 'all') {
     const meta = document.createElement('div'); meta.className = 'history-meta';
     const kind = document.createElement('strong');
     kind.textContent = item.section === 'levels' ? `Level ${item.level}` : 'Daily challenge';
-    meta.append(kind, document.createTextNode(` · Completed ${miniDateLabel(item.date)}`));
+    const age = item.ageGroup ? ` · ${window.WORD_AGE_GROUPS.find(group => group.id === item.ageGroup)?.label || item.ageGroup}` : '';
+    meta.append(kind, document.createTextNode(` · Completed ${miniDateLabel(item.date)}${age}`));
     const status = document.createElement('span'); status.textContent = '✓ Solved'; status.className = 'level-status';
     details.append(title, meta); row.append(details, status); panel.append(row);
   }
@@ -238,7 +252,7 @@ function entryCells(entry) {
   }));
 }
 
-function miniSeed() { let hash = 2166136261; const seedDate = miniMode === 'level' ? `level-${miniLevel}` : miniPuzzleDate; for (const char of `${miniPuzzle.title}-${seedDate}-${miniIndex}`) { hash ^= char.charCodeAt(0); hash = Math.imul(hash, 16777619); } return hash >>> 0; }
+function miniSeed() { let hash = 2166136261; const seedDate = miniMode === 'level' ? `level-${miniLevel}` : `${window.WORD_AGE_GROUP}-${miniPuzzleDate}`; const seedName = miniMode === 'daily' ? 'shared-daily' : miniPuzzle.title; for (const char of `${seedName}-${seedDate}-${miniIndex}`) { hash ^= char.charCodeAt(0); hash = Math.imul(hash, 16777619); } return hash >>> 0; }
 function layoutMiniEntries(wordPoolOverride = null) {
   let state = miniSeed();
   const random = () => { state = (Math.imul(state,1664525)+1013904223) >>> 0; return state/4294967296; };
@@ -249,7 +263,11 @@ function layoutMiniEntries(wordPoolOverride = null) {
     // answer. A date-derived partition also generates identically on every device.
     const epochDay = Math.floor(Date.parse(`${miniPuzzleDate}T12:00:00Z`) / 86400000);
     const parity = ((epochDay % 2) + 2) % 2;
-    const dailyPool = MINI_DAILY_WORDS.filter((_, index) => index % 2 === parity);
+    const agePool = window.filterWordsForAge(MINI_DAILY_WORDS, 9);
+    const accessiblePool = agePool.filter(word => window.isAgePreferredDailyWord(word.answer));
+    const selectedPool = accessiblePool.length >= 16 ? accessiblePool : agePool;
+    const partitionedPool = selectedPool.filter((_, index) => index % 2 === parity);
+    const dailyPool = partitionedPool.length >= 8 ? partitionedPool : selectedPool;
     layoutMiniEntries(dailyPool);
     return;
   }
@@ -271,7 +289,7 @@ function layoutMiniEntries(wordPoolOverride = null) {
       placed.push({...word,row,col,dir:dir.name}); used.add(word.answer);
       cells.forEach(cell=>occupied.set(key(cell.row,cell.col),cell));
     };
-    const starterLength = miniMode === 'daily' ? 4 : miniMode === 'level' ? MINI_LEVELS[miniLevel-1].minLength : 6;
+    const starterLength = miniMode === 'daily' ? window.currentWordAgeGroup().minWordLength : miniMode === 'level' ? MINI_LEVELS[miniLevel-1].minLength : 6;
     const starters=wordPool.filter(word=>word.answer.length>=starterLength);
     const first=starters[Math.floor(random()*starters.length)],dir=dirs[Math.floor(random()*dirs.length)];
     const row=Math.floor((MINI_SIZE-dir.dr*(first.answer.length-1))/2);
@@ -486,9 +504,10 @@ function highlightEntryAt(row, col) {
 
 function miniEasyHint(entry) {
   const specific = MINI_EASY_HINTS[entry.answer];
-  if (specific && specific.trim().toLowerCase() !== entry.clue.trim().toLowerCase()) return specific;
   const answer = entry.answer;
-  return `It begins with “${answer[0]}” and ends with “${answer.at(-1)}”. Use those letters with the clue above.`;
+  const semantic = specific && specific.trim().toLowerCase() !== entry.clue.trim().toLowerCase()
+    ? specific : `Think about the clue: ${entry.clue}`;
+  return `${semantic.trim().replace(/[.!?]+$/, '')}. It starts with “${answer[0]}” and ends with “${answer.at(-1)}”.`;
 }
 
 function renderMiniClues() {
@@ -657,9 +676,7 @@ document.querySelectorAll('[data-game-choice]').forEach(button => button.addEven
   }
 }));
 function showGameSelector() {
-  document.getElementById('welcome-modal').hidden = true;
-  document.getElementById('mini-modal').hidden = true;
-  document.getElementById('game-selector').hidden = false;
+  window.showGameChooser();
 }
 
 document.getElementById('game-menu').addEventListener('click', showGameSelector);
@@ -743,6 +760,7 @@ document.getElementById('mini-modal').addEventListener('click', event => { if (e
 window.addEventListener('load', () => { document.getElementById('game-welcome').hidden = false; document.getElementById('game-selector').hidden = true; });
 document.getElementById('game-welcome-continue').addEventListener('click', () => { document.getElementById('game-welcome').hidden = true; document.getElementById('game-selector').hidden = false; });
 
+window.addEventListener('word-age-change', () => { if (miniMode === 'daily') startMiniDaily(); });
 window.addEventListener('daily-reset', () => {
   if (miniMode === 'daily' && miniCells.length) {
     const welcomeHidden = document.getElementById('mini-welcome').hidden;
