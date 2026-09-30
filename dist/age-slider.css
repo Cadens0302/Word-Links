@@ -1,0 +1,52 @@
+.age-slider-wrap {
+  position: relative;
+  z-index: 0;
+  width: 100%;
+  height: 34px;
+  margin: 18px 0 8px;
+  isolation: isolate;
+}
+
+.age-slider-wrap input[type="range"] {
+  position: relative;
+  z-index: 2;
+  display: block;
+  width: 100%;
+  height: 34px;
+  margin: 0;
+  padding: 0;
+  accent-color: #82934c;
+  cursor: pointer;
+  touch-action: pan-x;
+}
+
+.age-trail-layer {
+  position: absolute;
+  z-index: 5;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.age-trail-dot {
+  position: absolute;
+  display: block;
+  width: var(--dot-size, 5px);
+  height: var(--dot-size, 5px);
+  border-radius: 50%;
+  background: #9bad62;
+  box-shadow: 0 0 0 1.5px rgba(255, 254, 250, .95), 0 1px 6px rgba(48, 67, 35, .42);
+  opacity: 0;
+  transform: translate(-50%, -50%);
+  animation: age-trail-fade 1000ms cubic-bezier(.18, .7, .2, 1) both;
+}
+
+@keyframes age-trail-fade {
+  0% { opacity: .96; transform: translate(-50%, -50%) scale(.9); }
+  42% { opacity: .48; }
+  100% { opacity: 0; transform: translate(-50%, calc(-50% + var(--dot-drift, -10px))) scale(.18); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .age-trail-dot { display: none; animation: none; }
+}

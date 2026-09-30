@@ -35,6 +35,57 @@ const ageForm = document.getElementById('age-form');
 const agePanel = document.getElementById('age-choice-panel');
 const gameChoices = document.getElementById('game-choice-grid');
 const gameSelector = document.getElementById('game-selector');
+
+// Wrap the native range control so its pointer trail never interferes with
+// dragging, tapping, keyboard control, or screen-reader access.
+const ageSliderWrap = document.createElement('div');
+ageSliderWrap.className = 'age-slider-wrap';
+ageInput.before(ageSliderWrap);
+ageSliderWrap.append(ageInput);
+const ageTrailLayer = document.createElement('span');
+ageTrailLayer.className = 'age-trail-layer';
+ageTrailLayer.setAttribute('aria-hidden', 'true');
+ageSliderWrap.append(ageTrailLayer);
+const reduceAgeMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+let lastAgeTrailAt = 0;
+let lastAgePointerAt = 0;
+
+function addAgeTrailDot(clientX, clientY) {
+  if (reduceAgeMotion.matches) return;
+  const rect = ageSliderWrap.getBoundingClientRect();
+  if (!rect.width || !rect.height) return;
+  const dot = document.createElement('i');
+  dot.className = 'age-trail-dot';
+  dot.style.left = `${Math.max(0, Math.min(rect.width, clientX - rect.left))}px`;
+  dot.style.top = `${Math.max(3, Math.min(rect.height - 3, clientY - rect.top + (Math.random() - .5) * 16))}px`;
+  dot.style.setProperty('--dot-size', `${5 + Math.random() * 3}px`);
+  dot.style.setProperty('--dot-drift', `${-7 - Math.random() * 7}px`);
+  dot.style.backgroundColor = Math.random() > .5 ? '#526b31' : '#b7ca75';
+  ageTrailLayer.append(dot);
+  dot.addEventListener('animationend', () => dot.remove(), {once:true});
+}
+
+ageSliderWrap.addEventListener('pointermove', event => {
+  const now = performance.now();
+  if (now - lastAgeTrailAt < 24) return;
+  lastAgeTrailAt = now;
+  lastAgePointerAt = now;
+  for (let i = 0; i < 2; i++) addAgeTrailDot(event.clientX + (Math.random() - .5) * 7, event.clientY + (Math.random() - .5) * 5);
+});
+ageSliderWrap.addEventListener('pointerdown', event => {
+  lastAgePointerAt = performance.now();
+  for (let i = 0; i < 2; i++) addAgeTrailDot(event.clientX + (Math.random() - .5) * 7, event.clientY + (Math.random() - .5) * 5);
+});
+ageInput.addEventListener('input', () => {
+  updateAgePreview();
+  const now = performance.now();
+  if (now - lastAgePointerAt < 90) return;
+  const rect = ageSliderWrap.getBoundingClientRect();
+  const min = Number(ageInput.min) || 0;
+  const max = Number(ageInput.max) || 100;
+  const ratio = (Number(ageInput.value) - min) / Math.max(1, max - min);
+  addAgeTrailDot(rect.left + ratio * rect.width, rect.top + rect.height / 2);
+});
 function updateAgeButtons() {
   const group = currentWordAgeGroup();
   for (const id of ['age-profile-links','age-profile-crossword']) {
@@ -67,7 +118,6 @@ window.showGameChooser = function(requireAge = false) {
 function openAgeSettings() { window.showGameChooser(true); }
 updateAgeButtons();
 updateAgePreview();
-ageInput.addEventListener('input', updateAgePreview);
 document.getElementById('age-profile-links')?.addEventListener('click', openAgeSettings);
 document.getElementById('age-profile-crossword')?.addEventListener('click', openAgeSettings);
 ageForm.addEventListener('submit', event => {

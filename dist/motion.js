@@ -1,6 +1,17 @@
 'use strict';
 
 const gameEntranceAnimations = new WeakMap();
+const clueRevealAnimations = new WeakMap();
+function animateClueReveal(element) {
+  if (!element) return;
+  clueRevealAnimations.get(element)?.cancel();
+  if (element.hidden || !element.animate || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const animation = element.animate([
+    { opacity: 0, transform: 'translateY(8px) scale(.98)' },
+    { opacity: 1, transform: 'translateY(0) scale(1)' }
+  ], { duration: 280, easing: 'cubic-bezier(.2,.8,.2,1)' });
+  clueRevealAnimations.set(element, animation);
+}
 function animateGameEntrance(game) {
   const selector = game === 'mini'
     ? '.mini-board-column, .mini-side, .mini-info-card'

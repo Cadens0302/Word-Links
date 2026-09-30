@@ -147,6 +147,9 @@ function miniHistory() { try { return JSON.parse(localStorage.getItem('wordLinks
 function miniLevelProgress() { try { return JSON.parse(localStorage.getItem('wordLinksMiniLevelProgress') || '{}'); } catch { return {}; } }
 function saveMiniLevelProgress(progress) { localStorage.setItem('wordLinksMiniLevelProgress', JSON.stringify(progress)); }
 function miniStreak() { return streakFor(miniHistory(), miniDateKey()); }
+window.getMiniStreakMessage = function() {
+  return `Your daily crossword streak is ${miniStreak()} day${miniStreak() === 1 ? '' : 's'}.`;
+};
 function updateMiniChallengeStreak() {
   const line = document.getElementById('mini-challenge-streak');
   if (line) line.textContent = `${miniStreak()} day streak`;
@@ -196,10 +199,16 @@ let lastMiniClickedCell = null;
 let miniMode = 'daily';
 let miniPuzzleDate = miniDateKey();
 let miniLevel = null;
+let miniCustomPool = [];
+let miniCustomOptions = {hints:null,rerolls:null,easier:null};
 let miniRevealUsed = false;
+let miniHintUses = 0;
+let miniEasyUses = 0;
+let miniRerollsLeft = Infinity;
 let miniResumeState = null;
-function miniSessionKey(mode = miniMode, level = miniLevel, date = miniPuzzleDate, title = miniPuzzle?.title) { return mode === 'level' ? `wordLinksMiniSession:level:${level}` : `dailyChallenge:Mini Crossword:v${MINI_DAILY_GENERATOR_VERSION}:${title||'Daily Crossword'}:${date}`; }
+function miniSessionKey(mode = miniMode, level = miniLevel, date = miniPuzzleDate, title = miniPuzzle?.title) { return mode === 'level' ? `wordLinksMiniSession:level:${level}` : mode === 'custom' ? `wordLinksMiniSession:custom:${title||'My Crossword'}` : `dailyChallenge:Mini Crossword:v${MINI_DAILY_GENERATOR_VERSION}:${title||'Daily Crossword'}:${date}`; }
 function readMiniSession(mode, level, title) {
+  if (mode === 'custom') return null;
   try {
     const date=miniDateKey(), key=miniSessionKey(mode,level,date,title);
     const saved = JSON.parse(localStorage.getItem(key) || 'null');
@@ -207,13 +216,14 @@ function readMiniSession(mode, level, title) {
   } catch { return null; }
 }
 function saveMiniSession() {
+  if (miniMode === 'custom') return;
   if (!miniPuzzle?.entries?.length) return;
   const answers = miniPuzzle.entries.flatMap(entry => entryCells(entry).map(({row, col}) => {
     const value = miniCell(row, col)?.value;
     return value ? {row, col, value} : null;
   }).filter(Boolean));
   try {
-    localStorage.setItem(miniSessionKey(), JSON.stringify({gameType:miniMode==='daily'?'Mini Crossword':'Mini Crossword Level',challengeName:miniPuzzle.title,title:miniPuzzle.title,entries:miniPuzzle.entries,answers,selectedEntryId:selectedEntry?.id||null,revealUsed:miniRevealUsed,feedback:document.getElementById('mini-feedback').textContent}));
+    localStorage.setItem(miniSessionKey(), JSON.stringify({gameType:miniMode==='daily'?'Mini Crossword':miniMode==='custom'?'Custom Mini Crossword':'Mini Crossword Level',challengeName:miniPuzzle.title,title:miniPuzzle.title,entries:miniPuzzle.entries,answers,selectedEntryId:selectedEntry?.id||null,revealUsed:miniRevealUsed,hintUses:miniHintUses,easyUses:miniEasyUses,rerollsLeft:miniRerollsLeft===Infinity?-1:miniRerollsLeft,feedback:document.getElementById('mini-feedback').textContent}));
   } catch {}
 }
 function resetMiniReveal() {
@@ -222,13 +232,17 @@ function resetMiniReveal() {
 
 function updateMiniRevealButtons() {
   document.querySelectorAll('[data-mini-reveal]').forEach(button => {
-    button.disabled = miniRevealUsed;
-    button.textContent = miniRevealUsed ? 'Word reveal used for this puzzle' : 'Reveal this word · 1 use for this puzzle';
+    const limit=miniMode==='custom'?miniCustomOptions.hints:1;
+    const used=miniMode==='custom'?miniHintUses:(miniRevealUsed?1:0);
+    const exhausted=limit!=null&&used>=limit;
+    button.disabled=exhausted;
+    button.textContent=exhausted?'Word reveal limit reached':`Reveal this word · ${limit==null?'∞':limit-used} use${limit!=null&&limit-used===1?'':'s'} left`;
   });
 }
 
 function revealMiniWord(entryId) {
-  if (miniRevealUsed) return;
+  const limit=miniMode==='custom'?miniCustomOptions.hints:1;
+  if (limit!=null&&(miniMode==='custom'?miniHintUses:miniRevealUsed?1:0)>=limit) return;
   const entry = miniPuzzle.entries.find(item => item.id === entryId);
   if (!entry) return;
   selectedEntry = entry;
@@ -236,8 +250,9 @@ function revealMiniWord(entryId) {
     const cell = miniCell(row, col);
     if (cell) { cell.value = entry.answer[index]; cell.classList.remove('mini-wrong'); }
   });
-  miniRevealUsed = true;
+  miniRevealUsed = true; miniHintUses++;
   updateMiniRevealButtons();
+  updateMiniEasyButtons();
   updateMiniProgress();
   updateMiniClueChecks();
   saveMiniSession();
@@ -252,12 +267,29 @@ function entryCells(entry) {
   }));
 }
 
-function miniSeed() { let hash = 2166136261; const seedDate = miniMode === 'level' ? `level-${miniLevel}` : `${window.WORD_AGE_GROUP}-${miniPuzzleDate}`; const seedName = miniMode === 'daily' ? 'shared-daily' : miniPuzzle.title; for (const char of `${seedName}-${seedDate}-${miniIndex}`) { hash ^= char.charCodeAt(0); hash = Math.imul(hash, 16777619); } return hash >>> 0; }
+function miniSeed() { let hash = 2166136261; const seedDate = miniMode === 'level' ? `level-${miniLevel}` : miniMode === 'custom' ? 'custom-shared' : `${window.WORD_AGE_GROUP}-${miniPuzzleDate}`; const seedName = miniMode === 'daily' ? 'shared-daily' : miniPuzzle.title; for (const char of `${seedName}-${seedDate}-${miniIndex}`) { hash ^= char.charCodeAt(0); hash = Math.imul(hash, 16777619); } return hash >>> 0; }
 function layoutMiniEntries(wordPoolOverride = null) {
   let state = miniSeed();
   const random = () => { state = (Math.imul(state,1664525)+1013904223) >>> 0; return state/4294967296; };
   const dirs = [{name:'Across',dr:0,dc:1},{name:'Down',dr:1,dc:0}];
-  const wordPool = wordPoolOverride || (miniMode === 'level' ? MINI_LEVEL_WORDS.filter(word => word.answer.length >= MINI_LEVELS[miniLevel-1].minLength && word.answer.length <= MINI_LEVELS[miniLevel-1].maxLength) : miniMode === 'daily' ? MINI_DAILY_WORDS : MINI_WORDS);
+  const wordPool = wordPoolOverride || (miniMode === 'custom' ? miniCustomPool : miniMode === 'level' ? MINI_LEVEL_WORDS.filter(word => word.answer.length >= MINI_LEVELS[miniLevel-1].minLength && word.answer.length <= MINI_LEVELS[miniLevel-1].maxLength) : miniMode === 'daily' ? MINI_DAILY_WORDS : MINI_WORDS);
+  if(miniMode==='custom'&&wordPoolOverride?.some(word=>Number.isInteger(word.row)||Number.isInteger(word.col)||word.dir)){
+    if(wordPoolOverride.length!==8||wordPoolOverride.some(word=>!Number.isInteger(word.row)||!Number.isInteger(word.col)||!['Across','Down'].includes(word.dir)))throw new Error('Pinned crossword puzzles need eight placed entries.');
+    const occupied=new Map(),placed=[];
+    for(let index=0;index<wordPoolOverride.length;index++){
+      const word=wordPoolOverride[index],dir=dirs.find(item=>item.name===word.dir),cells=cellsFor(word,word.row,word.col,dir);
+      if(cells.some(cell=>cell.row<0||cell.row>=MINI_SIZE||cell.col<0||cell.col>=MINI_SIZE))throw new Error('A crossword answer goes past the board edge.');
+      const overlaps=cells.filter(cell=>occupied.has(key(cell.row,cell.col)));
+      if(index===0?overlaps.length!==0:overlaps.length!==1)throw new Error('Each new answer must cross exactly one placed answer.');
+      if(overlaps.length&&occupied.get(key(overlaps[0].row,overlaps[0].col)).letter!==overlaps[0].letter)throw new Error('Crossing letters do not match.');
+      if(overlaps.length){const cross=overlaps[0];if(!placed.some(entry=>entry.dir!==word.dir&&entryCells(entry).some(cell=>cell.row===cross.row&&cell.col===cross.col)))throw new Error('Crossword answers must cross in opposite directions.');}
+      const cross=overlaps[0];
+      if(cells.some(cell=>occupied.has(key(cell.row-dir.dr,cell.col-dir.dc))||occupied.has(key(cell.row+dir.dr,cell.col+dir.dc))))throw new Error('Leave a cell between separate answers.');
+      if(cells.some(cell=>{if(cross&&cell.row===cross.row&&cell.col===cross.col)return false;return [[0,1],[0,-1],[1,0],[-1,0]].some(([dr,dc])=>occupied.has(key(cell.row+dr,cell.col+dc)));}))throw new Error('Keep unrelated answers from touching.');
+      const entry={...word,id:`custom-${index+1}`};placed.push(entry);cells.forEach(cell=>occupied.set(key(cell.row,cell.col),cell));
+    }
+    miniPuzzle.entries=placed;return;
+  }
   if (miniMode === 'daily' && !wordPoolOverride) {
     // Alternate disjoint, stable pools so consecutive dates never reuse an
     // answer. A date-derived partition also generates identically on every device.
@@ -271,7 +303,7 @@ function layoutMiniEntries(wordPoolOverride = null) {
     layoutMiniEntries(dailyPool);
     return;
   }
-  const targetCount = miniMode === 'daily' ? 8 : 9;
+  const targetCount = miniMode === 'daily' || miniMode === 'custom' ? 8 : 9;
   const varietyTarget = miniMode === 'daily' ? 4 : miniMode === 'level'
     ? Math.min(5, MINI_LEVELS[miniLevel-1].maxLength - MINI_LEVELS[miniLevel-1].minLength + 1)
     : 5;
@@ -283,13 +315,13 @@ function layoutMiniEntries(wordPoolOverride = null) {
   };
   let best=[],bestScore=-Infinity;
   // Bounded attempts keep generation quick; every addition joins the existing network.
-  for(let attempt=0;attempt<24;attempt++) {
+  for(let attempt=0;attempt<(miniMode==='custom'?48:24);attempt++) {
     const placed=[],occupied=new Map(),used=new Set();
     const add=(word,row,col,dir,cells)=>{
       placed.push({...word,row,col,dir:dir.name}); used.add(word.answer);
       cells.forEach(cell=>occupied.set(key(cell.row,cell.col),cell));
     };
-    const starterLength = miniMode === 'daily' ? window.currentWordAgeGroup().minWordLength : miniMode === 'level' ? MINI_LEVELS[miniLevel-1].minLength : 6;
+  const starterLength = miniMode === 'daily' ? window.currentWordAgeGroup().minWordLength : miniMode === 'level' ? MINI_LEVELS[miniLevel-1].minLength : miniMode === 'custom' ? 3 : 6;
     const starters=wordPool.filter(word=>word.answer.length>=starterLength);
     const first=starters[Math.floor(random()*starters.length)],dir=dirs[Math.floor(random()*dirs.length)];
     const row=Math.floor((MINI_SIZE-dir.dr*(first.answer.length-1))/2);
@@ -448,12 +480,16 @@ function renderMini() {
   if (miniResumeState) {
     miniResumeState.answers.forEach(({row, col, value}) => { const cell = miniCell(row, col); if (cell) cell.value = value; });
     miniRevealUsed = Boolean(miniResumeState.revealUsed);
+    miniHintUses = miniResumeState.hintUses || 0;
+    miniEasyUses = miniResumeState.easyUses || 0;
+    if(miniResumeState.rerollsLeft!==undefined)miniRerollsLeft=miniResumeState.rerollsLeft===-1?Infinity:miniResumeState.rerollsLeft;
     selectedEntry = miniPuzzle.entries.find(entry => entry.id === miniResumeState.selectedEntryId) || null;
     if (selectedEntry) highlightEntry(selectedEntry);
     if (miniResumeState.feedback) document.getElementById('mini-feedback').textContent = miniResumeState.feedback;
     miniResumeState = null;
   }
   updateMiniRevealButtons();
+  updateMiniEasyButtons();
   updateMiniProgress();
   updateMiniClueChecks();
   saveMiniSession();
@@ -494,6 +530,7 @@ function highlightEntry(entry) {
   document.querySelectorAll('.mini-cell').forEach(cell => cell.classList.remove('mini-active'));
   entryCells(entry).forEach(({row, col}) => miniCell(row, col)?.classList.add('mini-active'));
   document.querySelectorAll('.mini-clue').forEach(button => button.classList.toggle('active', button.dataset.entry === entry.id));
+  updateMiniEasyButtons();
 }
 
 function highlightEntryAt(row, col) {
@@ -510,10 +547,12 @@ function miniEasyHint(entry) {
   return `${semantic.trim().replace(/[.!?]+$/, '')}. It starts with “${answer[0]}” and ends with “${answer.at(-1)}”.`;
 }
 
+function escapeMiniHTML(value){return String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));}
+
 function renderMiniClues() {
   for (const direction of ['Across', 'Down']) {
     const list = document.getElementById(direction === 'Across' ? 'mini-across' : 'mini-down');
-    list.innerHTML = miniPuzzle.entries.filter(entry => entry.dir === direction).map(entry => `<div class="mini-clue-row" style="grid-template-columns:minmax(0,1fr) 32px 20px"><button class="mini-clue" type="button" data-entry="${entry.id}" aria-label="${direction} clue ${entry.number}: ${entry.clue} (${entry.answer.length} letters)"><strong class="mini-clue-label" data-arrow="${miniArrowPlacement(entry)}"><span>${entry.number}</span><span class="mini-clue-arrow" aria-hidden="true">${miniDirectionArrow(entry)}</span></strong> ${entry.clue} <span class="mini-length">(${entry.answer.length})</span></button><button class="mini-clue-toggle" type="button" aria-label="Show a better hint for ${direction} clue ${entry.number}" aria-expanded="false">▸</button><span class="mini-clue-check" style="display:none;place-items:center;width:20px;height:30px;color:#5c7837;font-size:17px;font-weight:bold" data-entry-check="${entry.id}" role="img" aria-label="Completed">✓</span><span class="mini-better-hint" hidden><span class="mini-easy-hint"></span><button class="mini-reveal-word secondary" type="button" data-mini-reveal="${entry.id}" hidden style="display:block;width:100%;margin-top:7px;padding:8px 10px;border:1px solid #c9c0ae;border-radius:6px;background:rgba(255,254,250,.55);color:var(--ink);cursor:pointer;font-size:11px">${miniRevealUsed?'Word reveal used for this puzzle':'Reveal this word · 1 use for this puzzle'}</button></span></div>`).join('');
+    list.innerHTML = miniPuzzle.entries.filter(entry => entry.dir === direction).map(entry => `<div class="mini-clue-row" style="grid-template-columns:minmax(0,1fr) 32px 20px"><button class="mini-clue" type="button" data-entry="${entry.id}" aria-label="${direction} clue ${entry.number}: ${escapeMiniHTML(entry.clue)} (${entry.answer.length} letters)"><strong class="mini-clue-label" data-arrow="${miniArrowPlacement(entry)}"><span>${entry.number}</span><span class="mini-clue-arrow" aria-hidden="true">${miniDirectionArrow(entry)}</span></strong> ${escapeMiniHTML(entry.clue)} <span class="mini-length">(${entry.answer.length})</span></button><button class="mini-clue-toggle" type="button" aria-label="Show a better hint for ${direction} clue ${entry.number}" aria-expanded="false">▸</button><span class="mini-clue-check" style="display:none;place-items:center;width:20px;height:30px;color:#5c7837;font-size:17px;font-weight:bold" data-entry-check="${entry.id}" role="img" aria-label="Completed">✓</span><span class="mini-better-hint" hidden><span class="mini-easy-hint"></span><button class="mini-reveal-word secondary" type="button" data-mini-reveal="${entry.id}" hidden style="display:block;width:100%;margin-top:7px;padding:8px 10px;border:1px solid #c9c0ae;border-radius:6px;background:rgba(255,254,250,.55);color:var(--ink);cursor:pointer;font-size:11px">${miniRevealUsed?'Word reveal used for this puzzle':'Reveal this word · 1 use for this puzzle'}</button></span></div>`).join('');
     list.querySelectorAll('.mini-clue').forEach(button => button.addEventListener('click', () => {
       const entry = miniPuzzle.entries.find(item => item.id === button.dataset.entry);
       highlightEntry(entry);
@@ -524,10 +563,14 @@ function renderMiniClues() {
       const row = button.closest('.mini-clue-row');
       const hint = row.querySelector('.mini-better-hint');
       const expanded = button.getAttribute('aria-expanded') === 'true';
+      const easierLimit=miniMode==='custom'?miniCustomOptions.easier:null;
+      if(!expanded&&easierLimit!=null&&miniEasyUses>=easierLimit){document.getElementById('mini-feedback').textContent='You have used all the easier clues for this custom crossword.';document.getElementById('mini-feedback').className='mini-feedback error';return;}
       if (!expanded) {
         const clueId = row.querySelector('.mini-clue').dataset.entry;
         const entry = miniPuzzle.entries.find(item => item.id === clueId);
         if (entry) row.querySelector('.mini-easy-hint').textContent = `Hint: ${miniEasyHint(entry)}`;
+        miniEasyUses++;
+        updateMiniEasyButtons();
       }
       document.querySelectorAll('.mini-clue-toggle[aria-expanded="true"]').forEach(openButton => {
         if (openButton === button) return;
@@ -541,12 +584,21 @@ function renderMiniClues() {
       button.textContent = expanded ? '▸' : '▾';
       hint.hidden = expanded;
       row.querySelector('[data-mini-reveal]').hidden = expanded;
+      if (!expanded) animateClueReveal(hint);
+      updateMiniEasyButtons();
+      saveMiniSession();
     }));
     list.querySelectorAll('[data-mini-reveal]').forEach(button => button.addEventListener('click', () => revealMiniWord(button.dataset.miniReveal)));
   }
-  document.getElementById('mini-daily-date').textContent = `Shared puzzle · ${miniDateKey()} · Resets at 12:00 AM local time`;
+  document.getElementById('mini-daily-date').textContent = miniMode === 'daily'
+    ? `Shared puzzle · ${miniDateKey()} · Resets at 12:00 AM local time`
+    : miniMode === 'custom' ? 'Your custom crossword · progress lasts for this visit'
+      : `Level ${miniLevel} · complete it to unlock the next level`;
   updateMiniClueChecks();
+  updateMiniEasyButtons();
 }
+
+function updateMiniEasyButtons(){document.querySelectorAll('.mini-clue-toggle').forEach(button=>{const expanded=button.getAttribute('aria-expanded')==='true',entryId=button.closest('.mini-clue-row')?.querySelector('.mini-clue')?.dataset.entry,entry=miniPuzzle.entries.find(item=>item.id===entryId),selected=selectedEntry?.id===entryId,limit=miniMode==='custom'?miniCustomOptions.easier:null;button.disabled=!expanded&&(!selected||(limit!=null&&miniEasyUses>=limit));const label=selected||expanded?`Show a better hint for ${entry?.dir} clue ${entry?.number}`:`Select the ${entry?.dir} clue ${entry?.number} first to unlock a better hint`;button.setAttribute('aria-label',label);button.title=label;});}
 
 function updateMiniClueChecks() {
   miniPuzzle.entries.forEach(entry => {
@@ -564,7 +616,7 @@ function checkMini() {
     else cell?.classList.remove('mini-wrong');
   }));
   const feedback = document.getElementById('mini-feedback');
-  if (complete && miniMode === 'level') { const progress=miniLevelProgress(); progress.completed=progress.completed||{}; progress.best=progress.best||{}; progress.history=progress.history||[]; progress.completed[miniLevel]=true; progress.best[miniLevel]=Math.min(progress.best[miniLevel]??Infinity,filledMiniCells()); progress.history.push({date:miniDateKey(),level:miniLevel,title:miniPuzzle.title}); saveMiniLevelProgress(progress); feedback.textContent=`Congratulations! Level ${miniLevel} complete. ${miniLevel<MINI_LEVELS.length?'The next level is unlocked.':'You completed every crossword level!'} Your daily mini streak is ${miniStreak()} day${miniStreak()===1?'':'s'}.`; renderMiniLevels(); } else if (complete) { const streak = recordMiniSolved(); updateMiniChallengeStreak(); feedback.textContent = `Congratulations! You solved today’s crossword. Your daily streak is ${streak} day${streak===1?'':'s'}.`; } else feedback.textContent = 'Keep going—red squares need another look.';
+  if (complete && miniMode === 'level') { const progress=miniLevelProgress(); progress.completed=progress.completed||{}; progress.best=progress.best||{}; progress.history=progress.history||[]; progress.completed[miniLevel]=true; progress.best[miniLevel]=Math.min(progress.best[miniLevel]??Infinity,filledMiniCells()); progress.history.push({date:miniDateKey(),level:miniLevel,title:miniPuzzle.title}); saveMiniLevelProgress(progress); feedback.textContent=`Congratulations! Level ${miniLevel} complete. ${miniLevel<MINI_LEVELS.length?'The next level is unlocked.':'You completed every crossword level!'} Your daily mini streak is ${miniStreak()} day${miniStreak()===1?'':'s'}.`; renderMiniLevels(); } else if (complete && miniMode === 'custom') { feedback.textContent = 'Your custom crossword is complete. Create another puzzle or return to the daily challenge.'; } else if (complete) { const streak = recordMiniSolved(); updateMiniChallengeStreak(); feedback.textContent = `Congratulations! You solved today’s crossword. Your daily streak is ${streak} day${streak===1?'':'s'}.`; } else feedback.textContent = 'Keep going—red squares need another look.';
   feedback.className = `mini-feedback${complete ? ' success' : ''}`;
   renderMiniHistory();
   saveMiniSession();
@@ -591,6 +643,7 @@ function startMiniLevel(number) {
   const level=MINI_LEVELS[number-1], progress=miniLevelProgress();
   if(!level || (number>1&&!progress.completed?.[number-1]))return;
   miniMode='level'; miniLevel=number; miniIndex=0;
+  miniHintUses=0;miniEasyUses=0;miniRerollsLeft=Infinity;
   const title=`Level ${number} · ${level.name}`;
   miniResumeState=readMiniSession('level',number,title);
   miniPuzzle={title,entries:miniResumeState?miniResumeState.entries:[],_laidOut:Boolean(miniResumeState)}; selectedEntry=null;
@@ -609,6 +662,7 @@ function showMiniLevels() {
 function startMiniDaily() {
   miniPuzzleDate = miniDateKey();
   miniMode='daily'; miniLevel=null; miniIndex=miniDailyIndex();
+  miniHintUses=0;miniEasyUses=0;miniRerollsLeft=Infinity;
   const puzzle=miniDailyPuzzle(miniPuzzleDate);
   miniResumeState=readMiniSession('daily',null,puzzle.title);
   miniPuzzle={...puzzle,entries:miniResumeState?miniResumeState.entries:puzzle.entries.map(entry=>({...entry}))};
@@ -632,7 +686,12 @@ function restartMiniPuzzle() {
   selectedEntry = null;
   lastMiniClickedCell = null;
   miniRevealUsed = false;
-  if (miniMode === 'level') {
+  miniHintUses=0;miniEasyUses=0;miniRerollsLeft=miniMode==='custom'?(miniCustomOptions.rerolls==null?Infinity:miniCustomOptions.rerolls):Infinity;
+  if (miniMode === 'custom') {
+    miniPuzzle = {...miniPuzzle, entries:[], _laidOut:false};
+    renderMini();
+    document.getElementById('mini-feedback').textContent = 'Your custom crossword has been reset.';
+  } else if (miniMode === 'level') {
     const level = MINI_LEVELS[miniLevel - 1];
     miniIndex = 0;
     miniPuzzle = {title:`Level ${miniLevel} · ${level.name}`, entries:[], _laidOut:false};
@@ -658,13 +717,64 @@ function openMiniGame() {
   const puzzle=miniDailyPuzzle(miniPuzzleDate);
   miniResumeState=readMiniSession('daily',null,puzzle.title);
   miniPuzzle={...puzzle,entries:miniResumeState?miniResumeState.entries:[],_laidOut:Boolean(miniResumeState)};
+  selectedEntry=null;
   renderMini();
   const streak = miniStreak();
   updateMiniChallengeStreak();
   document.getElementById('mini-welcome-streak').textContent = `Your daily crossword streak is ${streak} day${streak === 1 ? '' : 's'}.`;
   document.getElementById('mini-modal').hidden = false;
-  document.getElementById('mini-welcome').hidden = false;
+  document.getElementById('mini-welcome').hidden = true;
   document.getElementById('game-selector').hidden = true;
+  updateMiniNextPuzzleButton();
+  window.showGameDirections?.('crossword');
+}
+
+function customMiniIdentity(entries,title){let hash=2166136261;for(const char of `${title}|${entries.map(e=>`${e.answer}:${e.clue}:${e.row??''}:${e.col??''}:${e.dir??''}`).join('|')}`){hash^=char.charCodeAt(0);hash=Math.imul(hash,16777619);}return hash>>>0;}
+window.previewMiniCustomPuzzle = (rawEntries,title='',seedOffset=0) => {
+  const previous={miniMode,miniIndex,miniPuzzle,miniPuzzleDate,miniLevel,miniCustomPool,miniCustomOptions,miniResumeState,selectedEntry};
+  miniMode='custom';miniPuzzleDate=miniDateKey();miniLevel=null;miniPuzzle={title:String(title||'').trim().slice(0,40)||'My Crossword',entries:[],_laidOut:false};miniCustomPool=rawEntries;miniCustomOptions={hints:null,rerolls:null,easier:null};const baseSeed=customMiniIdentity(rawEntries,miniPuzzle.title);let failure=null;
+  for(let attempt=0;attempt<32;attempt++){miniIndex=(baseSeed+seedOffset+attempt)>>>0;miniPuzzle.entries=[];try{layoutMiniEntries(rawEntries);const result=JSON.parse(JSON.stringify(miniPuzzle.entries)),seed=miniIndex;({miniMode,miniIndex,miniPuzzle,miniPuzzleDate,miniLevel,miniCustomPool,miniCustomOptions,miniResumeState,selectedEntry}=previous);return {ok:true,entries:result,seed};}catch(error){failure=error;if(rawEntries.some(e=>Number.isInteger(e.row)||Number.isInteger(e.col)||e.dir))break;}}
+  ({miniMode,miniIndex,miniPuzzle,miniPuzzleDate,miniLevel,miniCustomPool,miniCustomOptions,miniResumeState,selectedEntry}=previous);
+  return {ok:false,message:'I could not connect eight of those words in the crossword grid. Add more words that share letters, then try again.'};
+};
+window.createMiniCustomPuzzle = (rawEntries, title = '', options = {}) => {
+  if (!Array.isArray(rawEntries) || rawEntries.length < 8 || rawEntries.length > 24) return {ok:false,message:'Add 8–24 word and clue pairs.'};
+  const entries = rawEntries.map(item => ({answer:String(item.answer || '').toUpperCase(),clue:String(item.clue || '').trim(),...(Number.isInteger(item.row)?{row:item.row}:{}),...(Number.isInteger(item.col)?{col:item.col}:{}),...(['Across','Down'].includes(item.dir)?{dir:item.dir}:{})}));
+  if (entries.some(item => !/^[A-Z]{3,9}$/.test(item.answer) || !item.clue)) return {ok:false,message:'Each entry needs a 3–9 letter dictionary word and a clue.'};
+  if (new Set(entries.map(item => item.answer)).size !== entries.length) return {ok:false,message:'Each answer must be different. Remove duplicate words.'};
+  if (entries.some(item => !window.isWordAccepted?.(item.answer))) return {ok:false,message:'One or more answers are not in the Wordroom dictionary.'};
+
+  const prepared=window.previewMiniCustomPuzzle(entries,title);if(!prepared?.ok)return prepared;
+  const previous = {miniMode,miniIndex,miniPuzzle,miniPuzzleDate,miniLevel,miniCustomPool,miniCustomOptions,miniResumeState,selectedEntry};
+  miniMode = 'custom'; miniPuzzleDate = miniDateKey(); miniLevel = null;
+  miniIndex=prepared.seed;
+  miniCustomPool = entries; miniResumeState = null; selectedEntry = null;
+  const safeLimit=value=>value==null?null:Number.isInteger(value)&&value>=0&&value<=20?value:null;
+  miniCustomOptions={hints:safeLimit(options.hints),rerolls:safeLimit(options.rerolls),easier:safeLimit(options.easier)};
+  miniHintUses=0;miniEasyUses=0;miniRerollsLeft=miniCustomOptions.rerolls==null?Infinity:miniCustomOptions.rerolls;miniRevealUsed=false;
+  miniPuzzle = {title:String(title || '').trim().slice(0,40) || 'My Crossword',entries:prepared.entries,_laidOut:true};
+  miniResumeState = null;
+  document.getElementById('mini-welcome').hidden = true;
+  document.getElementById('mini-levels-modal').hidden = true;
+  document.getElementById('mini-modal').hidden = false;
+  renderMini();
+  document.getElementById('mini-feedback').textContent = `Your custom puzzle is ready · ${miniPuzzle.entries.length} connected words.`;
+  updateMiniNextPuzzleButton();
+  updateMiniCustomRerollButton();updateMiniRevealButtons();updateMiniEasyButtons();
+  document.querySelector('.mini-cell')?.focus();
+  window.showGameDirections?.('crossword');
+  return {ok:true};
+};
+
+function rerollCustomMiniLayout(){
+  if(miniMode!=='custom')return;
+  if(miniRerollsLeft<1){document.getElementById('mini-feedback').textContent='You have used all the layout rerolls for this custom crossword.';document.getElementById('mini-feedback').className='mini-feedback error';return;}
+  const autoPool=miniCustomPool.map(({answer,clue})=>({answer,clue})),base=customMiniIdentity(autoPool,miniPuzzle.title),offset=(miniIndex-base+1)>>>0;
+  const prepared=window.previewMiniCustomPuzzle(autoPool,miniPuzzle.title,offset);
+  if(!prepared?.ok){document.getElementById('mini-feedback').textContent=prepared?.message||'No different layout could be created from these words.';document.getElementById('mini-feedback').className='mini-feedback error';return;}
+  if(miniRerollsLeft!==Infinity)miniRerollsLeft--;
+  miniCustomPool=autoPool;miniIndex=prepared.seed;miniPuzzle={...miniPuzzle,entries:prepared.entries,_laidOut:true};miniResumeState=null;selectedEntry=null;
+  renderMini();document.getElementById('mini-feedback').textContent=`Layout rerolled · ${miniRerollsLeft===Infinity?'∞':miniRerollsLeft} rerolls left.`;document.getElementById('mini-feedback').className='mini-feedback';saveMiniSession();updateMiniCustomRerollButton();
 }
 
 document.querySelectorAll('[data-game-choice]').forEach(button => button.addEventListener('click', () => {
@@ -672,7 +782,7 @@ document.querySelectorAll('[data-game-choice]').forEach(button => button.addEven
   else {
     document.getElementById('game-selector').hidden = true;
     animateGameEntrance('links');
-    openWelcome();
+    window.showGameDirections?.('links');
   }
 }));
 function showGameSelector() {
@@ -691,6 +801,12 @@ miniRestartButton.textContent = '↻ Restart puzzle';
 miniRestartButton.setAttribute('aria-label', 'Restart the current Mini Crossword puzzle');
 document.querySelector('.mini-header-actions')?.append(miniRestartButton);
 miniRestartButton.addEventListener('click', restartMiniPuzzle);
+const miniCustomRerollButton=document.createElement('button');
+miniCustomRerollButton.id='mini-custom-reroll';miniCustomRerollButton.className='secondary';miniCustomRerollButton.type='button';miniCustomRerollButton.hidden=true;
+document.querySelector('.mini-actions')?.prepend(miniCustomRerollButton);
+function updateMiniCustomRerollButton(){if(!miniCustomRerollButton)return;miniCustomRerollButton.hidden=miniMode!=='custom';miniCustomRerollButton.textContent=`↻ Reroll layout · ${miniRerollsLeft===Infinity?'∞':miniRerollsLeft} left`;miniCustomRerollButton.disabled=miniRerollsLeft<1;}
+miniCustomRerollButton.addEventListener('click',rerollCustomMiniLayout);
+updateMiniCustomRerollButton();
 const miniNextPuzzleButton = document.createElement('button');
 miniNextPuzzleButton.id = 'mini-next-puzzle';
 miniNextPuzzleButton.className = 'secondary mini-next-puzzle';
@@ -701,6 +817,7 @@ function updateMiniNextPuzzleButton() {
   miniNextPuzzleButton.hidden = miniMode !== 'level';
   miniNextPuzzleButton.textContent = miniLevel >= MINI_LEVELS.length ? 'All extra puzzles complete' : 'Move on to next puzzle';
   miniNextPuzzleButton.title = miniLevel >= MINI_LEVELS.length ? 'You completed every crossword level.' : `Complete Level ${miniLevel} to unlock the next puzzle.`;
+  updateMiniCustomRerollButton();
 }
 miniNextPuzzleButton.addEventListener('click', () => {
   if (miniMode !== 'level') return;
@@ -717,6 +834,9 @@ miniNextPuzzleButton.addEventListener('click', () => {
   startMiniLevel(miniLevel + 1);
 });
 document.getElementById('mini-levels-open').addEventListener('click', showMiniLevels);
+document.addEventListener('game-directions:levels', event => {
+  if(event.detail?.game==='crossword')showMiniLevels();
+});
 document.getElementById('mini-levels-close').addEventListener('click',()=>{document.getElementById('mini-levels-modal').hidden=true;});
 document.getElementById('mini-levels-modal').addEventListener('click',event=>{if(event.target.id==='mini-levels-modal')event.currentTarget.hidden=true;});
 document.getElementById('mini-welcome-start').addEventListener('click',startMiniDaily);
@@ -757,7 +877,7 @@ miniHistoryModal.addEventListener('keydown', event => {
 
 document.getElementById('mini-modal').addEventListener('click', event => { if (event.target.id === 'mini-modal') event.currentTarget.hidden = true; });
 
-window.addEventListener('load', () => { document.getElementById('game-welcome').hidden = false; document.getElementById('game-selector').hidden = true; });
+window.addEventListener('load', () => { if(window.SHARED_PUZZLE_ACTIVE){document.getElementById('game-welcome').hidden=true;document.getElementById('game-selector').hidden=true;return;}document.getElementById('game-welcome').hidden = false; document.getElementById('game-selector').hidden = true; });
 document.getElementById('game-welcome-continue').addEventListener('click', () => { document.getElementById('game-welcome').hidden = true; document.getElementById('game-selector').hidden = false; });
 
 window.addEventListener('word-age-change', () => { if (miniMode === 'daily') startMiniDaily(); });

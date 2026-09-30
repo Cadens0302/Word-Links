@@ -6,7 +6,7 @@ const EXTRA_BEST_STORAGE_KEY = 'wordLinksExtraBestV2';
 const EXTRA_COMPLETED_STORAGE_KEY = 'wordLinksExtraCompletedV1';
 const EXTRA_HISTORY_STORAGE_KEY = 'wordLinksExtraHistoryV1';
 const PUZZLE_ASSIGNMENTS_STORAGE_KEY = 'wordLinksPuzzleAssignmentsV1';
-const DAILY_LAYOUT_STORAGE_KEY = 'wordLinksDailyLayoutsV4';
+const DAILY_LAYOUT_STORAGE_KEY = 'wordLinksDailyLayoutsV6';
 const DAILY_STARTER_WORDS = Object.keys(WORD_CLUES)
   .filter(word => WORDS.has(word) && word.length >= 3 && word.length <= 9)
   .sort();
@@ -141,14 +141,19 @@ function updateStreakLabels() {
   const best = ageHistory.length ? Math.min(...ageHistory.map(item => item.score)) : null;
   document.getElementById('welcome-best').textContent = best === null ? '—' : best;
 }
+window.getWordLinksStreakMessage = function() {
+  updateStreakLabels();
+  return `Your Word Links daily streak is ${document.getElementById('welcome-streak').textContent}.`;
+};
 
 function startDaily() {
+  window.CUSTOM_PUZZLE = null;
   window.DAILY_MODE = true;
   const date = todayKey();
   window.DAILY_PUZZLE = dailyPuzzleFor(date);
-  window.DAILY_SEED = `daily-v4-${window.currentWordAgeGroup().id}-${date}`;
+  window.DAILY_SEED = `daily-v6-${window.currentWordAgeGroup().id}-${date}`;
   const layouts = readDailyLayouts();
-  const layoutKey = `v5:${date}:${window.currentWordAgeGroup().id}`;
+  const layoutKey = `v7:${date}:${window.currentWordAgeGroup().id}`;
   window.DAILY_LAYOUT = Array.isArray(layouts[layoutKey]) ? layouts[layoutKey] : null;
   window.EXTRA_LEVEL = null;
   window.EXTRA_PUZZLE = null;
@@ -166,19 +171,22 @@ function startDaily() {
 function startExtraLevel(levelNumber) {
   const level = EXTRA_LEVELS[levelNumber - 1];
   if (!level) return;
+  window.CUSTOM_PUZZLE = null;
   window.DAILY_MODE = false;
   window.DAILY_PUZZLE = null;
   window.EXTRA_LEVEL = levelNumber;
   window.DAILY_LAYOUT = null;
   const assignments = readPuzzleAssignments();
-  const assignmentKey = `level-${levelNumber}`;
+  const assignmentKey = `level-v2-${levelNumber}`;
   if (!Number.isInteger(assignments[assignmentKey])) {
-    assignments[assignmentKey] = (levelNumber * 7 + level.name.length) % level.puzzles.length;
+    const oldKey = `level-${levelNumber}`;
+    const previous = Number.isInteger(assignments[oldKey]) ? assignments[oldKey] : (levelNumber * 7 + level.name.length) % level.puzzles.length;
+    assignments[assignmentKey] = (previous + 1) % level.puzzles.length;
     writePuzzleAssignments(assignments);
   }
   const puzzleIndex = assignments[assignmentKey] % level.puzzles.length;
   window.EXTRA_PUZZLE = [...level.puzzles[puzzleIndex], level.name];
-  window.EXTRA_SEED = `level-${levelNumber}`;
+  window.EXTRA_SEED = `level-v2-${levelNumber}`;
   startGame();
   updateNextExtraPuzzleButton();
   setExtraLevelsOpen(false);
@@ -305,6 +313,12 @@ document.getElementById('history-modal').addEventListener('click', event => { if
 document.getElementById('levels-modal').addEventListener('click', event => { if (event.target.id === 'levels-modal') setExtraLevelsOpen(false); });
 document.addEventListener('keydown', event => {
   if (event.key === 'Escape' && !document.getElementById('levels-modal').hidden) setExtraLevelsOpen(false);
+});
+document.addEventListener('game-directions:levels', event => {
+  if(event.detail?.game!=='links')return;
+  renderLevels();
+  document.getElementById('welcome-modal').hidden=true;
+  setExtraLevelsOpen(true);
 });
 
 startDaily();

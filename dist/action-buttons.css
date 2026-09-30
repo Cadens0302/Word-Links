@@ -1,0 +1,280 @@
+/* Make the next useful action easy to spot in both games. */
+.submit,
+.custom-builder-submit {
+  border: 1px solid #1a2e24;
+  border-radius: 7px;
+  background: #243930;
+  color: #fffefa;
+  font-weight: 700;
+  box-shadow: 0 3px 0 #172820, 0 7px 16px rgba(25, 43, 33, .16);
+  transition: background-color .18s ease, color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+
+.submit:hover,
+.submit:focus-visible,
+.custom-builder-submit:hover,
+.custom-builder-submit:focus-visible {
+  background: #355643;
+  color: #fffefa;
+  box-shadow: 0 4px 0 #172820, 0 11px 22px rgba(25, 43, 33, .22);
+  transform: translateY(-2px);
+}
+
+.submit:active,
+.custom-builder-submit:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 0 #172820, 0 3px 8px rgba(25, 43, 33, .16);
+}
+
+#daily-challenge-button,
+#mini-daily,
+#extra-puzzles,
+#mini-levels-open,
+#next-extra-puzzle,
+#mini-next-puzzle,
+.mini-welcome-secondary,
+.custom-share-copy {
+  border: 1px solid #859a50;
+  background: #e5efb5;
+  color: #20382d;
+  font-weight: 700;
+  box-shadow: 0 2px 0 rgba(89, 111, 48, .18), 0 4px 12px rgba(79, 103, 44, .1);
+  transition: background-color .18s ease, border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+
+#daily-challenge-button:hover,
+#daily-challenge-button:focus-visible,
+#mini-daily:hover,
+#mini-daily:focus-visible,
+#extra-puzzles:hover,
+#extra-puzzles:focus-visible,
+#mini-levels-open:hover,
+#mini-levels-open:focus-visible,
+#next-extra-puzzle:hover,
+#next-extra-puzzle:focus-visible,
+#mini-next-puzzle:hover,
+#mini-next-puzzle:focus-visible,
+.mini-welcome-secondary:hover,
+.mini-welcome-secondary:focus-visible,
+.custom-share-copy:hover,
+.custom-share-copy:focus-visible {
+  border-color: #667c37;
+  background: #eff7cf;
+  box-shadow: 0 3px 0 rgba(89, 111, 48, .2), 0 8px 17px rgba(79, 103, 44, .17);
+  transform: translateY(-2px);
+}
+
+#daily-challenge-button:active,
+#mini-daily:active,
+#extra-puzzles:active,
+#mini-levels-open:active,
+#next-extra-puzzle:active,
+#mini-next-puzzle:active,
+.mini-welcome-secondary:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 0 rgba(89, 111, 48, .18);
+}
+
+.custom-share-copy:active { transform: translateY(1px); }
+
+#next-extra-puzzle[hidden],
+#mini-next-puzzle[hidden] {
+  display: none !important;
+}
+
+.custom-puzzle-button {
+  border-color: #526d34;
+  background: linear-gradient(135deg, #365642, #243930);
+  color: #fffefa;
+  box-shadow: 0 3px 0 #172820, 0 7px 16px rgba(25, 43, 33, .18);
+}
+
+.custom-puzzle-button:hover,
+.custom-puzzle-button:focus-visible {
+  border-color: #243930;
+  background: linear-gradient(135deg, #466d4f, #2c4738);
+  color: #fffefa;
+  box-shadow: 0 4px 0 #172820, 0 11px 22px rgba(25, 43, 33, .24);
+}
+
+.clue-button {
+  min-height: 44px;
+  justify-content: flex-start;
+  gap: 9px;
+  padding: 10px 12px;
+  border: 1px solid #c9d1bd;
+  border-radius: 7px;
+  background: #f0f3e8;
+  font-weight: 700;
+  transition: background-color .18s ease, border-color .18s ease, transform .18s ease;
+}
+
+.clue-button span:last-child { margin-left: auto; }
+.clue-button .clue-hint-count:not([hidden]) {
+  margin-left: auto;
+  color: #667c37;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.clue-button .clue-hint-count:not([hidden]) + span:last-child { margin-left: 0; }
+.clue-button:disabled { cursor: default; opacity: .68; transform: none; }
+.clue-option {
+  border-color: #d6d9d1;
+  background: #eff0ec;
+  color: #888e86;
+  transition: background-color .18s ease, border-color .18s ease, color .18s ease, transform .18s ease;
+}
+.clue-option:disabled { cursor: default; opacity: 1; }
+.clue-option:not(:disabled) {
+  border-color: #82964b;
+  background: #e5efb5;
+  color: #243930;
+  font-weight: 700;
+  cursor: pointer;
+}
+.clue-option:not(:disabled):hover,
+.clue-option:not(:disabled):focus-visible {
+  border-color: #667c37;
+  background: #d8e99a;
+  transform: translateY(-1px);
+}
+.clue-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+.clue-actions > #clue { grid-column: 1 / -1; }
+.clue-actions > .clue-option {
+  width: 100%;
+  min-width: 0;
+  min-height: 38px;
+  padding: 7px;
+  font-size: 10px;
+  line-height: 1.25;
+  text-align: center;
+  white-space: normal;
+}
+.mini-clue-toggle:disabled {
+  border: 1px solid #d9dcd4;
+  background: #eff0ec;
+  color: #9a9f98;
+  opacity: 1;
+  cursor: default;
+}
+.mini-clue-toggle:not(:disabled) {
+  border: 1px solid #82964b;
+  background: #e5efb5;
+  color: #243930;
+}
+.mini-clue-toggle:not(:disabled):hover,
+.mini-clue-toggle:not(:disabled):focus-visible {
+  background: #d8e99a;
+  outline: 1px solid #667c37;
+}
+.mini-reveal-word:not(:disabled) {
+  border-color: #82964b !important;
+  background: #e5efb5 !important;
+  color: #243930 !important;
+  font-weight: 700;
+}
+.mini-reveal-word:disabled {
+  border-color: #d9dcd4 !important;
+  background: #eff0ec !important;
+  color: #92988f !important;
+  opacity: 1;
+  cursor: default !important;
+}
+.clue-button:hover,
+.clue-button:focus-visible {
+  border-color: #8a9e5e;
+  background: #e5edcf;
+  transform: translateY(-1px);
+}
+
+.mini-actions .submit { min-height: 48px; }
+.mini-check,
+#mini-check { letter-spacing: .01em; }
+
+.level-card:not(.locked) {
+  border-color: #c2cba9;
+  box-shadow: 0 2px 7px rgba(36, 57, 48, .06);
+}
+
+.level-card:not(.locked):hover,
+.level-card:not(.locked):focus-visible {
+  border-color: #83994e;
+  box-shadow: 0 5px 14px rgba(36, 57, 48, .13);
+}
+
+.game-menu,
+.mini-menu {
+  border-color: #74866f;
+  box-shadow: 0 2px 6px rgba(36, 57, 48, .08);
+  transition: background-color .18s ease, border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+
+.game-menu:hover,
+.game-menu:focus-visible,
+.mini-menu:hover,
+.mini-menu:focus-visible {
+  border-color: #748d41;
+  background-color: #e5efb5;
+  color: #20382d;
+  box-shadow: 0 4px 11px rgba(36, 57, 48, .15);
+  transform: translateY(-1px);
+}
+
+@media (max-width: 600px) {
+  .submit,
+  .custom-builder-submit,
+  #daily-challenge-button,
+  #mini-daily,
+  #extra-puzzles,
+  #mini-levels-open,
+  #next-extra-puzzle,
+  #mini-next-puzzle,
+  .mini-welcome-secondary { min-height: 46px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .submit,
+  .custom-builder-submit,
+  #daily-challenge-button,
+  #mini-daily,
+  #extra-puzzles,
+  #mini-levels-open,
+  #next-extra-puzzle,
+  #mini-next-puzzle,
+  .mini-welcome-secondary,
+  .custom-puzzle-button,
+  .custom-share-copy,
+  .clue-button,
+  .level-card,
+  .game-menu,
+  .mini-menu { transition: none; }
+}
+
+.mission-tip { display: none; }
+@media (min-width: 801px) {
+  .game-layout.has-active-clue > .mission {
+    grid-column: 1 / -1;
+    width: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 36px;
+  }
+  .game-layout.has-active-clue .mission-tip {
+    display: block;
+    padding: 20px 24px;
+    background: #f0f2e6;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+  }
+  .mission-tip h2 { font-size: 23px; }
+  .mission-tip .mission-tip-note { margin-top: 12px; color: #52693c; }
+}
+
+@media (max-width: 800px) {
+  .game-layout > .mission { grid-column: 1; }
+}

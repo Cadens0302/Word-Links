@@ -7,7 +7,7 @@ if (typeof WORD_LINKS_EXTRA !== 'undefined') for (const word of WORD_LINKS_EXTRA
 for (const word of WORD_LINKS_WEBSTER) WORDS.add(word);
 for (const word of WORD_LINKS_EXPANDED.split(/\s+/)) WORDS.add(word);
 const PUZZLES = [['LIGHT','SOUND','THE FIRST CONNECTION'],['NIGHT','SHORE','AFTER HOURS'],['SIGHT','STONE','A DIFFERENT PERSPECTIVE'],['RIVER','GARDEN','GREEN THINGS'],['BRIDGE','STONE','CROSSING OVER'],['MUSIC','DANCE','THE RHYTHM'],['OCEAN','ISLAND','OPEN WATER'],['PAPER','PENCIL','ON THE PAGE']];
-let words=[], selected=null, direction='R', score=0, won=false, puzzleIndex=-1, activeClue=null, clueRerolls=3, clueOptions=[], clueIndex=0;
+let words=[], selected=null, direction='R', score=0, won=false, puzzleIndex=-1, activeClue=null, clueReady=false, easierClueUsedForCurrent=false, clueRerolls=3, clueOptions=[], clueIndex=0, clueHistory=[], clueHintUses=0, easierClueUses=0;
 const $ = id => document.getElementById(id);
 const scoringRule = document.querySelector('.rules article:nth-of-type(2) p');
 if (scoringRule) scoringRule.textContent = 'Each letter costs 1 point. Shorter words give you a lower total.';
@@ -95,12 +95,14 @@ function alignSelectedStart(text){
 }
 function feedback(message,type=''){ $('feedback').textContent=message;$('feedback').className='feedback '+type; }
 function placementFeedback(text){if(!text||!selected||!WORDS.has(text))return;const result=validate(text,selected.r,selected.c,direction);if(result.error){feedback(result.error,'error');return;}const end=cells({text,...selected,dir:direction}).at(-1);const startAt=`${String.fromCharCode(65+selected.c)}${selected.r+1}`,endAt=`${String.fromCharCode(65+end.c)}${end.r+1}`;feedback(result.bridge?`This ${direction==='U'?'up':direction==='D'?'down':direction==='L'?'left':'right'} placement from ${startAt} to ${endAt} connects both groups. Submit ${text} to finish.`:`This is a legal ${direction==='U'?'up':direction==='D'?'down':direction==='L'?'left':'right'} link from ${startAt} to ${endAt}. Submit ${text} to place it.`, 'success');}
-function sessionStorageKey(){if(window.DAILY_MODE){const name=window.DAILY_PUZZLE?.[2]||'Daily Challenge';return `dailyChallenge:Word Links:${name}:${window.DAILY_SEED||'today'}`;}if(window.EXTRA_LEVEL)return `wordLinksSession:level:${window.EXTRA_LEVEL}`;return `wordLinksSession:extra:${window.EXTRA_SEED||puzzleIndex}`;}
+function sessionStorageKey(){if(window.DAILY_MODE){const name=window.DAILY_PUZZLE?.[2]||'Daily Challenge';return `dailyChallenge:Word Links:${name}:${window.DAILY_SEED||'today'}`;}if(window.EXTRA_LEVEL)return `wordLinksSession:level:v2:${window.EXTRA_LEVEL}`;if(window.CUSTOM_PUZZLE)return `wordLinksSession:custom:${window.CUSTOM_PUZZLE[2]}`;return `wordLinksSession:extra:${window.EXTRA_SEED||puzzleIndex}`;}
 function legacyDailySessionKey(){return `wordLinksSession:daily:${window.DAILY_SEED||'today'}`;}
-function saveGameSession(){try{localStorage.setItem(sessionStorageKey(),JSON.stringify({gameType:'Word Links',challengeName:$('puzzle-name').textContent,name:$('puzzle-name').textContent,words,score,won,selected,direction,draft:$('word').value,clueRerolls,activeClue,clueOptions,clueIndex,feedback:$('feedback').textContent,feedbackClass:$('feedback').className}));}catch{}}
+function wordLinksClueLimits(){return window.CUSTOM_PUZZLE?window.CUSTOM_PUZZLE_OPTIONS||{}:{rerolls:3,easier:1};}
+function remainingClueRerolls(saved,limit){const maximum=limit==null?Infinity:limit;return Number.isInteger(saved)&&saved>=0?Math.min(saved,maximum):maximum;}
+function saveGameSession(){if(window.CUSTOM_PUZZLE)return;try{localStorage.setItem(sessionStorageKey(),JSON.stringify({gameType:'Word Links',challengeName:$('puzzle-name').textContent,name:$('puzzle-name').textContent,words,score,won,selected,direction,draft:$('word').value,clueRerolls:clueRerolls===Infinity?-1:clueRerolls,clueHintUses,easierClueUses,easierClueUsedForCurrent,activeClue,clueOptions,clueIndex,clueHistory,feedback:$('feedback').textContent,feedbackClass:$('feedback').className}));}catch{}}
 function readGameSession(key,name){try{const raw=localStorage.getItem(key)||(window.DAILY_MODE?localStorage.getItem(legacyDailySessionKey()):null);const saved=JSON.parse(raw||'null');return saved?.name===name&&Array.isArray(saved.words)&&saved.words.length>=2?saved:null;}catch{return null;}}
-function render(){const inputText=$('word').value.toUpperCase().replace(/[^A-Z]/g,'');alignSelectedStart(inputText);const map=boardMap();const preview=selected?cells({text:inputText,...selected,dir:direction}):[];const pm=new Map(preview.map(p=>[p.r+','+p.c,p.letter]));
-  const clueEnds=activeClue?new Set([`${activeClue.r},${activeClue.c}`,`${cells(activeClue).at(-1).r},${cells(activeClue).at(-1).c}`]):new Set();
+function render(){const inputText=$('word').value.toUpperCase().replace(/[^A-Z]/g,'');if(!clueReady)alignSelectedStart(inputText);const map=boardMap();const preview=selected?cells({text:inputText,...selected,dir:direction}):[];const pm=new Map(preview.map(p=>[p.r+','+p.c,p.letter]));
+  const clueEnds=clueReady&&activeClue?new Set([`${activeClue.r},${activeClue.c}`,`${cells(activeClue).at(-1).r},${cells(activeClue).at(-1).c}`]):new Set();
   [...$('grid').children].forEach((button,i)=>{const r=Math.floor(i/15),c=i%15,key=r+','+c,old=map.get(key),letter=pm.get(key);button.className='cell';if(old)button.classList.add(old.ids.some(id=>id<2)?'start':'placed');if(letter)button.classList.add(old&&old.letter!==letter?'invalid':'preview');if(clueEnds.has(key))button.classList.add(key===`${activeClue.r},${activeClue.c}`?'clue-start':'clue-end');if(selected&&r===selected.r&&c===selected.c)button.classList.add('selected');button.textContent=old?.letter||letter||'';button.setAttribute('aria-label',`${String.fromCharCode(65+c)}${r+1}${old?', '+old.letter:letter?', preview '+letter:clueEnds.has(key)?', clue endpoint':', empty'}`);button.setAttribute('aria-pressed',String(Boolean(selected&&r===selected.r&&c===selected.c)));});
   $('selection-label').textContent=selected?`Starts at ${String.fromCharCode(65+selected.c)}${selected.r+1} · ${direction==='U'?'Up':direction==='D'?'Down':direction==='L'?'Left':'Right'}`:'Start at a square';$('cost').textContent=$('word').value?`${$('word').value.length} point${$('word').value.length===1?'':'s'}`:'1 point per letter';$('score').textContent=score;$('link-count').textContent=`${words.length-2} link${words.length===3?'':'s'} placed`;saveGameSession();
 }
@@ -116,28 +118,28 @@ function setDirection(dir){
   render();
   placementFeedback(text);
 }
-function submitWord(text,r,c,dir){if(!Number.isInteger(r)||!Number.isInteger(c)||!DIRECTIONS[dir])return {error:'Choose a starting square and direction.'};text=String(text).trim().toUpperCase();alignSelectedStart(text);if(selected){r=selected.r;c=selected.c;}const result=validate(text,r,c,dir);if(result.error){feedback(result.error,'error');return result;}words.push({text,r,c,dir});score+=result.cost;won=result.bridge;$('word').value='';clearClue();feedback(won?`Connected! You joined ${words[0].text} and ${words[1].text} in ${score} points. ${window.DAILY_MODE?'Your daily result is saved below.':'Your level result is saved below.'}`:`${text} linked. +${result.cost} points. Keep the connection going.`, 'success');$('word').disabled=won;document.querySelector('.submit').disabled=won;$('clue').disabled=won;render();if(won&&typeof window.wordLinksCompleted==='function')window.wordLinksCompleted({score,words:words.map(w=>w.text),mode:window.DAILY_MODE?'daily':'extra',level:window.EXTRA_LEVEL||null});return {word:text,score,complete:won};}
+function submitWord(text,r,c,dir){if(!Number.isInteger(r)||!Number.isInteger(c)||!DIRECTIONS[dir])return {error:'Choose a starting square and direction.'};text=String(text).trim().toUpperCase();if(!clueReady)alignSelectedStart(text);if(selected){r=selected.r;c=selected.c;}const result=validate(text,r,c,dir);if(result.error){feedback(result.error,'error');return result;}words.push({text,r,c,dir});score+=result.cost;won=result.bridge;$('word').value='';clearClue();feedback(won?window.CUSTOM_PUZZLE?`Custom puzzle complete! You connected ${words[0].text} and ${words[1].text} in ${score} points.`:`Connected! You joined ${words[0].text} and ${words[1].text} in ${score} points. ${window.DAILY_MODE?'Your daily result is saved below.':'Your level result is saved below.'}`:`${text} linked. +${result.cost} points. Keep the connection going.`, 'success');$('word').disabled=won;document.querySelector('.submit').disabled=won;$('clue').disabled=won;render();if(won&&typeof window.wordLinksCompleted==='function')window.wordLinksCompleted({score,words:words.map(w=>w.text),mode:window.DAILY_MODE?'daily':'extra',level:window.EXTRA_LEVEL||null});return {word:text,score,complete:won};}
 function seededRandom(seed){let state=2166136261;for(const char of String(seed)){state^=char.charCodeAt(0);state=Math.imul(state,16777619);}return()=>{state+=state<<13;state^=state>>>7;state+=state<<3;state^=state>>>17;state+=state<<5;return (state>>>0)/4294967296;};}
-function randomStartingWords(a,b,seed){const random=seed===undefined?Math.random:seededRandom(seed);for(let attempt=0;attempt<200;attempt++){const first={text:a,r:Math.floor(random()*15),c:Math.floor(random()*(16-a.length)),dir:'H'};const second={text:b,r:Math.floor(random()*15),c:Math.floor(random()*(16-b.length)),dir:'H'};const firstCells=cells(first),secondCells=cells(second);if(first.r===second.r&&firstCells.some(x=>secondCells.some(y=>x.c===y.c)))continue;if(firstCells.some(x=>secondCells.some(y=>Math.abs(x.r-y.r)<=1&&Math.abs(x.c-y.c)<=1)))continue;return [first,second];}return [{text:a,r:1,c:1,dir:'H'},{text:b,r:12,c:7,dir:'H'}];}
+function randomStartingWords(a,b,seed){if(window.CUSTOM_PUZZLE&&Array.isArray(window.CUSTOM_PUZZLE_PLACEMENTS))return window.CUSTOM_PUZZLE_PLACEMENTS.map((place,index)=>({text:index===0?a:b,r:place.r,c:place.c,dir:place.dir}));const random=seed===undefined?Math.random:seededRandom(seed),chosenMode=Math.floor(random()*3),modes=[chosenMode,(chosenMode+1)%3,(chosenMode+2)%3];for(const mode of modes){let firstDir,secondDir;if(mode===0){firstDir='H';secondDir='H';}else if(mode===1){firstDir='D';secondDir='D';}else if(random()<.5){firstDir='H';secondDir='D';}else{firstDir='D';secondDir='H';}for(let attempt=0;attempt<300;attempt++){const first={text:a,r:Math.floor(random()*(firstDir==='D'?16-a.length:15)),c:Math.floor(random()*(firstDir==='D'?15:16-a.length)),dir:firstDir};const second={text:b,r:Math.floor(random()*(secondDir==='D'?16-b.length:15)),c:Math.floor(random()*(secondDir==='D'?15:16-b.length)),dir:secondDir};const firstCells=cells(first),secondCells=cells(second);if(firstCells.some(x=>secondCells.some(y=>Math.abs(x.r-y.r)<=1&&Math.abs(x.c-y.c)<=1)))continue;return [first,second];}}return [{text:a,r:1,c:1,dir:'H'},{text:b,r:12,c:7,dir:'H'}];}
 function startGame(forceNew=false){
   puzzleIndex=(puzzleIndex+1)%PUZZLES.length;
-  const puzzle=window.EXTRA_PUZZLE||window.DAILY_PUZZLE||PUZZLES[puzzleIndex], [a,b,name]=puzzle;
+  const puzzle=window.CUSTOM_PUZZLE||window.EXTRA_PUZZLE||window.DAILY_PUZZLE||PUZZLES[puzzleIndex], [a,b,name]=puzzle;
   const seed=window.DAILY_MODE?window.DAILY_SEED:window.EXTRA_LEVEL?window.EXTRA_SEED:undefined;
   const baseWords=window.DAILY_MODE&&Array.isArray(window.DAILY_LAYOUT)?window.DAILY_LAYOUT.map(word=>({...word})):randomStartingWords(a,b,seed);
   const key=sessionStorageKey();
   if(forceNew){try{localStorage.removeItem(key);}catch{}}
-  const saved=forceNew?null:readGameSession(key,name);
+  const saved=forceNew||window.CUSTOM_PUZZLE?null:readGameSession(key,name);
   words=saved?saved.words.map(word=>({...word})):baseWords;
   window.STARTING_WORDS=words.slice(0,2).map(word=>({...word}));
   score=saved?saved.words.slice(2).reduce((total,word)=>total+word.text.length,0):0;won=Boolean(saved?.won);selected=saved?.selected||null;direction=({H:'R',V:'D'})[saved?.direction]||saved?.direction||'R';activeClue=saved?.activeClue||null;
-  clueRerolls=saved?.clueRerolls??3;clueOptions=saved?.clueOptions||[];clueIndex=saved?.clueIndex||0;
+  const limits=wordLinksClueLimits();
+  clueRerolls=remainingClueRerolls(saved?.clueRerolls,limits.rerolls);clueHintUses=saved?.clueHintUses||0;easierClueUses=saved?.easierClueUses||0;clueOptions=saved?.clueOptions||[];clueIndex=saved?.clueIndex||0;clueHistory=saved?.clueHistory||[];
   $('word').value=saved?.draft||'';$('word').disabled=won;document.querySelector('.submit').disabled=won;$('clue').disabled=won;
-  $('puzzle-name').textContent=name;$('puzzle-mode').textContent=window.DAILY_MODE?'DAILY CHALLENGE':window.EXTRA_LEVEL?'EXTRA LEVEL '+window.EXTRA_LEVEL:'EXTRA PUZZLE';
+  $('puzzle-name').textContent=name;$('puzzle-mode').textContent=window.DAILY_MODE?'DAILY CHALLENGE':window.CUSTOM_PUZZLE?'YOUR PUZZLE':window.EXTRA_LEVEL?'EXTRA LEVEL '+window.EXTRA_LEVEL:'EXTRA PUZZLE';
   $('start-one').textContent=a;$('start-two').textContent=b;
   for(const value of ['U','D','L','R']){$(`direction-${value}`).classList.toggle('active',direction===value);$(`direction-${value}`).setAttribute('aria-pressed',String(direction===value));}
   clearClue();
-  if(saved){clueOptions=saved.clueOptions||[];clueIndex=saved.clueIndex||0;}
-  if(saved?.activeClue){activeClue=saved.activeClue;$('clue-text').textContent=clueMessage(activeClue);$('clue-text').hidden=false;$('easier-clue').hidden=false;$('reroll-clue').hidden=false;$('reroll-clue').textContent=`↻ Reroll clue (${clueRerolls} left)`;$('clue').setAttribute('aria-expanded','true');}
+  if(saved){clueOptions=saved.clueOptions||[];clueIndex=saved.clueIndex||0;clueHistory=saved.clueHistory||[];activeClue=saved.activeClue||null;easierClueUsedForCurrent=Boolean(saved.easierClueUsedForCurrent);updateClueHintCount();}
   feedback(saved?.feedback||(won?'Connection complete.': 'Connect the two green words to finish.'),saved?.feedbackClass?.split(' ').at(-1)||'');
   render();
 }
@@ -145,17 +147,22 @@ for(let i=0;i<15;i++){$('column-labels').append(Object.assign(document.createEle
 for(let i=0;i<225;i++){const b=document.createElement('button');b.type='button';b.addEventListener('click',()=>{if(won)return;selected={r:Math.floor(i/15),c:i%15};render();$('word').focus();});b.addEventListener('keydown',e=>{const offset={ArrowLeft:-1,ArrowRight:1,ArrowUp:-15,ArrowDown:15}[e.key];if(offset!==undefined){e.preventDefault();$('grid').children[Math.max(0,Math.min(224,i+offset))].focus();}});$('grid').append(b);}
 for(const value of ['U','D','L','R'])$(`direction-${value}`).addEventListener('click',()=>setDirection(value));$('word').addEventListener('input',()=>{render();placementFeedback($('word').value.toUpperCase().replace(/[^A-Z]/g,''));});$('word-form').addEventListener('submit',e=>{e.preventDefault();if(!selected){feedback('Click the square where your word should begin.','error');return;}submitWord($('word').value,selected.r,selected.c,direction);});
 document.querySelectorAll('.replay').forEach(b=>b.addEventListener('click',()=>startGame(true)));
-function clearClue() {
-  activeClue = null;
-  clueOptions = [];
-  clueIndex = 0;
+function clearClue(resetHistory = true) {
+  clueReady = false;
+  if (resetHistory) {
+    activeClue = null;
+    easierClueUsedForCurrent = false;
+    clueOptions = [];
+    clueIndex = 0;
+    clueHistory = [];
+  }
   $('clue-text').hidden = true;
   $('clue-text').textContent = '';
   $('easier-clue-text').hidden = true;
   $('easier-clue-text').textContent = '';
-  $('easier-clue').hidden = true;
-  $('reroll-clue').hidden = true;
   $('clue').setAttribute('aria-expanded', 'false');
+  updateClueHintCount();
+  updateClueActionButtons();
   if ($('grid')?.children.length) render();
 }
 
@@ -207,36 +214,113 @@ function easierClueMessage(move) {
   return `Easier clue: starts with “${move.text[0]}”, has ${move.text.length} letters, and crosses ${anchor?.text || 'the existing word'} at ${crossing?coordinate(crossing):'the highlighted box'}. It ends at ${coordinate(end)}.`;
 }
 
-function showClue(move) {
+function updateClueHintCount() {
+  const button=$('clue'), count=$('clue-hint-count'), limits=wordLinksClueLimits();
+  if(!window.CUSTOM_PUZZLE){count.hidden=true;button.disabled=won;return;}
+  count.hidden=false;
+  const remaining=limits.hints==null?Infinity:Math.max(0,limits.hints-clueHintUses);
+  count.textContent=remaining===Infinity?'Unlimited':`${remaining} left`;
+  count.setAttribute('aria-label',remaining===Infinity?'Unlimited clue hints':`${remaining} clue hints remaining`);
+  button.disabled=won||(remaining===0&&!activeClue);
+}
+
+function showClue(move, preserveEasier = false) {
   activeClue = move;
+  clueReady = Boolean(move);
+  if (!preserveEasier) easierClueUsedForCurrent = false;
+  if (move) {
+    selected = {r:move.r,c:move.c};
+    direction = move.dir === 'H' ? 'R' : 'D';
+    for (const value of ['U','D','L','R']) {
+      $(`direction-${value}`).classList.toggle('active', direction === value);
+      $(`direction-${value}`).setAttribute('aria-pressed', String(direction === value));
+    }
+    const key = `${move.text}:${move.r}:${move.c}:${move.dir}`;
+    if (!clueHistory.some(seen => `${seen.text}:${seen.r}:${seen.c}:${seen.dir}` === key)) clueHistory.push({...move});
+  }
   $('clue-text').textContent = clueMessage(activeClue);
   $('clue-text').hidden = false;
-  $('easier-clue').hidden = false;
-  $('reroll-clue').hidden = false;
-  $('reroll-clue').textContent = `↻ Reroll clue (${clueRerolls} left)`;
+  $('easier-clue-text').hidden = !easierClueUsedForCurrent;
+  $('easier-clue-text').textContent = easierClueUsedForCurrent ? easierClueMessage(activeClue) : '';
+  animateClueReveal($('clue-text'));
+  $('reroll-clue').textContent = `↻ Reroll clue (${clueRerolls===Infinity?'∞':clueRerolls} left)`;
   $('clue').setAttribute('aria-expanded', 'true');
+  updateClueHintCount();
+  updateClueActionButtons();
   render();
 }
 
+function updateClueActionButtons(){
+  const ready=Boolean(clueReady&&activeClue&&!$('clue-text').hidden),limits=wordLinksClueLimits();
+  const layout=document.querySelector('.game-layout');
+  const mission=layout?.querySelector('.mission');
+  const missionParent=ready?layout:layout?.querySelector('aside');
+  if(mission&&missionParent&&mission.parentElement!==missionParent)missionParent.append(mission);
+  layout?.classList.toggle('has-active-clue',ready);
+  const rerollsAvailable=clueRerolls>0,easierRemaining=limits.easier==null?Infinity:Math.max(0,limits.easier-easierClueUses);
+  $('reroll-clue').hidden=false;
+  $('reroll-clue').disabled=!ready||!rerollsAvailable;
+  $('reroll-clue').textContent=`↻ Reroll clue (${clueRerolls===Infinity?'∞':clueRerolls} left)`;
+  $('easier-clue').hidden=false;
+  $('easier-clue').disabled=!ready||easierRemaining<1||easierClueUsedForCurrent;
+  $('easier-clue').textContent=`Need an easier clue? · ${easierRemaining===Infinity?'∞':easierRemaining} left`;
+}
+
 $('clue').addEventListener('click', () => {
-  if (!$('clue-text').hidden) { clearClue(); return; }
+  if (!$('clue-text').hidden) { clearClue(false); return; }
+  if (activeClue) { showClue(activeClue, true); return; }
+  const limits=wordLinksClueLimits();
+  if(limits.hints!=null&&clueHintUses>=limits.hints){feedback('You have used all the clue hints for this custom puzzle.','error');return;}
   clueOptions = findClues();
-  clueIndex = 0;
-  showClue(clueOptions[clueIndex] || null);
+  const previous = clueHistory.at(-1);
+  const unseen = clueOptions.filter(move => !clueHistory.some(seen => seen.text === move.text && seen.r === move.r && seen.c === move.c && seen.dir === move.dir));
+  const next = previous
+    ? unseen.find(move => move.text !== previous.text && (move.r !== previous.r || move.c !== previous.c))
+    : unseen[0];
+  clueIndex = next ? clueOptions.indexOf(next) : 0;
+  if(next){clueHintUses++;showClue(next);saveGameSession();}else showClue(null);
 });
 $('reroll-clue').addEventListener('click', () => {
-  if (clueRerolls < 1) return;
-  if (!clueOptions.length || clueOptions.length < 2) { feedback('There is no different legal clue for this layout yet.','error'); return; }
+  if (!clueReady||!activeClue||$('clue-text').hidden||clueRerolls < 1) return;
+  const next = clueOptions.find(move => move.text !== activeClue?.text && (move.r !== activeClue?.r || move.c !== activeClue?.c) && !clueHistory.some(seen => seen.text === move.text && seen.r === move.r && seen.c === move.c && seen.dir === move.dir));
+  if (!next) { feedback('No unused clue has both a different word and a different start square yet. Place a word to open up more clue choices.','error'); return; }
   clueRerolls -= 1;
-  clueIndex = (clueIndex + 1) % clueOptions.length;
-  showClue(clueOptions[clueIndex]);
+  clueIndex = clueOptions.indexOf(next);
+  showClue(next);
+  saveGameSession();
 });
-$('easier-clue').addEventListener('click', () => {
+  $('easier-clue').addEventListener('click', () => {
+  if(!clueReady||!activeClue||$('clue-text').hidden||easierClueUsedForCurrent)return;
+  const limits=wordLinksClueLimits();
+  if(limits.easier!=null&&easierClueUses>=limits.easier){feedback('You have used all the easier clues for this puzzle.','error');return;}
   $('easier-clue-text').textContent = easierClueMessage(activeClue);
   $('easier-clue-text').hidden = false;
-  $('easier-clue').hidden = true;
+  animateClueReveal($('easier-clue-text'));
+  easierClueUses++;easierClueUsedForCurrent=true;updateClueActionButtons();saveGameSession();
 });
 $('dictionary-info').textContent = `${WORDS.size.toLocaleString()} accepted words, 2–15 letters long. The list combines the ENABLE word-game dictionary with this edition’s original words. Names, abbreviations, and hyphenated words may not be accepted.`;
+
+window.isWordAccepted = word => WORDS.has(String(word || '').toUpperCase());
+window.createWordLinksPuzzle = (first, second, title = '', options = {}, placements = null) => {
+  const clean = value => String(value || '').trim().toUpperCase().replace(/[^A-Z]/g, '');
+  const a = clean(first), b = clean(second);
+  if (a.length < 3 || a.length > 15 || b.length < 3 || b.length > 15) return {ok:false,message:'Use two words that are 3–15 letters long.'};
+  if (a === b) return {ok:false,message:'Choose two different starting words.'};
+  if (!WORDS.has(a) || !WORDS.has(b)) return {ok:false,message:'Both starting words must be in the Wordroom dictionary.'};
+  const chosen=(Array.isArray(placements)?placements:[]).length===2?placements.map(item=>({r:Number(item.r),c:Number(item.c),dir:['R','L','U','D'].includes(item.dir)?item.dir:'R'})):null;
+  if(chosen){const placed=[{text:a,...chosen[0]},{text:b,...chosen[1]}],points=placed.map(cells);for(let i=0;i<placed.length;i++){if(points[i].some(p=>p.r<0||p.r>14||p.c<0||p.c>14))return {ok:false,message:`${i?'Second':'First'} word goes beyond the 15 × 15 board. Change its starting square or direction.`};}if(points[0].some(x=>points[1].some(y=>Math.abs(x.r-y.r)<=1&&Math.abs(x.c-y.c)<=1)))return {ok:false,message:'Keep the two starting words separate, with at least one empty square between them.'};}
+  window.DAILY_MODE = false; window.DAILY_PUZZLE = null; window.DAILY_LAYOUT = null; window.DAILY_SEED = null;
+  window.EXTRA_LEVEL = null; window.EXTRA_PUZZLE = null; window.EXTRA_SEED = null;
+  const puzzleTitle = String(title || '').trim().slice(0, 40) || 'My Word Links';
+  window.CUSTOM_PUZZLE = [a, b, puzzleTitle];
+  const safeLimit=value=>value==null?null:Number.isInteger(value)&&value>=0&&value<=20?value:null;
+  window.CUSTOM_PUZZLE_OPTIONS={hints:safeLimit(options.hints),rerolls:safeLimit(options.rerolls),easier:safeLimit(options.easier)};
+  window.CUSTOM_PUZZLE_PLACEMENTS=chosen;
+  startGame(true);
+  updateNextExtraPuzzleButton();
+  window.showGameDirections?.('links');
+  return {ok:true};
+};
 
 startGame();
 if(document.modelContext?.registerTool){try{Promise.resolve(document.modelContext.registerTool({name:'place_word',description:'Place and score a word in Beacon Wordroom. Rows and columns are zero-based; direction is H or V.',inputSchema:{type:'object',properties:{word:{type:'string'},row:{type:'integer',minimum:0,maximum:14},column:{type:'integer',minimum:0,maximum:14},direction:{type:'string',enum:['H','V']}},required:['word','row','column','direction'],additionalProperties:false},execute:input=>submitWord(input.word,input.row,input.column,input.direction)})).catch(()=>{});}catch{}}
