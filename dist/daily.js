@@ -50,9 +50,9 @@ function updateNextExtraPuzzleButton() {
   const completed = Boolean(readExtraCompleted()[level]);
   const isFinalLevel = level >= EXTRA_LEVELS.length;
   button.textContent = isFinalLevel && completed ? 'All extra puzzles complete' : 'Move on to next puzzle';
-  // Keep the control visually consistent while locked; clicking it explains
-  // what is needed instead of making it look like a broken or missing action.
-  button.disabled = false;
+  const canMoveOn = completed && !isFinalLevel;
+  button.classList.toggle('is-locked', !canMoveOn);
+  button.setAttribute('aria-disabled', String(!canMoveOn));
   button.title = completed
     ? isFinalLevel ? 'You completed every extra puzzle.' : `Open Level ${level + 1}`
     : 'Complete this level to unlock the next puzzle.';
@@ -98,7 +98,9 @@ function dailyPuzzleWordsFor(date, avoid = []) {
   for (const char of `${date}:${ageGroup.id}`) hash = (hash * 31 + char.charCodeAt(0)) >>> 0;
   let state = (Math.imul(hash ^ 0x9e3779b9, 1664525) + 1013904223) >>> 0;
   const random = () => { state = (Math.imul(state, 1664525) + 1013904223) >>> 0; return state / 4294967296; };
-  const ageWords = window.filterWordsForAge(DAILY_STARTER_WORDS);
+  const profile = window.wordLinksAgeChallenge?.() || {minLength:3,maxLength:9};
+  let ageWords = DAILY_STARTER_WORDS.filter(word => word.length >= profile.minLength && word.length <= profile.maxLength);
+  if (ageWords.length < 2) ageWords = DAILY_STARTER_WORDS.filter(word => word.length >= 3 && word.length <= 9);
   const familiarWords = ageWords.filter(word => window.isAgePreferredDailyWord?.(word));
   const words = familiarWords.length >= 2 ? familiarWords : ageWords;
   for (let i = words.length - 1; i > 0; i--) {
@@ -153,7 +155,7 @@ function startDaily() {
   window.DAILY_PUZZLE = dailyPuzzleFor(date);
   window.DAILY_SEED = `daily-v6-${window.currentWordAgeGroup().id}-${date}`;
   const layouts = readDailyLayouts();
-  const layoutKey = `v7:${date}:${window.currentWordAgeGroup().id}`;
+  const layoutKey = `v8:${date}:${window.currentWordAgeGroup().id}`;
   window.DAILY_LAYOUT = Array.isArray(layouts[layoutKey]) ? layouts[layoutKey] : null;
   window.EXTRA_LEVEL = null;
   window.EXTRA_PUZZLE = null;
@@ -166,6 +168,24 @@ function startDaily() {
   }
   updateStreakLabels();
   animateGameEntrance('links');
+}
+
+function levelWordsForAge(levelNumber, level, fallbackIndex) {
+  const profile = window.wordLinksAgeChallenge?.() || {minLength:3,maxLength:15};
+  const eligiblePairs = level.puzzles.filter(pair => pair.every(word => word.length >= profile.minLength && word.length <= profile.maxLength));
+  let seed = 2166136261;
+  for (const char of `${levelNumber}:${window.currentWordAgeGroup().id}`) { seed ^= char.charCodeAt(0); seed = Math.imul(seed, 16777619); }
+  if (eligiblePairs.length) return [...eligiblePairs[(seed >>> 0) % eligiblePairs.length]];
+  let pool = DAILY_STARTER_WORDS.filter(word => word.length >= profile.minLength && word.length <= profile.maxLength);
+  const familiar = pool.filter(word => window.isAgePreferredDailyWord?.(word));
+  if (familiar.length >= 2) pool = familiar;
+  if (pool.length < 2) pool = DAILY_STARTER_WORDS.filter(word => word.length >= 3 && word.length <= 9);
+  if (!pool.length) return [...level.puzzles[fallbackIndex % level.puzzles.length]];
+  const firstIndex = (seed >>> 0) % pool.length;
+  let secondIndex = (Math.imul(seed >>> 0, 1664525) + 1013904223) >>> 0;
+  secondIndex %= pool.length - 1;
+  if (secondIndex >= firstIndex) secondIndex++;
+  return [pool[firstIndex], pool[secondIndex]];
 }
 
 function startExtraLevel(levelNumber) {
@@ -185,8 +205,8 @@ function startExtraLevel(levelNumber) {
     writePuzzleAssignments(assignments);
   }
   const puzzleIndex = assignments[assignmentKey] % level.puzzles.length;
-  window.EXTRA_PUZZLE = [...level.puzzles[puzzleIndex], level.name];
-  window.EXTRA_SEED = `level-v2-${levelNumber}`;
+  window.EXTRA_PUZZLE = [...levelWordsForAge(levelNumber, level, puzzleIndex), level.name];
+  window.EXTRA_SEED = `level-v3-${levelNumber}-${window.currentWordAgeGroup().id}`;
   startGame();
   updateNextExtraPuzzleButton();
   setExtraLevelsOpen(false);
@@ -249,7 +269,7 @@ document.getElementById('next-extra-puzzle')?.addEventListener('click', () => {
   const level = Number(window.EXTRA_LEVEL);
   if (!level) return;
   if (!readExtraCompleted()[level]) {
-    feedback(`Finish Level ${level} first to unlock the next puzzle.`, 'error');
+    feedback('Finish this level to continue to the next level.', 'error');
     return;
   }
   if (level >= EXTRA_LEVELS.length) {

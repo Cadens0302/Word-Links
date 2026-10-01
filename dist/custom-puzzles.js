@@ -1,10 +1,10 @@
 (() => {
   const limitOptions = '<option value="-1">Unlimited</option><option value="0">None</option>' + Array.from({length:20},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('');
   const limitsMarkup = (kind) => `<fieldset class="custom-limits"><legend>Help for players</legend>
-    <label>${kind==='links'?'Clue hints':'Answer reveals'}<select data-limit="hints">${limitOptions}</select></label>
+    <div class="custom-limit-fixed"><strong>Clues</strong><span>Unlimited</span></div>
     <label>${kind==='links'?'Clue rerolls':'Layout rerolls'}<select data-limit="rerolls">${limitOptions.replace('value="3"','value="3" selected')}</select></label>
-    <label>Easier clues<select data-limit="easier">${limitOptions.replace('value="1"','value="1" selected')}</select></label>
-    <p>${kind==='links'?'A hint gives a legal next move. Rerolls choose a different clue.':'Answer reveals fill one answer. Layout rerolls rearrange the same words.'} Easier clues are tracked separately.</p>
+    ${kind==='links' ? '<div class="custom-limit-fixed"><strong>Easier clues</strong><span>Unlimited</span></div>' : '<div class="custom-limit-fixed"><strong>Answer reveal</strong><span>1 use per puzzle</span></div>'}
+    <p>${kind==='links'?'Players can ask for a new clue whenever they need one. Rerolls choose a different clue.':'Players can open clues freely. Layout rerolls rearrange the same words; answer reveal is available once.'}</p>
   </fieldset>`;
 
   const overlay = document.createElement('div');
@@ -35,6 +35,24 @@
   const shareOverlay=document.createElement('div');shareOverlay.id='custom-share-welcome';shareOverlay.className='custom-builder-backdrop custom-share-backdrop';shareOverlay.hidden=true;
   shareOverlay.innerHTML=`<section class="custom-share-card" role="dialog" aria-modal="true" aria-labelledby="custom-share-title"><div class="eyebrow">A PUZZLE FOR YOU</div><h2 id="custom-share-title">A friend made you a puzzle.</h2><p id="custom-share-description"></p><button id="custom-share-open" type="button" class="custom-builder-submit">Open real game <span aria-hidden="true">↗</span></button><p id="custom-share-error" class="custom-builder-status error" role="status" hidden></p></section>`;
   document.body.append(shareOverlay);
+
+  const completionOverlay=document.createElement('div');completionOverlay.id='custom-puzzle-complete';completionOverlay.className='custom-builder-backdrop custom-complete-backdrop';completionOverlay.hidden=true;
+  completionOverlay.innerHTML=`<section class="custom-share-card custom-complete-card" role="dialog" aria-modal="true" aria-labelledby="custom-complete-title" aria-describedby="custom-complete-copy"><button class="custom-complete-close" type="button" aria-label="Close completion message">×</button><div class="eyebrow">PUZZLE COMPLETE</div><h2 id="custom-complete-title">Nicely done.</h2><p id="custom-complete-copy">You finished a puzzle made by a player.</p><button id="custom-complete-home" type="button" class="custom-builder-submit">Go to the main game <span aria-hidden="true">↗</span></button></section>`;
+  document.body.append(completionOverlay);
+  let completionShown=false;
+  window.showCustomPuzzleCompletion=function(game){
+    if(completionShown)return;
+    completionShown=true;
+    const crossword=game==='crossword';
+    completionOverlay.querySelector('#custom-complete-title').textContent=crossword?'Crossword complete.':'Word Links complete.';
+    completionOverlay.querySelector('#custom-complete-copy').textContent=crossword?'You finished a player made crossword. Head back to the main game to play another puzzle.':'You finished a player made Word Links puzzle. Head back to the main game to play another puzzle.';
+    completionOverlay.hidden=false;
+    completionOverlay.querySelector('#custom-complete-home').focus({preventScroll:true});
+  };
+  completionOverlay.querySelector('#custom-complete-home').addEventListener('click',()=>location.assign(`${location.pathname}${location.search}`));
+  completionOverlay.querySelector('.custom-complete-close').addEventListener('click',()=>{completionOverlay.hidden=true;});
+  completionOverlay.addEventListener('click',event=>{if(event.target===completionOverlay)completionOverlay.hidden=true;});
+  document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!completionOverlay.hidden)completionOverlay.hidden=true;});
 
   const linksFields=overlay.querySelector('#custom-links-fields'),crosswordFields=overlay.querySelector('#custom-crossword-fields'),status=overlay.querySelector('#custom-builder-status');
   let activeGame='links', pendingShare=null;
@@ -67,7 +85,7 @@
   [...Object.values(placementInputs),...Object.values(placementWordInputs),...Object.values(placementDirections)].forEach(input=>{input.addEventListener('input',drawPlacementGrid);input.addEventListener('change',drawPlacementGrid);});
   drawPlacementGrid();
   const titleInput=()=>overlay.querySelector('#custom-puzzle-title').value.trim().slice(0,40)|| (activeGame==='links'?'My Word Links':'My Crossword');
-  const settings=()=>{const fields=activeGame==='links'?linksFields:crosswordFields;return Object.fromEntries(['hints','rerolls','easier'].map(name=>{const value=fields.querySelector(`[data-limit="${name}"]`).value;return [name,value==='-1'?null:Number(value)];}));};
+  const settings=()=>{const fields=activeGame==='links'?linksFields:crosswordFields;const value=fields.querySelector('[data-limit="rerolls"]').value;return {hints:null,rerolls:value==='-1'?null:Number(value),easier:null};};
   const setError=message=>{status.textContent=message;status.className='custom-builder-status error';};
   function close(){overlay.hidden=true;status.textContent='';status.className='custom-builder-status';}
   function readLinks(){
@@ -108,7 +126,7 @@
   function encode(payload){const bytes=new TextEncoder().encode(JSON.stringify(payload));let binary='';bytes.forEach(byte=>binary+=String.fromCharCode(byte));return btoa(binary).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
   function decode(token){const binary=atob(token.replace(/-/g,'+').replace(/_/g,'/'));const bytes=Uint8Array.from(binary,ch=>ch.charCodeAt(0));return JSON.parse(new TextDecoder().decode(bytes));}
   async function copyShareLink(){const payload=payloadForForm();if(payload.error){setError(payload.error);return;}const url=new URL(location.href);url.hash=`puzzle=${encode(payload)}`;if(url.href.length>8500){setError('This puzzle’s share link is too long. Shorten the clues and try again.');return;}try{await navigator.clipboard.writeText(url.href);status.className='custom-builder-status';status.textContent='Share link copied. Send it to a friend to open this puzzle.';}catch{const temp=document.createElement('textarea');temp.value=url.href;temp.style.position='fixed';temp.style.opacity='0';document.body.append(temp);temp.select();const copied=document.execCommand('copy');temp.remove();if(copied){status.className='custom-builder-status';status.textContent='Share link copied. Send it to a friend to open this puzzle.';}else setError('Your browser could not copy the link. Try copying the page address after creating the puzzle.');}}
-  function openBuilder(game){activeGame=game;const crossword=game==='crossword';linksFields.hidden=crossword;crosswordFields.hidden=!crossword;overlay.querySelector('#custom-builder-title').textContent=crossword?'Build a crossword':'Build a Word Links puzzle';overlay.querySelector('.custom-builder-description').textContent=crossword?'Write your own clues and place the answers, or let the game arrange a connected crossword.':'Choose two starting words, click their starting squares, and set the help available to players.';activePlacement='one';overlay.querySelectorAll('[data-pick-word]').forEach(button=>{const active=button.dataset.pickWord==='one';button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));});drawPlacementGrid();placementInstruction.textContent='Choose the first word, then click its starting square. Click a square to place it.';overlay.hidden=false;status.textContent='';status.className='custom-builder-status';requestAnimationFrame(()=>overlay.querySelector(crossword?'#custom-crossword-entries':'#custom-word-one').focus());}
+  function openBuilder(game){completionShown=false;activeGame=game;const crossword=game==='crossword';linksFields.hidden=crossword;crosswordFields.hidden=!crossword;overlay.querySelector('#custom-builder-title').textContent=crossword?'Build a crossword':'Build a Word Links puzzle';overlay.querySelector('.custom-builder-description').textContent=crossword?'Write your own clues and place the answers, or let the game arrange a connected crossword.':'Choose two starting words, click their starting squares, and set the help available to players.';activePlacement='one';overlay.querySelectorAll('[data-pick-word]').forEach(button=>{const active=button.dataset.pickWord==='one';button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));});drawPlacementGrid();placementInstruction.textContent='Choose the first word, then click its starting square. Click a square to place it.';overlay.hidden=false;status.textContent='';status.className='custom-builder-status';requestAnimationFrame(()=>overlay.querySelector(crossword?'#custom-crossword-entries':'#custom-word-one').focus());}
 
   document.querySelectorAll('.intro-actions,.mini-header-actions').forEach(toolbar=>{const button=document.createElement('button');button.type='button';button.className='custom-puzzle-button';button.textContent='✦ Create a puzzle';button.setAttribute('aria-haspopup','dialog');button.addEventListener('click',()=>openBuilder(toolbar.matches('.mini-header-actions')?'crossword':'links'));toolbar.prepend(button);});
   overlay.querySelector('.custom-builder-close').addEventListener('click',close);overlay.addEventListener('click',event=>{if(event.target===overlay)close();});
@@ -116,6 +134,7 @@
   overlay.querySelector('#custom-builder-submit').addEventListener('click',()=>{status.className='custom-builder-status';const payload=payloadForForm();if(payload.error){setError(payload.error);return;}let result;if(payload.g==='links')result=window.createWordLinksPuzzle(payload.words[0],payload.words[1],payload.title,payload.limits,payload.placements);else result=window.createMiniCustomPuzzle(payload.entries,payload.title,payload.limits);if(!result?.ok){setError(result?.message||'The puzzle could not be created. Check the entries and try again.');return;}close();});
 
   function openSharedPuzzle(payload){
+    completionShown=false;
     shareOverlay.hidden=true;window.SHARED_PUZZLE_ACTIVE=true;window.ageSelectionConfirmedThisLoad=true;
     document.getElementById('game-selector').hidden=true;document.getElementById('game-welcome').hidden=true;document.getElementById('welcome-modal').hidden=true;
     let result;

@@ -118,9 +118,9 @@ function setDirection(dir){
   render();
   placementFeedback(text);
 }
-function submitWord(text,r,c,dir){if(!Number.isInteger(r)||!Number.isInteger(c)||!DIRECTIONS[dir])return {error:'Choose a starting square and direction.'};text=String(text).trim().toUpperCase();if(!clueReady)alignSelectedStart(text);if(selected){r=selected.r;c=selected.c;}const result=validate(text,r,c,dir);if(result.error){feedback(result.error,'error');return result;}words.push({text,r,c,dir});score+=result.cost;won=result.bridge;$('word').value='';clearClue();feedback(won?window.CUSTOM_PUZZLE?`Custom puzzle complete! You connected ${words[0].text} and ${words[1].text} in ${score} points.`:`Connected! You joined ${words[0].text} and ${words[1].text} in ${score} points. ${window.DAILY_MODE?'Your daily result is saved below.':'Your level result is saved below.'}`:`${text} linked. +${result.cost} points. Keep the connection going.`, 'success');$('word').disabled=won;document.querySelector('.submit').disabled=won;$('clue').disabled=won;render();if(won&&typeof window.wordLinksCompleted==='function')window.wordLinksCompleted({score,words:words.map(w=>w.text),mode:window.DAILY_MODE?'daily':'extra',level:window.EXTRA_LEVEL||null});return {word:text,score,complete:won};}
+function submitWord(text,r,c,dir){if(!Number.isInteger(r)||!Number.isInteger(c)||!DIRECTIONS[dir])return {error:'Choose a starting square and direction.'};text=String(text).trim().toUpperCase();if(!clueReady)alignSelectedStart(text);if(selected){r=selected.r;c=selected.c;}const result=validate(text,r,c,dir);if(result.error){feedback(result.error,'error');return result;}words.push({text,r,c,dir});score+=result.cost;won=result.bridge;$('word').value='';clearClue();feedback(won?window.CUSTOM_PUZZLE?`Custom puzzle complete! You connected ${words[0].text} and ${words[1].text} in ${score} points.`:`Connected! You joined ${words[0].text} and ${words[1].text} in ${score} points. ${window.DAILY_MODE?'Your daily result is saved below.':'Your level result is saved below.'}`:`${text} linked. +${result.cost} points. Keep the connection going.`, 'success');$('word').disabled=won;document.querySelector('.submit').disabled=won;$('clue').disabled=won;render();if(won&&window.CUSTOM_PUZZLE)window.showCustomPuzzleCompletion?.('links');if(won&&typeof window.wordLinksCompleted==='function')window.wordLinksCompleted({score,words:words.map(w=>w.text),mode:window.DAILY_MODE?'daily':'extra',level:window.EXTRA_LEVEL||null});return {word:text,score,complete:won};}
 function seededRandom(seed){let state=2166136261;for(const char of String(seed)){state^=char.charCodeAt(0);state=Math.imul(state,16777619);}return()=>{state+=state<<13;state^=state>>>7;state+=state<<3;state^=state>>>17;state+=state<<5;return (state>>>0)/4294967296;};}
-function randomStartingWords(a,b,seed){if(window.CUSTOM_PUZZLE&&Array.isArray(window.CUSTOM_PUZZLE_PLACEMENTS))return window.CUSTOM_PUZZLE_PLACEMENTS.map((place,index)=>({text:index===0?a:b,r:place.r,c:place.c,dir:place.dir}));const random=seed===undefined?Math.random:seededRandom(seed),chosenMode=Math.floor(random()*3),modes=[chosenMode,(chosenMode+1)%3,(chosenMode+2)%3];for(const mode of modes){let firstDir,secondDir;if(mode===0){firstDir='H';secondDir='H';}else if(mode===1){firstDir='D';secondDir='D';}else if(random()<.5){firstDir='H';secondDir='D';}else{firstDir='D';secondDir='H';}for(let attempt=0;attempt<300;attempt++){const first={text:a,r:Math.floor(random()*(firstDir==='D'?16-a.length:15)),c:Math.floor(random()*(firstDir==='D'?15:16-a.length)),dir:firstDir};const second={text:b,r:Math.floor(random()*(secondDir==='D'?16-b.length:15)),c:Math.floor(random()*(secondDir==='D'?15:16-b.length)),dir:secondDir};const firstCells=cells(first),secondCells=cells(second);if(firstCells.some(x=>secondCells.some(y=>Math.abs(x.r-y.r)<=1&&Math.abs(x.c-y.c)<=1)))continue;return [first,second];}}return [{text:a,r:1,c:1,dir:'H'},{text:b,r:12,c:7,dir:'H'}];}
+function randomStartingWords(a,b,seed){if(window.CUSTOM_PUZZLE&&Array.isArray(window.CUSTOM_PUZZLE_PLACEMENTS))return window.CUSTOM_PUZZLE_PLACEMENTS.map((place,index)=>({text:index===0?a:b,r:place.r,c:place.c,dir:place.dir}));const random=seed===undefined?Math.random:seededRandom(seed),minimumGap=window.DAILY_MODE||window.EXTRA_LEVEL?window.wordLinksAgeChallenge?.().minGap||2:2,chosenMode=Math.floor(random()*3),modes=[chosenMode,(chosenMode+1)%3,(chosenMode+2)%3];for(const mode of modes){let firstDir,secondDir;if(mode===0){firstDir='H';secondDir='H';}else if(mode===1){firstDir='D';secondDir='D';}else if(random()<.5){firstDir='H';secondDir='D';}else{firstDir='D';secondDir='H';}for(let attempt=0;attempt<1400;attempt++){const first={text:a,r:Math.floor(random()*(firstDir==='D'?16-a.length:15)),c:Math.floor(random()*(firstDir==='D'?15:16-a.length)),dir:firstDir};const second={text:b,r:Math.floor(random()*(secondDir==='D'?16-b.length:15)),c:Math.floor(random()*(secondDir==='D'?15:16-b.length)),dir:secondDir};const firstCells=cells(first),secondCells=cells(second);if(firstCells.some(x=>secondCells.some(y=>Math.abs(x.r-y.r)<=1&&Math.abs(x.c-y.c)<=1)))continue;let closest=Infinity;for(const x of firstCells)for(const y of secondCells)closest=Math.min(closest,Math.abs(x.r-y.r)+Math.abs(x.c-y.c));if(closest<minimumGap)continue;return [first,second];}}return [{text:a,r:1,c:1,dir:'H'},{text:b,r:12,c:7,dir:'H'}];}
 function startGame(forceNew=false){
   puzzleIndex=(puzzleIndex+1)%PUZZLES.length;
   const puzzle=window.CUSTOM_PUZZLE||window.EXTRA_PUZZLE||window.DAILY_PUZZLE||PUZZLES[puzzleIndex], [a,b,name]=puzzle;
@@ -138,7 +138,7 @@ function startGame(forceNew=false){
   $('puzzle-name').textContent=name;$('puzzle-mode').textContent=window.DAILY_MODE?'DAILY CHALLENGE':window.CUSTOM_PUZZLE?'YOUR PUZZLE':window.EXTRA_LEVEL?'EXTRA LEVEL '+window.EXTRA_LEVEL:'EXTRA PUZZLE';
   $('start-one').textContent=a;$('start-two').textContent=b;
   for(const value of ['U','D','L','R']){$(`direction-${value}`).classList.toggle('active',direction===value);$(`direction-${value}`).setAttribute('aria-pressed',String(direction===value));}
-  clearClue();
+  clearClue(true);
   if(saved){clueOptions=saved.clueOptions||[];clueIndex=saved.clueIndex||0;clueHistory=saved.clueHistory||[];activeClue=saved.activeClue||null;easierClueUsedForCurrent=Boolean(saved.easierClueUsedForCurrent);updateClueHintCount();}
   feedback(saved?.feedback||(won?'Connection complete.': 'Connect the two green words to finish.'),saved?.feedbackClass?.split(' ').at(-1)||'');
   render();
@@ -146,16 +146,18 @@ function startGame(forceNew=false){
 for(let i=0;i<15;i++){$('column-labels').append(Object.assign(document.createElement('span'),{textContent:String.fromCharCode(65+i)}));$('row-labels').append(Object.assign(document.createElement('span'),{textContent:i+1}));}
 for(let i=0;i<225;i++){const b=document.createElement('button');b.type='button';b.addEventListener('click',()=>{if(won)return;selected={r:Math.floor(i/15),c:i%15};render();$('word').focus();});b.addEventListener('keydown',e=>{const offset={ArrowLeft:-1,ArrowRight:1,ArrowUp:-15,ArrowDown:15}[e.key];if(offset!==undefined){e.preventDefault();$('grid').children[Math.max(0,Math.min(224,i+offset))].focus();}});$('grid').append(b);}
 for(const value of ['U','D','L','R'])$(`direction-${value}`).addEventListener('click',()=>setDirection(value));$('word').addEventListener('input',()=>{render();placementFeedback($('word').value.toUpperCase().replace(/[^A-Z]/g,''));});$('word-form').addEventListener('submit',e=>{e.preventDefault();if(!selected){feedback('Click the square where your word should begin.','error');return;}submitWord($('word').value,selected.r,selected.c,direction);});
-document.querySelectorAll('.replay').forEach(b=>b.addEventListener('click',()=>startGame(true)));
-function clearClue(resetHistory = true) {
+window.confirmPuzzleRestart = label => window.showWordroomConfirmation({title:'Restart this puzzle?',message:`Your entries in ${label} will be cleared.`,confirmLabel:'Restart puzzle',danger:true});
+document.querySelectorAll('.replay').forEach(b=>b.addEventListener('click',async()=>{
+  const label=window.DAILY_MODE?'today’s Word Links challenge':window.EXTRA_LEVEL?`Word Links Level ${window.EXTRA_LEVEL}`:'this Word Links puzzle';
+  if(await window.confirmPuzzleRestart(label))startGame(true);
+}));
+function clearClue(resetHistory = false) {
   clueReady = false;
-  if (resetHistory) {
-    activeClue = null;
-    easierClueUsedForCurrent = false;
-    clueOptions = [];
-    clueIndex = 0;
-    clueHistory = [];
-  }
+  activeClue = null;
+  easierClueUsedForCurrent = false;
+  clueOptions = [];
+  clueIndex = 0;
+  if (resetHistory) clueHistory = [];
   $('clue-text').hidden = true;
   $('clue-text').textContent = '';
   $('easier-clue-text').hidden = true;
@@ -267,16 +269,25 @@ function updateClueActionButtons(){
 }
 
 $('clue').addEventListener('click', () => {
-  if (!$('clue-text').hidden) { clearClue(false); return; }
+  if (!$('clue-text').hidden) {
+    clueReady = false;
+    $('clue-text').hidden = true;
+    $('easier-clue-text').hidden = true;
+    $('clue').setAttribute('aria-expanded', 'false');
+    updateClueActionButtons();
+    render();
+    return;
+  }
   if (activeClue) { showClue(activeClue, true); return; }
   const limits=wordLinksClueLimits();
   if(limits.hints!=null&&clueHintUses>=limits.hints){feedback('You have used all the clue hints for this custom puzzle.','error');return;}
   clueOptions = findClues();
   const previous = clueHistory.at(-1);
-  const unseen = clueOptions.filter(move => !clueHistory.some(seen => seen.text === move.text && seen.r === move.r && seen.c === move.c && seen.dir === move.dir));
-  const next = previous
-    ? unseen.find(move => move.text !== previous.text && (move.r !== previous.r || move.c !== previous.c))
-    : unseen[0];
+  const unseen = clueOptions.filter(move =>
+    !clueHistory.some(seen => seen.text === move.text && seen.r === move.r && seen.c === move.c && seen.dir === move.dir) &&
+    (!previous || (move.text !== previous.text && (move.r !== previous.r || move.c !== previous.c)))
+  );
+  const next = unseen[0];
   clueIndex = next ? clueOptions.indexOf(next) : 0;
   if(next){clueHintUses++;showClue(next);saveGameSession();}else showClue(null);
 });
@@ -314,7 +325,7 @@ window.createWordLinksPuzzle = (first, second, title = '', options = {}, placeme
   const puzzleTitle = String(title || '').trim().slice(0, 40) || 'My Word Links';
   window.CUSTOM_PUZZLE = [a, b, puzzleTitle];
   const safeLimit=value=>value==null?null:Number.isInteger(value)&&value>=0&&value<=20?value:null;
-  window.CUSTOM_PUZZLE_OPTIONS={hints:safeLimit(options.hints),rerolls:safeLimit(options.rerolls),easier:safeLimit(options.easier)};
+  window.CUSTOM_PUZZLE_OPTIONS={hints:null,rerolls:safeLimit(options.rerolls),easier:null};
   window.CUSTOM_PUZZLE_PLACEMENTS=chosen;
   startGame(true);
   updateNextExtraPuzzleButton();

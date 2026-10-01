@@ -552,7 +552,7 @@ function escapeMiniHTML(value){return String(value).replace(/[&<>"']/g,char=>({'
 function renderMiniClues() {
   for (const direction of ['Across', 'Down']) {
     const list = document.getElementById(direction === 'Across' ? 'mini-across' : 'mini-down');
-    list.innerHTML = miniPuzzle.entries.filter(entry => entry.dir === direction).map(entry => `<div class="mini-clue-row" style="grid-template-columns:minmax(0,1fr) 32px 20px"><button class="mini-clue" type="button" data-entry="${entry.id}" aria-label="${direction} clue ${entry.number}: ${escapeMiniHTML(entry.clue)} (${entry.answer.length} letters)"><strong class="mini-clue-label" data-arrow="${miniArrowPlacement(entry)}"><span>${entry.number}</span><span class="mini-clue-arrow" aria-hidden="true">${miniDirectionArrow(entry)}</span></strong> ${escapeMiniHTML(entry.clue)} <span class="mini-length">(${entry.answer.length})</span></button><button class="mini-clue-toggle" type="button" aria-label="Show a better hint for ${direction} clue ${entry.number}" aria-expanded="false">▸</button><span class="mini-clue-check" style="display:none;place-items:center;width:20px;height:30px;color:#5c7837;font-size:17px;font-weight:bold" data-entry-check="${entry.id}" role="img" aria-label="Completed">✓</span><span class="mini-better-hint" hidden><span class="mini-easy-hint"></span><button class="mini-reveal-word secondary" type="button" data-mini-reveal="${entry.id}" hidden style="display:block;width:100%;margin-top:7px;padding:8px 10px;border:1px solid #c9c0ae;border-radius:6px;background:rgba(255,254,250,.55);color:var(--ink);cursor:pointer;font-size:11px">${miniRevealUsed?'Word reveal used for this puzzle':'Reveal this word · 1 use for this puzzle'}</button></span></div>`).join('');
+    list.innerHTML = miniPuzzle.entries.filter(entry => entry.dir === direction).map(entry => `<div class="mini-clue-row" style="grid-template-columns:minmax(0,1fr) 32px 20px"><button class="mini-clue" type="button" data-entry="${entry.id}" aria-label="${direction} clue ${entry.number}: ${escapeMiniHTML(entry.clue)} (${entry.answer.length} letters)"><strong class="mini-clue-label" data-arrow="${miniArrowPlacement(entry)}"><span>${entry.number}</span><span class="mini-clue-arrow" aria-hidden="true">${miniDirectionArrow(entry)}</span></strong> <span class="mini-clue-copy">${escapeMiniHTML(entry.clue)} <span class="mini-length">(${entry.answer.length})</span></span></button><button class="mini-clue-toggle" type="button" aria-label="Show a better hint for ${direction} clue ${entry.number}" aria-expanded="false">▸</button><span class="mini-clue-check" style="display:none;place-items:center;width:20px;height:30px;color:#5c7837;font-size:17px;font-weight:bold" data-entry-check="${entry.id}" role="img" aria-label="Completed">✓</span><span class="mini-better-hint" hidden><span class="mini-easy-hint"></span><button class="mini-reveal-word secondary" type="button" data-mini-reveal="${entry.id}" hidden style="display:block;width:100%;margin-top:7px;padding:8px 10px;border:1px solid #c9c0ae;border-radius:6px;background:rgba(255,254,250,.55);color:var(--ink);cursor:pointer;font-size:11px">${miniRevealUsed?'Word reveal used for this puzzle':'Reveal this word · 1 use for this puzzle'}</button></span></div>`).join('');
     list.querySelectorAll('.mini-clue').forEach(button => button.addEventListener('click', () => {
       const entry = miniPuzzle.entries.find(item => item.id === button.dataset.entry);
       highlightEntry(entry);
@@ -568,7 +568,13 @@ function renderMiniClues() {
       if (!expanded) {
         const clueId = row.querySelector('.mini-clue').dataset.entry;
         const entry = miniPuzzle.entries.find(item => item.id === clueId);
-        if (entry) row.querySelector('.mini-easy-hint').textContent = `Hint: ${miniEasyHint(entry)}`;
+        if (entry) {
+          row.querySelector('.mini-easy-hint').textContent = `Hint: ${miniEasyHint(entry)}`;
+          highlightEntry(entry);
+          const cell = miniCell(entry.row, entry.col);
+          cell?.focus({ preventScroll: true });
+          cell?.scrollIntoView({ block: 'center', inline: 'nearest', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+        }
         miniEasyUses++;
         updateMiniEasyButtons();
       }
@@ -598,7 +604,18 @@ function renderMiniClues() {
   updateMiniEasyButtons();
 }
 
-function updateMiniEasyButtons(){document.querySelectorAll('.mini-clue-toggle').forEach(button=>{const expanded=button.getAttribute('aria-expanded')==='true',entryId=button.closest('.mini-clue-row')?.querySelector('.mini-clue')?.dataset.entry,entry=miniPuzzle.entries.find(item=>item.id===entryId),selected=selectedEntry?.id===entryId,limit=miniMode==='custom'?miniCustomOptions.easier:null;button.disabled=!expanded&&(!selected||(limit!=null&&miniEasyUses>=limit));const label=selected||expanded?`Show a better hint for ${entry?.dir} clue ${entry?.number}`:`Select the ${entry?.dir} clue ${entry?.number} first to unlock a better hint`;button.setAttribute('aria-label',label);button.title=label;});}
+function updateMiniEasyButtons() {
+  document.querySelectorAll('.mini-clue-toggle').forEach(button => {
+    const expanded = button.getAttribute('aria-expanded') === 'true';
+    const entryId = button.closest('.mini-clue-row')?.querySelector('.mini-clue')?.dataset.entry;
+    const entry = miniPuzzle.entries.find(item => item.id === entryId);
+    const limit = miniMode === 'custom' ? miniCustomOptions.easier : null;
+    button.disabled = !expanded && limit != null && miniEasyUses >= limit;
+    const label = button.disabled ? 'No easier clues left for this puzzle' : `${expanded ? 'Hide' : 'Show'} a better hint for ${entry?.dir} clue ${entry?.number}`;
+    button.setAttribute('aria-label', label);
+    button.title = label;
+  });
+}
 
 function updateMiniClueChecks() {
   miniPuzzle.entries.forEach(entry => {
@@ -616,7 +633,7 @@ function checkMini() {
     else cell?.classList.remove('mini-wrong');
   }));
   const feedback = document.getElementById('mini-feedback');
-  if (complete && miniMode === 'level') { const progress=miniLevelProgress(); progress.completed=progress.completed||{}; progress.best=progress.best||{}; progress.history=progress.history||[]; progress.completed[miniLevel]=true; progress.best[miniLevel]=Math.min(progress.best[miniLevel]??Infinity,filledMiniCells()); progress.history.push({date:miniDateKey(),level:miniLevel,title:miniPuzzle.title}); saveMiniLevelProgress(progress); feedback.textContent=`Congratulations! Level ${miniLevel} complete. ${miniLevel<MINI_LEVELS.length?'The next level is unlocked.':'You completed every crossword level!'} Your daily mini streak is ${miniStreak()} day${miniStreak()===1?'':'s'}.`; renderMiniLevels(); } else if (complete && miniMode === 'custom') { feedback.textContent = 'Your custom crossword is complete. Create another puzzle or return to the daily challenge.'; } else if (complete) { const streak = recordMiniSolved(); updateMiniChallengeStreak(); feedback.textContent = `Congratulations! You solved today’s crossword. Your daily streak is ${streak} day${streak===1?'':'s'}.`; } else feedback.textContent = 'Keep going—red squares need another look.';
+  if (complete && miniMode === 'level') { const progress=miniLevelProgress(); progress.completed=progress.completed||{}; progress.best=progress.best||{}; progress.history=progress.history||[]; progress.completed[miniLevel]=true; progress.best[miniLevel]=Math.min(progress.best[miniLevel]??Infinity,filledMiniCells()); progress.history.push({date:miniDateKey(),level:miniLevel,title:miniPuzzle.title}); saveMiniLevelProgress(progress); feedback.textContent=`Congratulations! Level ${miniLevel} complete. ${miniLevel<MINI_LEVELS.length?'The next level is unlocked.':'You completed every crossword level!'} Your daily mini streak is ${miniStreak()} day${miniStreak()===1?'':'s'}.`; renderMiniLevels(); updateMiniNextPuzzleButton(); } else if (complete && miniMode === 'custom') { feedback.textContent = 'Your custom crossword is complete. Create another puzzle or return to the daily challenge.'; window.showCustomPuzzleCompletion?.('crossword'); } else if (complete) { const streak = recordMiniSolved(); updateMiniChallengeStreak(); feedback.textContent = `Congratulations! You solved today’s crossword. Your daily streak is ${streak} day${streak===1?'':'s'}.`; } else feedback.textContent = 'Keep going—red squares need another look.';
   feedback.className = `mini-feedback${complete ? ' success' : ''}`;
   renderMiniHistory();
   saveMiniSession();
@@ -750,7 +767,7 @@ window.createMiniCustomPuzzle = (rawEntries, title = '', options = {}) => {
   miniIndex=prepared.seed;
   miniCustomPool = entries; miniResumeState = null; selectedEntry = null;
   const safeLimit=value=>value==null?null:Number.isInteger(value)&&value>=0&&value<=20?value:null;
-  miniCustomOptions={hints:safeLimit(options.hints),rerolls:safeLimit(options.rerolls),easier:safeLimit(options.easier)};
+  miniCustomOptions={hints:1,rerolls:safeLimit(options.rerolls),easier:null};
   miniHintUses=0;miniEasyUses=0;miniRerollsLeft=miniCustomOptions.rerolls==null?Infinity:miniCustomOptions.rerolls;miniRevealUsed=false;
   miniPuzzle = {title:String(title || '').trim().slice(0,40) || 'My Crossword',entries:prepared.entries,_laidOut:true};
   miniResumeState = null;
@@ -800,7 +817,10 @@ miniRestartButton.type = 'button';
 miniRestartButton.textContent = '↻ Restart puzzle';
 miniRestartButton.setAttribute('aria-label', 'Restart the current Mini Crossword puzzle');
 document.querySelector('.mini-header-actions')?.append(miniRestartButton);
-miniRestartButton.addEventListener('click', restartMiniPuzzle);
+miniRestartButton.addEventListener('click', async () => {
+  const label=miniMode==='daily'?'today’s crossword challenge':miniMode==='level'?`crossword Level ${miniLevel}`:miniMode==='custom'?'this custom crossword':'this crossword';
+  if(await window.confirmPuzzleRestart?.(label))restartMiniPuzzle();
+});
 const miniCustomRerollButton=document.createElement('button');
 miniCustomRerollButton.id='mini-custom-reroll';miniCustomRerollButton.className='secondary';miniCustomRerollButton.type='button';miniCustomRerollButton.hidden=true;
 document.querySelector('.mini-actions')?.prepend(miniCustomRerollButton);
@@ -815,15 +835,18 @@ miniNextPuzzleButton.textContent = 'Move on to next puzzle';
 document.querySelector('.mini-header-actions')?.append(miniNextPuzzleButton);
 function updateMiniNextPuzzleButton() {
   miniNextPuzzleButton.hidden = miniMode !== 'level';
-  miniNextPuzzleButton.textContent = miniLevel >= MINI_LEVELS.length ? 'All extra puzzles complete' : 'Move on to next puzzle';
-  miniNextPuzzleButton.title = miniLevel >= MINI_LEVELS.length ? 'You completed every crossword level.' : `Complete Level ${miniLevel} to unlock the next puzzle.`;
+  miniNextPuzzleButton.textContent = miniLevel >= MINI_LEVELS.length && miniLevelProgress().completed?.[miniLevel] ? 'All extra puzzles complete' : 'Move on to next puzzle';
+  const canMoveOn = Boolean(miniLevelProgress().completed?.[miniLevel]) && miniLevel < MINI_LEVELS.length;
+  miniNextPuzzleButton.classList.toggle('is-locked', !canMoveOn);
+  miniNextPuzzleButton.setAttribute('aria-disabled', String(!canMoveOn));
+  miniNextPuzzleButton.title = canMoveOn ? `Open Level ${miniLevel + 1}` : miniLevel >= MINI_LEVELS.length ? 'You completed every crossword level.' : `Complete Level ${miniLevel} to unlock the next puzzle.`;
   updateMiniCustomRerollButton();
 }
 miniNextPuzzleButton.addEventListener('click', () => {
   if (miniMode !== 'level') return;
   const progress = miniLevelProgress();
   if (!progress.completed?.[miniLevel]) {
-    document.getElementById('mini-feedback').textContent = `Finish Level ${miniLevel} first to unlock the next puzzle.`;
+    document.getElementById('mini-feedback').textContent = 'Finish this level to continue to the next level.';
     document.getElementById('mini-feedback').className = 'mini-feedback error';
     return;
   }
