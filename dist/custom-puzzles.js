@@ -1,9 +1,8 @@
 (() => {
   const limitOptions = '<option value="-1">Unlimited</option><option value="0">None</option>' + Array.from({length:20},(_,i)=>`<option value="${i+1}">${i+1}</option>`).join('');
   const limitsMarkup = (kind) => `<fieldset class="custom-limits"><legend>Help for players</legend>
-    <div class="custom-limit-fixed"><strong>Clues</strong><span>Unlimited</span></div>
     <label>${kind==='links'?'Clue rerolls':'Layout rerolls'}<select data-limit="rerolls">${limitOptions.replace('value="3"','value="3" selected')}</select></label>
-    ${kind==='links' ? '<div class="custom-limit-fixed"><strong>Easier clues</strong><span>Unlimited</span></div>' : '<div class="custom-limit-fixed"><strong>Answer reveal</strong><span>1 use per puzzle</span></div>'}
+    <label>Easier clues<select data-limit="easier">${limitOptions.replace('value="1"','value="1" selected')}</select></label>
     <p>${kind==='links'?'Players can ask for a new clue whenever they need one. Rerolls choose a different clue.':'Players can open clues freely. Layout rerolls rearrange the same words; answer reveal is available once.'}</p>
   </fieldset>`;
 
@@ -49,7 +48,13 @@
     completionOverlay.hidden=false;
     completionOverlay.querySelector('#custom-complete-home').focus({preventScroll:true});
   };
-  completionOverlay.querySelector('#custom-complete-home').addEventListener('click',()=>location.assign(`${location.pathname}${location.search}`));
+  function openMainGame() {
+    const url = new URL(location.href);
+    url.hash = '';
+    history.replaceState(null, '', url.href);
+    location.reload();
+  }
+  completionOverlay.querySelector('#custom-complete-home').addEventListener('click', openMainGame);
   completionOverlay.querySelector('.custom-complete-close').addEventListener('click',()=>{completionOverlay.hidden=true;});
   completionOverlay.addEventListener('click',event=>{if(event.target===completionOverlay)completionOverlay.hidden=true;});
   document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!completionOverlay.hidden)completionOverlay.hidden=true;});
@@ -85,7 +90,7 @@
   [...Object.values(placementInputs),...Object.values(placementWordInputs),...Object.values(placementDirections)].forEach(input=>{input.addEventListener('input',drawPlacementGrid);input.addEventListener('change',drawPlacementGrid);});
   drawPlacementGrid();
   const titleInput=()=>overlay.querySelector('#custom-puzzle-title').value.trim().slice(0,40)|| (activeGame==='links'?'My Word Links':'My Crossword');
-  const settings=()=>{const fields=activeGame==='links'?linksFields:crosswordFields;const value=fields.querySelector('[data-limit="rerolls"]').value;return {hints:null,rerolls:value==='-1'?null:Number(value),easier:null};};
+  const settings=()=>{const fields=activeGame==='links'?linksFields:crosswordFields;const read=name=>{const value=fields.querySelector(`[data-limit="${name}"]`).value;return value==='-1'?null:Number(value);};return {hints:null,rerolls:read('rerolls'),easier:read('easier')};};
   const setError=message=>{status.textContent=message;status.className='custom-builder-status error';};
   function close(){overlay.hidden=true;status.textContent='';status.className='custom-builder-status';}
   function readLinks(){
@@ -146,6 +151,15 @@
     }else result={ok:false,message:'This share link does not contain a supported puzzle.'};
     if(!result?.ok){window.SHARED_PUZZLE_ACTIVE=false;shareOverlay.hidden=false;const error=shareOverlay.querySelector('#custom-share-error');error.textContent=result?.message||'This puzzle link is invalid.';error.hidden=false;return;}
     document.body.classList.add('shared-puzzle-mode');
+    for (const toolbar of document.querySelectorAll('.intro-actions,.mini-header-actions')) {
+      if (toolbar.querySelector('.shared-home-link')) continue;
+      const home = document.createElement('a');
+      home.className = 'shared-home-link';
+      home.href = `${location.pathname}${location.search}`;
+      home.textContent = 'Open real game ↗';
+      home.addEventListener('click', event => { event.preventDefault(); openMainGame(); });
+      toolbar.prepend(home);
+    }
     for(const link of document.querySelectorAll('.masthead a.brand,.mini-masthead a.brand')){const label=document.createElement('span');label.className=link.className;label.textContent=link.textContent;link.replaceWith(label);}
     window.animateGameEntrance?.(payload.g==='links'?'links':'mini');
   }

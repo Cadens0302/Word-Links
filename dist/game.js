@@ -325,7 +325,7 @@ window.createWordLinksPuzzle = (first, second, title = '', options = {}, placeme
   const puzzleTitle = String(title || '').trim().slice(0, 40) || 'My Word Links';
   window.CUSTOM_PUZZLE = [a, b, puzzleTitle];
   const safeLimit=value=>value==null?null:Number.isInteger(value)&&value>=0&&value<=20?value:null;
-  window.CUSTOM_PUZZLE_OPTIONS={hints:null,rerolls:safeLimit(options.rerolls),easier:null};
+  window.CUSTOM_PUZZLE_OPTIONS={hints:null,rerolls:safeLimit(options.rerolls),easier:safeLimit(options.easier)};
   window.CUSTOM_PUZZLE_PLACEMENTS=chosen;
   startGame(true);
   updateNextExtraPuzzleButton();

@@ -293,3 +293,32 @@
 }
 
 #next-extra-puzzle.is-locked,#mini-next-puzzle.is-locked{border-color:#d2d5cf;background:#e9eae6;color:#737971;box-shadow:0 1px 0 rgba(54,64,56,.08);cursor:pointer}#next-extra-puzzle.is-locked:hover,#next-extra-puzzle.is-locked:focus-visible,#mini-next-puzzle.is-locked:hover,#mini-next-puzzle.is-locked:focus-visible{border-color:#c4c8c1;background:#e9eae6;color:#626a63;box-shadow:0 1px 0 rgba(54,64,56,.08);transform:none}#next-extra-puzzle.is-locked:active,#mini-next-puzzle.is-locked:active{transform:none;box-shadow:0 1px 0 rgba(54,64,56,.08)}
+
+/* Keep phone toolbars and puzzle panels in their own layout. */
+@media (max-width:800px) {
+  .intro { display:flex; flex-direction:column; align-items:stretch; gap:20px; }
+  .intro > div:first-child { min-width:0; }
+  .intro p { max-width:none; }
+  .intro-actions,.mini-header-actions { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); width:100%; max-width:none; gap:8px; justify-content:stretch; }
+  .intro-actions > button,.mini-header-actions > button,.shared-home-link { min-width:0; min-height:44px; width:100%; margin:0; padding:10px 8px; justify-content:center; text-align:center; font-size:12px; white-space:normal; }
+  .intro-actions > .custom-puzzle-button,.mini-header-actions > .custom-puzzle-button,.shared-home-link { grid-column:1/-1; }
+  .game-layout > aside { display:flex; flex-direction:column; gap:16px; min-width:0; }
+  .game-layout > aside > section { width:100%; min-width:0; }
+  .game-layout .entry-panel { grid-column:auto; grid-row:auto; }
+  .game-layout .mission { display:block; }
+  .entry-meta { flex-wrap:wrap; gap:6px 12px; }
+  .mini-layout { grid-template-columns:minmax(0,1fr); }
+  .mini-layout > .mini-side { display:block; width:100%; min-width:0; }
+  .mini-side > .mini-clues { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); align-items:start; gap:18px; width:100%; }
+  .mini-clues > div + div { border-top:0; padding-top:0; }
+  .mini-side .mini-challenge-card { margin-top:20px; width:100%; }
+  .mini-side .mini-actions { width:100%; }
+  .mini-clues .mini-clue-row { grid-template-columns:minmax(0,1fr) 32px 14px!important; column-gap:3px!important; }
+  .mini-clues .mini-clue-toggle { width:32px; min-height:40px; }
+  .mini-clues .mini-clue-check { width:14px!important; font-size:14px!important; }
+  .mini-clues .mini-clue { grid-template-columns:18px minmax(0,1fr); gap:4px; font-size:12px; }
+}
+@media (max-width:440px) {
+  .mini-side > .mini-clues { grid-template-columns:1fr; }
+  .mini-clues > div + div { border-top:1px solid var(--line); padding-top:14px; }
+}

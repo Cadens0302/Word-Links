@@ -767,7 +767,7 @@ window.createMiniCustomPuzzle = (rawEntries, title = '', options = {}) => {
   miniIndex=prepared.seed;
   miniCustomPool = entries; miniResumeState = null; selectedEntry = null;
   const safeLimit=value=>value==null?null:Number.isInteger(value)&&value>=0&&value<=20?value:null;
-  miniCustomOptions={hints:1,rerolls:safeLimit(options.rerolls),easier:null};
+  miniCustomOptions={hints:1,rerolls:safeLimit(options.rerolls),easier:safeLimit(options.easier)};
   miniHintUses=0;miniEasyUses=0;miniRerollsLeft=miniCustomOptions.rerolls==null?Infinity:miniCustomOptions.rerolls;miniRevealUsed=false;
   miniPuzzle = {title:String(title || '').trim().slice(0,40) || 'My Crossword',entries:prepared.entries,_laidOut:true};
   miniResumeState = null;
