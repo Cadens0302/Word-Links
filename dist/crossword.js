@@ -76,7 +76,15 @@ const MINI_LEVEL_WORDS = [...new Map([
   ...MINI_LEVEL_EXTRA_WORDS
 ].filter(word => WORDS.has(word.answer) && word.answer.length >= 3 && word.answer.length <= 9)
   .map(word => [word.answer, word])).values()];
-const MINI_DAILY_GENERATOR_VERSION = 7;
+// Academic and less familiar entries receive priority in the upper modes.
+const MINI_CHALLENGE_WORDS = new Set('COMPASS HABITAT GLACIER MIGRATE MINERAL OBSERVE PROTEIN REFLECT SPECIES SURFACE PATTERN CURRENT CURIOUS CAPTURE CIRCUIT CLIMATE GRAVITY VOLCANO ELEMENT MEASURE CULTURE COMPARE BOUNDARY EQUATION FRICTION CONTRAST EVIDENCE CONCLUDE FRACTION MULTIPLE MATERIAL ORGANISM BEHAVIOR LANGUAGE SOLUTION SEQUENCE ANALYSIS APPROACH ARTIFACT AUDIENCE CATEGORY CREDIBLE DECISION ESTIMATE EVALUATE IDENTIFY METAPHOR PARALLEL PERSUADE RESOURCE STRATEGY VARIABLE ABSTRACT COMPOUND CALCULATE INFLUENCE INTERPRET STRUCTURE VIEWPOINT TRANSFORM CONSTRUCT AMBIGUOUS CRITERION EMPIRICAL INFERENCE INTEGRITY INTRICATE OBJECTIVE PLAUSIBLE PRAGMATIC RECONCILE RESILIENT SYNTHESIS VERSATILE CONSENSUS HIERARCHY'.split(' '));
+function miniChallengeBonus(answer) {
+  const mode=window.WORD_AGE_GROUP;
+  if(mode!=='hard'&&mode!=='master')return 0;
+  if(MINI_CHALLENGE_WORDS.has(answer))return mode==='master'?95:55;
+  return 0;
+}
+const MINI_DAILY_GENERATOR_VERSION = 8;
 
 const MINI_LEVELS = [
   ['First steps','Easy',3,4],['Bright beginnings','Easy',3,4],['Little by little','Easy',3,5],['Word paths','Easy',3,5],['Crossing clues','Easy',4,5],
@@ -112,6 +120,7 @@ Object.assign(MINI_EASY_HINTS, {
 
 // These everyday and classroom words make the 12–14 daily crossword fairer:
 // each has a plain-language easier clue ready if a player needs it.
+MINI_EASY_HINTS.MURAL = 'A large painting created directly on a wall.';
 window.isAgePreferredDailyWord = word => window.WORD_AGE_GROUP !== 'easy' || MINI_WORDS.some(item => item.answer === word);
 
 function miniDateKey(date = new Date()) { return puzzleDateKey(date); }
@@ -206,7 +215,7 @@ let miniHintUses = 0;
 let miniEasyUses = 0;
 let miniRerollsLeft = Infinity;
 let miniResumeState = null;
-function miniSessionKey(mode = miniMode, level = miniLevel, date = miniPuzzleDate, title = miniPuzzle?.title) { return mode === 'level' ? `wordLinksMiniSession:level:${level}:${window.WORD_AGE_GROUP}` : mode === 'custom' ? `wordLinksMiniSession:custom:${title||'My Crossword'}` : `dailyChallenge:Mini Crossword:v${MINI_DAILY_GENERATOR_VERSION}:${title||'Daily Crossword'}:${date}`; }
+function miniSessionKey(mode = miniMode, level = miniLevel, date = miniPuzzleDate, title = miniPuzzle?.title) { return mode === 'level' ? `wordLinksMiniSession:level:v2:${level}:${window.WORD_AGE_GROUP}` : mode === 'custom' ? `wordLinksMiniSession:custom:${title||'My Crossword'}` : `dailyChallenge:Mini Crossword:v${MINI_DAILY_GENERATOR_VERSION}:${title||'Daily Crossword'}:${date}`; }
 function readMiniSession(mode, level, title) {
   if (mode === 'custom') return null;
   try {
@@ -324,7 +333,9 @@ function layoutMiniEntries(wordPoolOverride = null) {
     };
   const starterLength = miniMode === 'daily' ? window.currentWordAgeGroup().minWordLength : miniMode === 'level' ? Math.max(3,Math.min(8,MINI_LEVELS[miniLevel-1].minLength+({easy:-1,medium:0,hard:1,master:2}[window.WORD_AGE_GROUP]||0))) : miniMode === 'custom' ? 3 : 6;
     const starters=wordPool.filter(word=>word.answer.length>=starterLength);
-    const first=starters[Math.floor(random()*starters.length)],dir=dirs[Math.floor(random()*dirs.length)];
+    const challengingStarters=starters.filter(word=>MINI_CHALLENGE_WORDS.has(word.answer));
+    const starterPool=miniMode!=='custom' && ['hard','master'].includes(window.WORD_AGE_GROUP) && challengingStarters.length>=8 ? challengingStarters : starters;
+    const first=starterPool[Math.floor(random()*starterPool.length)],dir=dirs[Math.floor(random()*dirs.length)];
     const row=Math.floor((MINI_SIZE-dir.dr*(first.answer.length-1))/2);
     const col=Math.floor((MINI_SIZE-dir.dc*(first.answer.length-1))/2);
     add(first,row,col,dir,cellsFor(first,row,col,dir));
@@ -358,7 +369,7 @@ function layoutMiniEntries(wordPoolOverride = null) {
             const area=boundsArea([...oldCells,...cells]);
             const lengthBonus=lengths.has(word.answer.length)?0:24;
             const directionBonus=placed.some(entry=>entry.dir===dir.name)?0:18;
-            const score=area+lengthBonus+directionBonus+random()*22;
+            const score=area+lengthBonus+directionBonus+miniChallengeBonus(word.answer)+random()*22;
             candidates.push({word,row,col,dir,cells,score});
           }
         }

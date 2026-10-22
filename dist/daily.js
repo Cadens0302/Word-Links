@@ -11,6 +11,16 @@ const DAILY_STARTER_WORDS = Object.keys(WORD_CLUES)
   .filter(word => WORDS.has(word) && word.length >= 3 && word.length <= 9)
   .sort();
 
+// Curated short starters add vocabulary challenge without relying only on distance.
+const HARD_STARTERS = new Set('AURA COVE DAWN DUSK ECHO FERN GLOW HAZE MOSS OMEN REEF RIFT SAGE TIDE WISP OATH PACT BRIM CLOAK EMBER FLARE GLADE INLET LUNAR MURAL PRISM RIDGE SHORE SLOPE SPARK TRACE VISTA WOVEN YEARN'.split(' '));
+const MASTER_STARTERS = new Set('EBB ELM FOE IVY ORE AURA COVE DUSK ECHO HAZE MOSS OMEN REEF RIFT SAGE TIDE WISP'.split(' '));
+function challengeStarterPool(words) {
+  const preferred = window.WORD_AGE_GROUP === 'master' ? MASTER_STARTERS : window.WORD_AGE_GROUP === 'hard' ? HARD_STARTERS : null;
+  if (!preferred) return words;
+  const choices = words.filter(word => preferred.has(word));
+  return choices.length >= 2 ? choices : words;
+}
+
 function todayKey() { return puzzleDateKey(); }
 
 function readHistory() {
@@ -102,7 +112,7 @@ function dailyPuzzleWordsFor(date, avoid = []) {
   let ageWords = DAILY_STARTER_WORDS.filter(word => word.length >= profile.minLength && word.length <= profile.maxLength);
   if (ageWords.length < 2) ageWords = DAILY_STARTER_WORDS.filter(word => word.length >= 3 && word.length <= 9);
   const familiarWords = ageWords.filter(word => window.isAgePreferredDailyWord?.(word));
-  const words = familiarWords.length >= 2 ? familiarWords : ageWords;
+  const words = challengeStarterPool(familiarWords.length >= 2 ? familiarWords : ageWords);
   for (let i = words.length - 1; i > 0; i--) {
     const j = Math.floor(random() * (i + 1));
     [words[i], words[j]] = [words[j], words[i]];
@@ -153,9 +163,9 @@ function startDaily() {
   window.DAILY_MODE = true;
   const date = todayKey();
   window.DAILY_PUZZLE = dailyPuzzleFor(date);
-  window.DAILY_SEED = `daily-difficulty-v1-${window.currentWordAgeGroup().id}-${date}`;
+  window.DAILY_SEED = `daily-difficulty-v2-${window.currentWordAgeGroup().id}-${date}`;
   const layouts = readDailyLayouts();
-  const layoutKey = `difficulty-v1:${date}:${window.currentWordAgeGroup().id}`;
+  const layoutKey = `difficulty-v2:${date}:${window.currentWordAgeGroup().id}`;
   window.DAILY_LAYOUT = Array.isArray(layouts[layoutKey]) ? layouts[layoutKey] : null;
   window.EXTRA_LEVEL = null;
   window.EXTRA_PUZZLE = null;
@@ -179,6 +189,7 @@ function levelWordsForAge(levelNumber, level, fallbackIndex) {
   let pool = DAILY_STARTER_WORDS.filter(word => word.length >= profile.minLength && word.length <= profile.maxLength);
   const familiar = pool.filter(word => window.isAgePreferredDailyWord?.(word));
   if (familiar.length >= 2) pool = familiar;
+  pool = challengeStarterPool(pool);
   if (pool.length < 2) pool = DAILY_STARTER_WORDS.filter(word => word.length >= 3 && word.length <= 9);
   if (!pool.length) return [...level.puzzles[fallbackIndex % level.puzzles.length]];
   const firstIndex = (seed >>> 0) % pool.length;
@@ -206,7 +217,7 @@ function startExtraLevel(levelNumber) {
   }
   const puzzleIndex = assignments[assignmentKey] % level.puzzles.length;
   window.EXTRA_PUZZLE = [...levelWordsForAge(levelNumber, level, puzzleIndex), level.name];
-  window.EXTRA_SEED = `level-difficulty-v1-${levelNumber}-${window.currentWordAgeGroup().id}`;
+  window.EXTRA_SEED = `level-difficulty-v2-${levelNumber}-${window.currentWordAgeGroup().id}`;
   startGame();
   updateNextExtraPuzzleButton();
   setExtraLevelsOpen(false);

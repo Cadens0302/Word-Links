@@ -6,7 +6,7 @@ const WORD_DIFFICULTIES = [
   {id:'easy',label:'Easy',minWordLength:3,maxWordLength:6,links:{minLength:6,maxLength:8,minGap:2,maxGap:4}},
   {id:'medium',label:'Medium',minWordLength:4,maxWordLength:7,links:{minLength:5,maxLength:6,minGap:5,maxGap:6}},
   {id:'hard',label:'Hard',minWordLength:5,maxWordLength:8,links:{minLength:4,maxLength:5,minGap:7,maxGap:9}},
-  {id:'master',label:'Masters',minWordLength:6,maxWordLength:9,links:{minLength:3,maxLength:4,minGap:10,maxGap:Infinity}}
+  {id:'master',label:'Masters',minWordLength:6,maxWordLength:9,links:{minLength:3,maxLength:4,minGap:10,maxGap:12}}
 ];
 window.WORD_AGE_GROUPS = WORD_DIFFICULTIES; // Existing daily and history modules use this lookup.
 window.WORD_AGE_GROUP = 'medium';

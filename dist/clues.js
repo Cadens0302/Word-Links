@@ -290,3 +290,11 @@ Object.assign(WORD_CLUES, {
   SCRUTINY:'Very close and careful examination.',
   UBIQUITOUS:'Present or found almost everywhere.'
 });
+
+// Less familiar, concise starters keep Hard and Masters demanding while still clueable.
+Object.assign(WORD_CLUES, {
+  EBB:'The flowing back of water as the tide goes out.', ELM:'A tall shade tree with broad leaves.', FOE:'An opponent or enemy.', IVY:'A climbing plant that clings to walls.', ORE:'Rock from which metal can be extracted.',
+  AURA:'A distinctive feeling or atmosphere around a person or place.', COVE:'A small sheltered inlet on a coast.', DUSK:'The dim light just after sunset.', ECHO:'A sound heard again after it reflects.', HAZE:'Light mist or dust that makes distant things unclear.', MOSS:'A soft green plant that carpets damp ground.', OMEN:'A sign thought to predict what will happen.', REEF:'A ridge of rock or coral near the sea surface.', RIFT:'A split or break between things.', SAGE:'A wise person, or a fragrant cooking herb.', TIDE:'The regular rise and fall of the sea.', WISP:'A thin strand or small tuft.',
+  DAWN:'The first light before sunrise.', FERN:'A leafy plant that grows from spores rather than flowers.', GLOW:'To shine softly without a strong beam.', OATH:'A serious promise.', PACT:'An agreement between people or groups.', BRIM:'The edge of a hat that shades your face.',
+  CLOAK:'A loose outer garment draped over the shoulders.', EMBER:'A small glowing piece left after a fire.', FLARE:'A sudden bright burst of light.', GLADE:'An open space among trees.', INLET:'A narrow stretch of water leading inland.', LUNAR:'Related to the moon.', MURAL:'A painting made directly on a wall.', PRISM:'A solid that can split white light into colors.', RIDGE:'A long narrow raised line of land.', SHORE:'The land along a body of water.', SLOPE:'A surface that rises or falls at an angle.', SPARK:'A tiny fiery particle.', TRACE:'A small sign left behind, or to follow an outline.', VISTA:'A broad, pleasing view.', WOVEN:'Made by interlacing threads.', YEARN:'To long deeply for something.'
+});
