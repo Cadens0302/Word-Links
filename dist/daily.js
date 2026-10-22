@@ -153,9 +153,9 @@ function startDaily() {
   window.DAILY_MODE = true;
   const date = todayKey();
   window.DAILY_PUZZLE = dailyPuzzleFor(date);
-  window.DAILY_SEED = `daily-v6-${window.currentWordAgeGroup().id}-${date}`;
+  window.DAILY_SEED = `daily-difficulty-v1-${window.currentWordAgeGroup().id}-${date}`;
   const layouts = readDailyLayouts();
-  const layoutKey = `v8:${date}:${window.currentWordAgeGroup().id}`;
+  const layoutKey = `difficulty-v1:${date}:${window.currentWordAgeGroup().id}`;
   window.DAILY_LAYOUT = Array.isArray(layouts[layoutKey]) ? layouts[layoutKey] : null;
   window.EXTRA_LEVEL = null;
   window.EXTRA_PUZZLE = null;
@@ -206,7 +206,7 @@ function startExtraLevel(levelNumber) {
   }
   const puzzleIndex = assignments[assignmentKey] % level.puzzles.length;
   window.EXTRA_PUZZLE = [...levelWordsForAge(levelNumber, level, puzzleIndex), level.name];
-  window.EXTRA_SEED = `level-v3-${levelNumber}-${window.currentWordAgeGroup().id}`;
+  window.EXTRA_SEED = `level-difficulty-v1-${levelNumber}-${window.currentWordAgeGroup().id}`;
   startGame();
   updateNextExtraPuzzleButton();
   setExtraLevelsOpen(false);

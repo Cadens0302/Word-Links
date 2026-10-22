@@ -76,7 +76,7 @@ const MINI_LEVEL_WORDS = [...new Map([
   ...MINI_LEVEL_EXTRA_WORDS
 ].filter(word => WORDS.has(word.answer) && word.answer.length >= 3 && word.answer.length <= 9)
   .map(word => [word.answer, word])).values()];
-const MINI_DAILY_GENERATOR_VERSION = 6;
+const MINI_DAILY_GENERATOR_VERSION = 7;
 
 const MINI_LEVELS = [
   ['First steps','Easy',3,4],['Bright beginnings','Easy',3,4],['Little by little','Easy',3,5],['Word paths','Easy',3,5],['Crossing clues','Easy',4,5],
@@ -112,7 +112,7 @@ Object.assign(MINI_EASY_HINTS, {
 
 // These everyday and classroom words make the 12–14 daily crossword fairer:
 // each has a plain-language easier clue ready if a player needs it.
-window.isAgePreferredDailyWord = word => window.WORD_AGE_GROUP !== '12-14' || Boolean(MINI_EASY_HINTS[word]);
+window.isAgePreferredDailyWord = word => window.WORD_AGE_GROUP !== 'easy' || MINI_WORDS.some(item => item.answer === word);
 
 function miniDateKey(date = new Date()) { return puzzleDateKey(date); }
 function miniDailyIndex(date = miniDateKey()) { let hash = 2166136261; for (const char of `${window.WORD_AGE_GROUP}:${date}`) { hash ^= char.charCodeAt(0); hash = Math.imul(hash, 16777619); } return hash >>> 0; }
@@ -206,7 +206,7 @@ let miniHintUses = 0;
 let miniEasyUses = 0;
 let miniRerollsLeft = Infinity;
 let miniResumeState = null;
-function miniSessionKey(mode = miniMode, level = miniLevel, date = miniPuzzleDate, title = miniPuzzle?.title) { return mode === 'level' ? `wordLinksMiniSession:level:${level}` : mode === 'custom' ? `wordLinksMiniSession:custom:${title||'My Crossword'}` : `dailyChallenge:Mini Crossword:v${MINI_DAILY_GENERATOR_VERSION}:${title||'Daily Crossword'}:${date}`; }
+function miniSessionKey(mode = miniMode, level = miniLevel, date = miniPuzzleDate, title = miniPuzzle?.title) { return mode === 'level' ? `wordLinksMiniSession:level:${level}:${window.WORD_AGE_GROUP}` : mode === 'custom' ? `wordLinksMiniSession:custom:${title||'My Crossword'}` : `dailyChallenge:Mini Crossword:v${MINI_DAILY_GENERATOR_VERSION}:${title||'Daily Crossword'}:${date}`; }
 function readMiniSession(mode, level, title) {
   if (mode === 'custom') return null;
   try {
@@ -267,12 +267,12 @@ function entryCells(entry) {
   }));
 }
 
-function miniSeed() { let hash = 2166136261; const seedDate = miniMode === 'level' ? `level-${miniLevel}` : miniMode === 'custom' ? 'custom-shared' : `${window.WORD_AGE_GROUP}-${miniPuzzleDate}`; const seedName = miniMode === 'daily' ? 'shared-daily' : miniPuzzle.title; for (const char of `${seedName}-${seedDate}-${miniIndex}`) { hash ^= char.charCodeAt(0); hash = Math.imul(hash, 16777619); } return hash >>> 0; }
+function miniSeed() { let hash = 2166136261; const seedDate = miniMode === 'level' ? `level-${miniLevel}-${window.WORD_AGE_GROUP}` : miniMode === 'custom' ? 'custom-shared' : `${window.WORD_AGE_GROUP}-${miniPuzzleDate}`; const seedName = miniMode === 'daily' ? 'shared-daily' : miniPuzzle.title; for (const char of `${seedName}-${seedDate}-${miniIndex}`) { hash ^= char.charCodeAt(0); hash = Math.imul(hash, 16777619); } return hash >>> 0; }
 function layoutMiniEntries(wordPoolOverride = null) {
   let state = miniSeed();
   const random = () => { state = (Math.imul(state,1664525)+1013904223) >>> 0; return state/4294967296; };
   const dirs = [{name:'Across',dr:0,dc:1},{name:'Down',dr:1,dc:0}];
-  const wordPool = wordPoolOverride || (miniMode === 'custom' ? miniCustomPool : miniMode === 'level' ? MINI_LEVEL_WORDS.filter(word => word.answer.length >= MINI_LEVELS[miniLevel-1].minLength && word.answer.length <= MINI_LEVELS[miniLevel-1].maxLength) : miniMode === 'daily' ? MINI_DAILY_WORDS : MINI_WORDS);
+  const wordPool = wordPoolOverride || (miniMode === 'custom' ? miniCustomPool : miniMode === 'level' ? (() => { const level=MINI_LEVELS[miniLevel-1], shift={easy:-1,medium:0,hard:1,master:2}[window.WORD_AGE_GROUP]||0, low=Math.max(3,Math.min(8,level.minLength+shift)), high=Math.max(low+1,Math.min(9,level.maxLength+shift)); return MINI_LEVEL_WORDS.filter(word=>word.answer.length>=low&&word.answer.length<=high); })() : miniMode === 'daily' ? MINI_DAILY_WORDS : MINI_WORDS);
   if(miniMode==='custom'&&wordPoolOverride?.some(word=>Number.isInteger(word.row)||Number.isInteger(word.col)||word.dir)){
     if(wordPoolOverride.length!==8||wordPoolOverride.some(word=>!Number.isInteger(word.row)||!Number.isInteger(word.col)||!['Across','Down'].includes(word.dir)))throw new Error('Pinned crossword puzzles need eight placed entries.');
     const occupied=new Map(),placed=[];
@@ -296,8 +296,9 @@ function layoutMiniEntries(wordPoolOverride = null) {
     const epochDay = Math.floor(Date.parse(`${miniPuzzleDate}T12:00:00Z`) / 86400000);
     const parity = ((epochDay % 2) + 2) % 2;
     const agePool = window.filterWordsForAge(MINI_DAILY_WORDS, 9);
-    const accessiblePool = agePool.filter(word => window.isAgePreferredDailyWord(word.answer));
-    const selectedPool = accessiblePool.length >= 16 ? accessiblePool : agePool;
+    const familiar = new Set(MINI_WORDS.map(word => word.answer));
+    const preferred = agePool.filter(word => window.WORD_AGE_GROUP === 'easy' ? familiar.has(word.answer) : window.WORD_AGE_GROUP === 'master' ? !familiar.has(word.answer) : true);
+    const selectedPool = preferred.length >= 32 ? preferred : agePool;
     const partitionedPool = selectedPool.filter((_, index) => index % 2 === parity);
     const dailyPool = partitionedPool.length >= 8 ? partitionedPool : selectedPool;
     layoutMiniEntries(dailyPool);
@@ -321,7 +322,7 @@ function layoutMiniEntries(wordPoolOverride = null) {
       placed.push({...word,row,col,dir:dir.name}); used.add(word.answer);
       cells.forEach(cell=>occupied.set(key(cell.row,cell.col),cell));
     };
-  const starterLength = miniMode === 'daily' ? window.currentWordAgeGroup().minWordLength : miniMode === 'level' ? MINI_LEVELS[miniLevel-1].minLength : miniMode === 'custom' ? 3 : 6;
+  const starterLength = miniMode === 'daily' ? window.currentWordAgeGroup().minWordLength : miniMode === 'level' ? Math.max(3,Math.min(8,MINI_LEVELS[miniLevel-1].minLength+({easy:-1,medium:0,hard:1,master:2}[window.WORD_AGE_GROUP]||0))) : miniMode === 'custom' ? 3 : 6;
     const starters=wordPool.filter(word=>word.answer.length>=starterLength);
     const first=starters[Math.floor(random()*starters.length)],dir=dirs[Math.floor(random()*dirs.length)];
     const row=Math.floor((MINI_SIZE-dir.dr*(first.answer.length-1))/2);

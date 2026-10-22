@@ -1,93 +1,12 @@
-.age-slider-wrap {
-  position: relative;
-  z-index: 0;
-  width: 100%;
-  height: 34px;
-  margin: 18px 0 8px;
-  isolation: isolate;
-}
-
-.age-slider-wrap input[type="range"] {
-  position: relative;
-  z-index: 2;
-  display: block;
-  width: 100%;
-  height: 34px;
-  margin: 0;
-  padding: 0;
-  accent-color: #82934c;
-  cursor: pointer;
-  touch-action: pan-x;
-}
-
-.age-trail-layer {
-  position: absolute;
-  z-index: 5;
-  inset: 0;
-  overflow: visible;
-  pointer-events: none;
-}
-
-.age-trail-dot {
-  position: absolute;
-  display: block;
-  width: var(--dot-size, 5px);
-  height: var(--dot-size, 5px);
-  border-radius: 50%;
-  background: #9bad62;
-  box-shadow: 0 0 0 1.5px rgba(255, 254, 250, .95), 0 1px 6px rgba(48, 67, 35, .42);
-  opacity: 0;
-  transform: translate(-50%, -50%);
-  animation: age-trail-fade 1000ms cubic-bezier(.18, .7, .2, 1) both;
-}
-
-@keyframes age-trail-fade {
-  0% { opacity: .96; transform: translate(-50%, -50%) scale(.9); }
-  42% { opacity: .48; }
-  100% { opacity: 0; transform: translate(-50%, calc(-50% + var(--dot-drift, -10px))) scale(.18); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .age-trail-dot { display: none; animation: none; }
-}
-
-.age-history{display:flex;gap:8px;flex-wrap:wrap;min-height:0;margin:1px 0 8px}.age-history:empty{display:none}.age-history-button{min-height:34px;padding:7px 12px;border:1px solid #cdd2c4;border-radius:999px;background:#f0f2e8;color:#34483d;font:700 12px Arial,Helvetica,sans-serif;cursor:pointer;transition:background .16s,border-color .16s,transform .16s}.age-history-button:hover,.age-history-button:focus-visible{background:#e4edc5;border-color:#92a263;transform:translateY(-1px);outline:2px solid #82934c;outline-offset:2px}
-
-/* Separate the save preference from the primary action. */
-.age-submit-wrap {
-  display: grid;
-  gap: 12px;
-  margin-top: 10px;
-}
-.age-submit-wrap .age-submit-button { margin-top: 0 !important; }
-.age-dialog .age-save-choice {
-  display: inline-flex;
-  justify-self: end;
-  align-items: center;
-  gap: 9px;
-  min-height: 44px;
-  margin: 0;
-  padding: 9px 14px;
-  border: 1px solid #cdd6bd;
-  border-radius: 10px;
-  background: #f0f3e7;
-  color: #34483d;
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1.3;
-  cursor: pointer;
-  transition: background .16s, border-color .16s;
-}
-.age-dialog .age-save-choice:hover { background: #e7edda; border-color: #92a263; }
-.age-save-choice:focus-within { outline: 2px solid #82934c; outline-offset: 3px; }
-.age-save-choice input {
-  width: 18px;
-  height: 18px;
-  margin: 0;
-  accent-color: #637d40;
-  cursor: pointer;
-}
-
-.age-history-item{display:flex;align-items:center;overflow:hidden;border:1px solid #cdd2c4;border-radius:999px;background:#f0f2e8}.age-history-item .age-history-button{border:0;border-radius:999px 0 0 999px}.age-history-delete{align-self:stretch;min-width:34px;padding:0 9px;border:0;border-left:1px solid #d5dacb;background:transparent;color:#64705e;font-size:19px;line-height:1;cursor:pointer;transition:background .16s,color .16s}.age-history-delete:hover,.age-history-delete:focus-visible{background:#f4e2db;color:#963f30;outline:2px solid #963f30;outline-offset:-2px}
-
-.wordroom-confirm-backdrop{position:fixed;inset:0;z-index:20000;display:grid;place-items:center;padding:20px;background:rgba(20,35,28,.5);animation:wordroomConfirmFade .16s ease-out both}.wordroom-confirm-dialog{width:min(100%,420px);padding:28px;border:1px solid #d7dbd1;border-radius:13px;background:#f8f6ef;color:#243930;box-shadow:0 24px 70px rgba(8,23,16,.3);animation:wordroomConfirmPop .2s cubic-bezier(.2,.8,.2,1) both}.wordroom-confirm-dialog>.eyebrow{color:#718342;font-size:10px;letter-spacing:.15em}.wordroom-confirm-dialog h2{margin:12px 0 8px;font:normal 27px/1.1 Georgia,serif}.wordroom-confirm-dialog p{margin:0;color:#667169;font-size:14px;line-height:1.55}.wordroom-confirm-actions{display:flex;justify-content:flex-end;gap:9px;margin-top:23px}.wordroom-confirm-actions button{min-height:42px;padding:9px 14px;border:1px solid #cdd2c4;border-radius:7px;background:#fffefa;color:#34483d;font-weight:700}.wordroom-confirm-actions button:hover,.wordroom-confirm-actions button:focus-visible{background:#edf2e1;border-color:#92a263}.wordroom-confirm-actions .wordroom-confirm-accept{border-color:#243930;background:#243930;color:white}.wordroom-confirm-actions .wordroom-confirm-accept:hover,.wordroom-confirm-actions .wordroom-confirm-accept:focus-visible{background:#365847}.wordroom-confirm-actions .wordroom-confirm-accept.danger{border-color:#9b4b3d;background:#9b4b3d}.wordroom-confirm-actions .wordroom-confirm-accept.danger:hover,.wordroom-confirm-actions .wordroom-confirm-accept.danger:focus-visible{background:#833d32}@keyframes wordroomConfirmFade{from{opacity:0}to{opacity:1}}@keyframes wordroomConfirmPop{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:translateY(0) scale(1)}}@media(prefers-reduced-motion:reduce){.wordroom-confirm-backdrop,.wordroom-confirm-dialog{animation:none}}
+.difficulty-dialog{width:min(100%,660px)}
+.difficulty-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px;margin:20px 0 18px}
+.difficulty-option{min-width:0;min-height:115px;display:flex;flex-direction:column;align-items:flex-start;gap:9px;padding:17px;border:1px solid #d5dacb;border-radius:12px;background:#fafaf5;color:#233a31;text-align:left;cursor:pointer;box-shadow:0 3px 0 transparent;transition:background .22s,border-color .22s,box-shadow .22s,transform .22s}
+.difficulty-option strong{font:normal 24px/1 Georgia,serif}.difficulty-option span{font:12px/1.5 Arial,sans-serif;color:#5a685c}
+.difficulty-option:hover{background:#f0f4df;border-color:#8c9c5f;transform:translateY(-3px);box-shadow:0 7px 18px rgba(28,49,34,.12)}
+.difficulty-option.selected{background:#e7efc5;border-color:#718342;box-shadow:inset 0 0 0 1px #718342,0 5px 15px rgba(42,64,39,.10)}
+.difficulty-option:focus-visible{outline:3px solid #718342;outline-offset:3px}
+.difficulty-pop{animation:difficulty-pop .34s cubic-bezier(.2,1.4,.5,1)}
+@keyframes difficulty-pop{0%{transform:scale(.96)}55%{transform:scale(1.035)}100%{transform:scale(1)}}
+.difficulty-continue{width:100%;min-height:48px}
+@media(max-width:540px){.difficulty-grid{grid-template-columns:1fr}.difficulty-option{min-height:82px;padding:14px}.difficulty-dialog{max-height:85vh;overflow:auto}}
+@media(prefers-reduced-motion:reduce){.difficulty-option{transition:none}.difficulty-pop{animation:none}}
