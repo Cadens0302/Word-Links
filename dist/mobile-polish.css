@@ -128,3 +128,26 @@
   body.mobile-play .mission-summary .streak-line{margin-top:5px!important}
   body.links-keyboard-open .mission{display:none}
 }
+
+/* Keep mobile content in normal flow so helpful cards never get cropped. */
+@media(max-width:600px){
+  body.mobile-play{height:auto;min-height:100dvh;overflow-x:hidden;overflow-y:auto}
+  body.mobile-play main{height:auto;min-height:calc(100dvh - 48px);overflow:visible;padding-bottom:12px}
+  body.mobile-play .game-layout{height:auto;min-height:calc(100dvh - 112px);overflow:visible}
+  body.mobile-play .mission{display:block;flex:0 0 auto;min-height:0;max-height:none;width:100%;padding:12px 14px;overflow:visible}
+  body.mobile-play .mission-tip{display:none}
+  body.mobile-play .mission-summary h2{font-size:18px;margin:4px 0}
+  body.mobile-play .mission-summary p{font-size:11px;line-height:1.4}
+  body.links-keyboard-open .mission{display:none}
+  body.mobile-mini-active .mini-layout{justify-content:flex-start;padding-top:6px}
+  body.mobile-mini-active .mini-board-column{justify-content:flex-start;flex:0 0 auto}
+  body.mobile-mini-active .mini-progress-strip{display:flex;align-items:center;gap:12px;flex:none;width:100%;min-height:48px;margin-top:auto;padding:7px 10px;border:1px solid #d7dbd1;border-radius:8px;background:#fffefa}
+  body.mobile-mini-active .mini-progress-strip>div:first-child{display:flex;align-items:baseline;gap:7px;white-space:nowrap}
+  body.mobile-mini-active .mini-progress-strip .eyebrow{font-size:8px}
+  body.mobile-mini-active .mini-progress-strip strong{font-size:17px}
+  body.mobile-mini-active .mini-progress-track{flex:1;margin:0}
+}
+@media(max-width:600px) and (max-height:680px){
+  body.mobile-play .mission{display:none}
+  body.mobile-mini-active .mini-progress-strip{display:none}
+}

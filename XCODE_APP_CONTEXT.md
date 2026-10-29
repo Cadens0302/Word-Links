@@ -273,3 +273,10 @@ The folder has **no Xcode project, bundle identifier, app icon, Apple signing co
 ---
 
 **For an Xcode AI assistant:** Start by identifying whether the task is an app shell or a native rewrite. Read the referenced `dist/` files before implementing game behavior. Preserve the current rules and report any mismatch between this document and source code. Make small, testable changes; verify one game at a time on a compact iPhone simulator and a larger phone before preparing an App Store build.
+
+### Mobile layout refinements (October 2026)
+
+- On phone, keep game content in normal vertical flow so the Word Links challenge card cannot be clipped by a fixed-height container. The board and move controls come first; the challenge card follows in full below them. Hide the card while the custom keyboard is open, and on very short screens where it would displace the board.
+- In Crossword, align the board and clue controls near the game header instead of vertically centering them in a tall empty region. Use the lower space for a compact progress strip on taller phones; omit it on short screens to preserve room for the puzzle.
+- The mobile clue sheet has two mutually exclusive tabs: **Horizontal · Across** and **Vertical · Down**. Show one direction’s clue list at a time; scroll within that list. No diagonal crossword entries are supported.
+- Use larger on-screen QWERTY keys and clear spacing between keys. Keep the device keyboard suppressed while the custom keyboard is active, with a visible Done control to dismiss it.
