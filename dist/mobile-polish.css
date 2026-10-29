@@ -1,0 +1,130 @@
+.site-keyboard{display:none}
+
+@media(max-width:600px){
+  body.mobile-play{--links-board-size:min(calc(100vw - 30px),calc(100dvh - 330px))}
+  body.mobile-play .masthead{height:48px;min-height:48px}
+  body.mobile-play main{height:calc(100dvh - 48px);padding:4px 9px 9px}
+  body.mobile-play .intro{height:48px;min-height:48px;gap:9px}
+  body.mobile-play .intro h1{font-size:clamp(19px,5.3vw,25px)}
+  body.mobile-play .mobile-tools-button{min-height:38px;padding:7px 10px!important;font-size:12px!important}
+  body.mobile-play .game-layout{height:calc(100% - 48px);gap:8px}
+  body.mobile-play .board-heading{min-height:28px;max-height:28px;padding:5px 8px;font-size:10px}
+  body.mobile-play .column-labels{width:var(--links-board-size);height:13px;font-size:8px}
+  body.mobile-play .board-line{width:calc(var(--links-board-size) + 12px)}
+  body.mobile-play .row-labels{font-size:8px}
+  body.mobile-play .grid{width:var(--links-board-size);height:var(--links-board-size)}
+  body.mobile-play .game-layout>aside{gap:8px}
+  body.mobile-play .score-panel{height:36px;min-height:36px;padding:5px 11px}
+  body.mobile-play .score-panel .eyebrow{font-size:9px}
+  body.mobile-play .score-line strong{font-size:26px}
+  body.mobile-play .score-line>span,body.mobile-play .score-bottom{font-size:10px}
+  body.mobile-play .entry-panel{padding:9px 10px}
+  body.mobile-play .entry-meta{height:19px;min-height:19px;margin-bottom:5px;font-size:11px}
+  body.mobile-play #word-form{grid-template-rows:43px 36px;gap:6px}
+  body.mobile-play #word{height:43px;min-height:43px;padding:7px 11px;font-size:16px;cursor:pointer}
+  body.mobile-play #word-form .submit{height:43px;min-height:43px;font-size:12px}
+  body.mobile-play .direction{height:36px;min-height:36px;padding:3px}
+  body.mobile-play .direction button{min-height:30px;font-size:11px}
+  body.mobile-play .feedback{height:28px;min-height:28px;max-height:28px;margin:6px 0 4px;font-size:12px;line-height:1.2}
+  body.mobile-play .clue-button{min-height:39px;height:39px;font-size:12px}
+
+  body.mobile-mini-active .mini-modal{padding:max(5px,env(safe-area-inset-top)) 9px max(8px,env(safe-area-inset-bottom))}
+  body.mobile-mini-active .mini-masthead{height:42px;min-height:42px;max-height:42px}
+  body.mobile-mini-active .mini-page-intro{min-height:59px;max-height:59px;gap:8px}
+  body.mobile-mini-active .mini-page-intro h2{font-size:clamp(19px,5.6vw,25px)}
+  body.mobile-mini-active .mini-puzzle-name{font-size:10px!important}
+  body.mobile-mini-active .mini-grid{width:min(calc(100vw - 20px),calc(100dvh - 255px));height:min(calc(100vw - 20px),calc(100dvh - 255px))}
+  body.mobile-mini-active .mobile-mini-bar{gap:7px;margin-top:9px}
+  .mobile-mini-directions{display:grid;grid-template-columns:1fr 1fr;gap:7px;min-height:31px}
+  .mobile-mini-directions button{min-height:31px;border:1px solid #cbd4bf;border-radius:7px;background:#f5f6ed;color:#31493a;font-size:13px;font-weight:700}
+  .mobile-mini-directions button.active{background:#e1eea5;border-color:#829a50}
+  .mobile-mini-clue-line{grid-template-columns:39px minmax(0,1fr) 39px;gap:7px;min-height:50px}
+  .mobile-mini-clue-line .mobile-mini-current{max-height:50px;padding:6px 9px;font-size:12px}
+  .mobile-mini-bottom{gap:9px;min-height:42px}
+  .mobile-mini-status{font-size:11px}
+  .mobile-mini-check{min-height:42px;height:42px;font-size:12px!important}
+
+  .site-keyboard{width:100%;padding:7px 4px 4px;border:1px solid #d5ddc8;border-radius:9px;background:#eef2df;box-shadow:0 3px 12px #24393014}
+  .site-keyboard-head{display:flex;align-items:center;justify-content:space-between;min-height:22px;padding:0 3px 4px;color:#526747;font-size:10px;font-weight:700;letter-spacing:.11em}
+  .site-keyboard-done{min-height:21px;padding:2px 6px;border:0;border-radius:4px;background:#dce8c3;color:#243930;font-size:11px;font-weight:700;letter-spacing:0}
+  .site-keyboard-row{display:flex;justify-content:center;gap:3px;margin-top:4px}
+  .site-keyboard-key{flex:1;min-width:0;height:31px;min-height:31px;padding:2px 0;border:1px solid #c5d1ba;border-radius:5px;background:#fffefa;color:#243930;font-size:13px;font-weight:700;box-shadow:0 2px 0 #aab99e;touch-action:manipulation}
+  .site-keyboard-key:active{transform:translateY(2px);box-shadow:none;background:#e1eea5}
+  .site-keyboard-backspace{flex:1.4;background:#dce8c3;font-size:19px}
+  body.links-keyboard-open .site-keyboard-links,body.mini-keyboard-open .site-keyboard-mini{display:block}
+  body.links-keyboard-open{--links-board-size:min(calc(100vw - 30px),calc(100dvh - 380px))}
+  body.links-keyboard-open .score-panel,body.links-keyboard-open .entry-panel .feedback,body.links-keyboard-open .entry-panel .clue-actions{display:none}
+  body.links-keyboard-open .entry-panel .site-keyboard{margin-top:8px}
+  body.mini-keyboard-open .mini-grid{width:min(calc(100vw - 20px),calc(100dvh - 360px));height:min(calc(100vw - 20px),calc(100dvh - 360px))}
+  body.mini-keyboard-open .mobile-mini-bottom{display:none}
+  body.mini-keyboard-open .site-keyboard-mini{margin-top:8px}
+}
+
+@media(max-width:600px) and (max-height:680px){
+  body.mobile-play .masthead{height:42px;min-height:42px}
+  body.mobile-play main{height:calc(100dvh - 42px);padding:2px 7px 6px}
+  body.mobile-play .intro{height:40px;min-height:40px}
+  body.mobile-play .mobile-tools-button{min-height:34px;font-size:11px!important}
+  body.mobile-play .game-layout{height:calc(100% - 40px);gap:4px}
+  body.mobile-play .board-heading{min-height:24px;max-height:24px}
+  body.mobile-play .column-labels{height:11px}
+  body.mobile-play .game-layout>aside{gap:4px}
+  body.mobile-play .score-panel{height:29px;min-height:29px}
+  body.mobile-play .entry-panel{padding:6px 8px}
+  body.mobile-play .entry-meta{height:16px;min-height:16px;margin-bottom:3px;font-size:10px}
+  body.mobile-play #word-form{grid-template-rows:38px 30px;gap:4px}
+  body.mobile-play #word,body.mobile-play #word-form .submit{height:38px;min-height:38px}
+  body.mobile-play .direction{height:30px;min-height:30px}
+  body.mobile-play .direction button{min-height:25px}
+  body.mobile-play .feedback{height:23px;min-height:23px;max-height:23px;margin:3px 0 2px;font-size:11px}
+  body.mobile-play .clue-button{height:32px;min-height:32px}
+  body.links-keyboard-open{--links-board-size:min(calc(100vw - 30px),calc(100dvh - 385px))}
+  body.mobile-mini-active .mini-masthead{height:37px;min-height:37px;max-height:37px}
+  body.mobile-mini-active .mini-page-intro{min-height:52px;max-height:52px}
+  body.mobile-mini-active .mini-grid{width:min(calc(100vw - 16px),calc(100dvh - 260px));height:min(calc(100vw - 16px),calc(100dvh - 260px))}
+  body.mini-keyboard-open .mini-grid{width:min(calc(100vw - 16px),calc(100dvh - 365px));height:min(calc(100vw - 16px),calc(100dvh - 365px))}
+  body.mobile-mini-active .mobile-mini-bar{gap:4px;margin-top:5px}
+  .mobile-mini-directions{min-height:27px}
+  .mobile-mini-directions button{min-height:27px;font-size:12px}
+  .mobile-mini-clue-line{min-height:44px}
+  .mobile-mini-clue-line .mobile-mini-current{max-height:44px;font-size:11px}
+  .mobile-mini-bottom{min-height:38px}
+  .mobile-mini-check{min-height:38px;height:38px}
+  .site-keyboard{padding:4px 3px}
+  .site-keyboard-head{min-height:18px;padding-bottom:2px}
+  .site-keyboard-row{margin-top:3px}
+  .site-keyboard-key{height:29px;min-height:29px}
+}
+
+@media(prefers-reduced-motion:reduce){.site-keyboard-key:active{transform:none}}
+
+@media(max-width:600px){
+  body.mobile-play .masthead{padding-top:7px;padding-bottom:7px}
+  body.mobile-play #game-menu{top:50%;width:42px;height:42px;font-size:21px}
+  body.mobile-play .intro{margin-top:7px;margin-bottom:7px}
+  body.mobile-play .board-heading{letter-spacing:.15px}
+  body.mobile-play .game-layout{gap:10px}
+  body.mobile-play .game-layout>aside{gap:10px}
+  body.mobile-play .entry-panel{padding:11px 12px}
+  body.mobile-play .entry-meta{margin-bottom:8px}
+  body.mobile-play .direction{margin-top:2px}
+  body.mobile-play .clue-button{margin-top:5px}
+  .site-keyboard{padding:9px 7px 7px}
+  .site-keyboard-head{min-height:26px;padding-bottom:7px;font-size:11px}
+  .site-keyboard-done{min-height:27px;padding:4px 9px;font-size:12px}
+  .site-keyboard-row{gap:5px;margin-top:6px}
+  .site-keyboard-key{height:41px;min-height:41px;border-radius:7px;font-size:16px}
+  .site-keyboard-backspace{font-size:21px}
+  body.mobile-mini-active .mobile-clue-tabs{position:sticky;top:38px;z-index:2;display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:8px 0;background:#fffefa}
+  body.mobile-mini-active .mobile-clue-tabs button{min-height:42px;border:1px solid #cbd4bf;border-radius:7px;background:#f5f6ed;color:#31493a;font-size:13px;font-weight:700}
+  body.mobile-mini-active .mobile-clue-tabs button[aria-selected=true]{background:#e1eea5;border-color:#829a50}
+  body.mobile-mini-active .mini-clues:not(.show-down)>div:nth-child(2),body.mobile-mini-active .mini-clues.show-down>div:first-child{display:none}
+}
+@media(max-width:600px) and (min-height:720px){
+  body.mobile-play .mission{display:block;flex:1;min-height:72px;width:100%;margin:0;padding:12px 14px;border:1px solid #d7dbd1;border-radius:8px;background:#f0f2e6;overflow:hidden}
+  body.mobile-play .mission-summary .eyebrow{font-size:9px}
+  body.mobile-play .mission-summary h2{margin:4px 0;font:normal 19px/1.08 Georgia,serif}
+  body.mobile-play .mission-summary p{margin:5px 0;font-size:11px;line-height:1.35}
+  body.mobile-play .mission-summary .streak-line{margin-top:5px!important}
+  body.links-keyboard-open .mission{display:none}
+}

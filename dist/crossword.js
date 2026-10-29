@@ -506,6 +506,7 @@ function renderMini() {
   updateMiniClueChecks();
   saveMiniSession();
   animateGameEntrance("mini");
+  window.updateMobileCrosswordClue?.();
 }
 
 function updateMiniProgress() {
@@ -543,6 +544,7 @@ function highlightEntry(entry) {
   entryCells(entry).forEach(({row, col}) => miniCell(row, col)?.classList.add('mini-active'));
   document.querySelectorAll('.mini-clue').forEach(button => button.classList.toggle('active', button.dataset.entry === entry.id));
   updateMiniEasyButtons();
+  window.updateMobileCrosswordClue?.();
 }
 
 function highlightEntryAt(row, col) {
