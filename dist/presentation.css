@@ -1,0 +1,683 @@
+/* Shared spacing and rhythm for the complete Beacon Wordroom experience. */
+:root {
+  --space-1: 6px;
+  --space-2: 10px;
+  --space-3: 16px;
+  --space-4: 22px;
+  --space-5: 30px;
+  --space-6: 42px;
+}
+
+button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
+button:not(.cell):not(.mini-cell):not(.custom-placement-cell) { transition: background-color .18s ease, border-color .18s ease, box-shadow .18s ease, transform .18s ease; }
+button:not(:disabled):active { transform: translateY(1px); }
+
+.intro { gap: var(--space-5); }
+.intro-actions, .mini-header-actions { gap: var(--space-2); }
+.intro-actions .secondary, .mini-header-actions .secondary { min-height: 42px; }
+.game-layout { gap: clamp(22px, 3vw, 38px); }
+.game-layout > aside { gap: var(--space-3); }
+.score-panel, .entry-panel { border-radius: 10px; }
+.entry-panel { padding: clamp(18px, 2.2vw, 26px); }
+.entry-panel h2 { margin-bottom: var(--space-3); line-height: 1.15; }
+.entry-meta { gap: 12px; margin-bottom: 12px; }
+.direction { gap: 7px; margin: 14px 0; padding: 5px; }
+.direction button { min-height: 38px; }
+.feedback { margin: 14px 0; line-height: 1.5; }
+.clue-actions { gap: 10px; flex-wrap: wrap; }
+.clue-button { min-height: 46px; }
+.clue-option { min-height: 38px; }
+.mission { padding: 12px 8px; }
+.rules { gap: clamp(22px, 3vw, 38px); padding: 34px 0; }
+.rules article { min-width: 0; }
+.rules h3 { margin: 12px 0 9px; }
+.rules p { line-height: 1.65; }
+
+.modal-backdrop { padding: clamp(14px, 3vw, 28px); }
+.modal { padding: clamp(26px, 4vw, 42px); border-radius: 14px; }
+.modal-close { top: 13px; right: 15px; width: 36px; height: 36px; border-radius: 50%; }
+.modal-mark { margin-bottom: 22px; }
+.modal h2 { margin: 14px 38px 12px 0; line-height: 1.08; }
+.modal > p { margin: 10px 0 16px; line-height: 1.65; }
+.modal .submit { min-height: 48px; margin-top: 10px; }
+.modal-subtitle { margin: 0 0 18px; line-height: 1.55; }
+.history-modal, .level-modal, .mini-levels-dialog { display: flex; flex-direction: column; max-height: min(88dvh, 900px); overflow: hidden; }
+.history-tabs { flex: none; gap: 10px; margin-top: 12px; }
+.history-tab { min-height: 42px; padding: 10px 14px; }
+.history-list { min-height: 80px; overflow: auto; overscroll-behavior: contain; padding-right: 5px; }
+.history-row { gap: 18px; padding: 16px 4px; }
+.level-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-top: 10px; padding: 4px; overflow: auto; overscroll-behavior: contain; }
+.level-card { min-height: 124px; padding: 16px 14px; border-radius: 10px; }
+.level-name { margin: 7px 0; line-height: 1.35; }
+.level-status, .level-best, .level-target { line-height: 1.4; }
+.level-note { flex: none; margin-top: 12px; line-height: 1.5; }
+.game-welcome-modal { padding: clamp(30px, 5vw, 48px); }
+.game-welcome-modal > p { max-width: 48ch; }
+.game-selector-modal { gap: 12px; }
+.game-choice-grid { gap: 14px; }
+.game-choice { padding: 22px; }
+
+.mini-page-intro { gap: clamp(18px, 3vw, 34px); padding: 28px 0 24px; }
+.mini-header-actions { gap: 10px; }
+.mini-layout { gap: clamp(22px, 3vw, 38px); margin-top: 24px; }
+.mini-side { display: grid; gap: 18px; padding: clamp(18px, 2.3vw, 26px); border-radius: 12px; }
+.mini-clues { gap: 22px; }
+.mini-clues > div + div { padding-top: 18px; }
+.mini-clues h3 { margin-bottom: 10px; }
+.mini-clue { padding: 8px 2px; line-height: 1.45; }
+.mini-challenge-card { margin: 0; padding: 20px 22px; }
+.mini-feedback { margin: 0; line-height: 1.5; }
+.mini-actions { gap: 10px; }
+.mini-progress-strip { margin-top: 22px; padding: 12px 16px; }
+.mini-rules { gap: clamp(22px, 3vw, 38px); margin-top: 30px; padding: 32px 0; }
+.mini-rules article p { line-height: 1.65; }
+
+.custom-builder { padding: clamp(24px, 4vw, 40px); }
+.custom-builder-description { margin-bottom: 24px; line-height: 1.6; }
+.custom-fields { gap: 16px; }
+.custom-field { gap: 8px; }
+.custom-field input, .custom-field textarea { min-height: 46px; padding: 12px 14px; }
+.custom-placement, .custom-limits { gap: 12px; padding: 15px; border-radius: 10px; }
+.custom-limits { margin: 4px 0; }
+.custom-builder-actions { gap: 12px; }
+
+@media (min-width: 801px) {
+  .game-layout > .mission {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
+    align-items: center;
+    gap: clamp(28px, 5vw, 64px);
+    margin-top: 6px;
+    padding: 25px 30px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: linear-gradient(115deg, #f0f2e6, #fbfaf5);
+  }
+  .mission-summary h2 { margin: 9px 0; }
+  .mission-summary p { line-height: 1.55; }
+  .mission-tip { padding-left: clamp(18px, 3vw, 36px); border-left: 1px solid #d0d6c4; }
+  .mission-tip h2 { margin: 8px 0; }
+}
+
+@media (max-width: 800px) {
+  .intro { gap: 18px; }
+  .rules { gap: 22px; }
+  .mini-side { gap: 14px; }
+}
+
+@media (min-width: 601px) and (max-width: 900px) {
+  .level-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+@media (max-width: 600px) {
+  /* Active games stay viewport-bound; spacing is shared without introducing page scroll. */
+  body.mobile-play .intro { gap: 9px; }
+  body.mobile-play .game-layout { gap: 8px; }
+  body.mobile-play .game-layout > aside { gap: 8px; }
+  body.mobile-play .entry-panel { padding: 9px 10px; border-radius: 9px; }
+  body.mobile-play .entry-meta { margin-bottom: 6px; }
+  body.mobile-play #word-form { gap: 6px; }
+  body.mobile-play .direction { gap: 4px; margin: 7px 0; padding: 3px; }
+  body.mobile-play .feedback { margin: 6px 0; }
+  body.mobile-play .clue-actions { display: flex; gap: 7px; }
+  body.mobile-play .clue-button { min-height: 38px; }
+
+  body.mobile-mini-active .mini-masthead { margin-bottom: 3px; }
+  body.mobile-mini-active .mini-page-intro { gap: 10px; }
+  body.mobile-mini-active .mini-board-column { gap: 0; }
+  body.mobile-mini-active .mobile-mini-bar { gap: 7px; margin-top: 7px; }
+  body.mobile-mini-active .mini-challenge-card { display: none !important; }
+  body.mobile-mini-active .mobile-clue-tabs { gap: 8px; }
+  body.mobile-mini-active .mobile-mini-answer-control { gap: 5px; }
+  body.mobile-mini-active .mobile-mini-clue-line { gap: 8px; }
+  body.mobile-mini-active .mobile-mini-bottom { gap: 9px; }
+
+  .modal-backdrop { padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom)); }
+  .modal { max-height: calc(100dvh - 24px); padding: 26px 21px 22px; border-radius: 13px; overflow: auto; }
+  .modal-mark { width: 40px; height: 40px; margin-bottom: 17px; }
+  .modal h2 { margin: 9px 34px 10px 0; font-size: clamp(25px, 7vw, 31px); }
+  .modal > p { margin: 8px 0 13px; font-size: 14px; line-height: 1.55; }
+  .modal .submit { min-height: 48px; }
+  .history-modal, .level-modal, .mini-levels-dialog { max-height: calc(100dvh - 24px); }
+  .history-tabs { gap: 3px; margin-top: 8px; }
+  .history-tab { flex: 1; min-height: 42px; padding: 8px 5px; font-size: 11px; }
+  .history-list { padding: 0 2px 4px; }
+  .history-row { gap: 10px; padding: 14px 2px; }
+  .level-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; margin-top: 6px; }
+  .level-card { min-height: 112px; padding: 13px 11px; }
+  .game-welcome-modal { padding: 28px 23px 24px; }
+  .game-selector-modal { justify-content: flex-start !important; gap: 10px; padding: max(22px, env(safe-area-inset-top)) 18px max(18px, env(safe-area-inset-bottom)) !important; overflow-y: auto !important; }
+  #age-choice-panel { margin: 10px auto 0; padding: 14px; }
+  #age-choice-panel .difficulty-grid { gap: 9px; margin: 12px 0; }
+  #age-choice-panel .difficulty-option { min-height: 84px; gap: 6px; padding: 10px; }
+  #age-choice-panel .difficulty-option span { font-size: 10px; line-height: 1.35; }
+  #game-choice-grid { gap: 10px; margin-top: 8px !important; }
+  #game-choice-grid .game-choice { min-height: 148px; gap: 9px; padding: 14px; }
+  .custom-builder { padding: 25px 20px 20px; }
+  .custom-fields { gap: 14px; }
+  .custom-placement, .custom-limits { gap: 10px; padding: 12px; }
+  .mini-header-actions { gap: 8px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button:not(.cell):not(.mini-cell):not(.custom-placement-cell) { transition: none; }
+}
+
+/* Put the unused tall-phone space to work with short, game-specific guidance. */
+@media (max-width: 600px) and (min-height: 850px) {
+  body.mobile-play .game-layout { gap: clamp(8px, 1.2dvh, 14px); }
+  body.mobile-play .game-layout > aside { flex: 1 1 auto; min-height: 0; }
+  body.mobile-play .mission {
+    display: grid;
+    flex: 1 1 auto;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: center;
+    gap: clamp(14px, 3vw, 24px);
+    min-height: 132px;
+    margin-top: 7px;
+    padding: 16px 18px;
+    overflow: hidden;
+    border: 1px solid #d7dbd1;
+    border-radius: 11px;
+    background: linear-gradient(135deg, #f0f2e6, #f8f7f1);
+  }
+  body.mobile-play .mission-summary h2 { margin: 8px 0; font-size: 19px; line-height: 1.14; }
+  body.mobile-play .mission-summary p { margin: 6px 0; font-size: 11px; line-height: 1.45; }
+  body.mobile-play .mission-summary .streak-line { margin-top: 8px !important; font-size: 11px; }
+  body.mobile-play .mission-tip {
+    display: block;
+    min-width: 0;
+    padding-left: 13px;
+    border-left: 1px solid #d0d6c4;
+  }
+  body.mobile-play .mission-tip .eyebrow { font-size: 8px; }
+  body.mobile-play .mission-tip h2 { margin: 7px 0; font-size: 16px; line-height: 1.18; }
+  body.mobile-play .mission-tip p { margin: 5px 0; font-size: 10px; line-height: 1.45; }
+  body.mobile-play .mission-tip-note { display: none; }
+  body.mobile-play .game-layout.has-active-clue .mission { grid-template-columns: 1fr; }
+  body.mobile-play .game-layout.has-active-clue .mission-tip { display: none; }
+
+  body.mobile-mini-active .mini-grid {
+    width: min(calc(100vw - 20px), calc(100dvh - 500px));
+    height: min(calc(100vw - 20px), calc(100dvh - 500px));
+  }
+  body.mobile-mini-active .mini-challenge-card {
+    display: grid !important;
+    flex: none;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 4px 12px;
+    width: 100%;
+    margin: 9px 0 0;
+    padding: 11px 14px;
+    border-radius: 10px;
+  }
+  body.mobile-mini-active .mini-challenge-card > .eyebrow { grid-column: 1 / -1; font-size: 8px; }
+  body.mobile-mini-active .mini-challenge-title { margin: 0; font-size: 16px; line-height: 1.08; }
+  body.mobile-mini-active .mini-challenge-card p { grid-column: 1; margin: 0; font-size: 10px; line-height: 1.35; }
+  body.mobile-mini-active .mini-challenge-streak { grid-column: 2; grid-row: 2 / span 2; gap: 5px; margin: 0; white-space: nowrap; font-size: 10px; }
+  body.mobile-mini-active .mini-challenge-streak strong { font-size: 10px; }
+}
+
+@media (max-width: 600px) and (min-height: 850px) and (max-width: 370px) {
+  body.mobile-play .mission { grid-template-columns: 1fr; gap: 8px; }
+  body.mobile-play .mission-tip { display: none; }
+  body.mobile-mini-active .mini-challenge-card { grid-template-columns: minmax(0, 1fr); }
+  body.mobile-mini-active .mini-challenge-card > .eyebrow,
+  body.mobile-mini-active .mini-challenge-card p { grid-column: 1; }
+  body.mobile-mini-active .mini-challenge-streak { grid-column: 1; grid-row: auto; }
+}
+
+/* Final phone pass: give the game room to breathe while keeping every control in view. */
+@media (max-width: 600px) {
+  body.mobile-play {
+    min-height: 100svh;
+    height: 100dvh;
+    overflow: hidden;
+    background: var(--paper);
+  }
+  body.mobile-play .masthead {
+    min-height: calc(50px + env(safe-area-inset-top));
+    height: calc(50px + env(safe-area-inset-top));
+    padding: calc(7px + env(safe-area-inset-top)) 12px 7px;
+  }
+  body.mobile-play main {
+    display: flex;
+    flex-direction: column;
+    height: calc(100dvh - 50px - env(safe-area-inset-top));
+    min-height: 0;
+    overflow: hidden;
+    padding: 7px 10px max(12px, env(safe-area-inset-bottom));
+  }
+  body.mobile-play .intro {
+    flex: 0 0 48px;
+    height: 48px;
+    min-height: 48px;
+    margin: 3px 0 9px;
+    padding: 0 3px;
+    gap: 12px;
+  }
+  body.mobile-play .intro h1 { line-height: 1.08; }
+  body.mobile-play .game-layout {
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    overflow: hidden;
+  }
+  body.mobile-play .board-panel { flex: 0 0 auto; margin-top: 2px; }
+  body.mobile-play .score-panel {
+    height: 38px;
+    min-height: 38px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: 1fr;
+    align-items: center;
+    column-gap: 9px;
+    padding: 4px 11px;
+  }
+  body.mobile-play .game-layout > aside { flex: 1 1 auto; min-height: 0; gap: 8px; }
+  body.mobile-play .mission { flex: 1 1 auto; min-height: 0; }
+  body.mobile-play .score-panel > .eyebrow { margin: 0; }
+  body.mobile-play .score-line {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin: 0;
+    line-height: 1;
+  }
+  body.mobile-play .score-line strong {
+    display: block;
+    font-size: 25px;
+    line-height: 1;
+  }
+  body.mobile-play .score-line > span:not(.score-symbol) {
+    display: inline-flex;
+    align-items: center;
+    align-self: center;
+    line-height: 1;
+  }
+  body.mobile-play .score-line .score-symbol { display: none; }
+  body.mobile-play .score-bottom { display: none; }
+  body.mobile-play #feedback[data-mobile-idle] { display: none; }
+  body.mobile-play .clue-actions { align-items: center; }
+  body.mobile-play .clue-button {
+    flex: 0 1 218px;
+    width: min(100%, 218px);
+    min-width: 0;
+    justify-content: flex-start;
+    gap: 9px;
+    border: 1px solid #cbd4bf;
+    border-radius: 8px;
+    background: #f0f2e6;
+    padding-inline: 11px;
+  }
+  body.mobile-play .clue-button span:last-child { margin-left: auto; }
+  body.mobile-play .entry-panel { padding: 12px; }
+  body.mobile-play #word-form { grid-template-rows: 38px 38px; row-gap: 6px; }
+  body.mobile-play #word-form { margin: 0; }
+  body.mobile-play .direction { margin-bottom: 6px; }
+  body.mobile-play .direction {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 5px;
+    height: 38px;
+    min-height: 38px;
+    margin: 4px 0 0;
+    padding: 4px;
+    border: 1px solid #e0e3d8;
+    border-radius: 9px;
+    background: #f1f2eb;
+  }
+  body.mobile-play #word-form .direction { align-self: stretch; }
+  body.mobile-play .direction button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-width: 0;
+    min-height: 28px;
+    padding: 3px 2px;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    font-size: 10px;
+    line-height: 1;
+  }
+  body.mobile-play .direction button svg { width: 12px; height: 12px; }
+  body.mobile-play .direction button.active {
+    border-color: #cbd4bf;
+    background: #fffefa;
+    color: #243930;
+    box-shadow: 0 1px 3px rgba(36,57,48,.12);
+  }
+  body.mobile-play .clue-actions {
+    position: relative;
+    clear: both;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: stretch;
+    gap: 8px;
+    min-height: 0;
+    margin: 17px 0 3px;
+    padding-top: 11px;
+    border-top: 1px solid #e1e4da;
+  }
+  body.mobile-play .clue-button {
+    grid-column: 1 / -1;
+    flex: none;
+    width: 174px;
+    max-width: 174px;
+    justify-self: start;
+    height: 37px;
+    min-height: 37px;
+    padding-inline: 10px;
+    font-size: 11px;
+  }
+  body.mobile-play .clue-option {
+    min-width: 0;
+    min-height: 38px;
+    padding: 6px 8px;
+    line-height: 1.25;
+  }
+  body.mobile-play .clue-text { margin-top: 10px; padding: 12px; border-radius: 6px; }
+  body.mobile-play .site-keyboard { bottom: max(8px, env(safe-area-inset-bottom)); }
+  body.mobile-play .site-keyboard-head { min-height: 30px; }
+  body.mobile-play .site-keyboard-key {
+    height: 43px;
+    min-height: 43px;
+    border-radius: 8px;
+    font-size: 17px;
+    box-shadow: 0 2px 0 #aab99e, 0 3px 6px rgba(36,57,48,.05);
+  }
+  body.mobile-play .site-keyboard-key:active { scale: .96; }
+
+  body.mobile-mini-active .mini-modal {
+    padding-top: max(9px, env(safe-area-inset-top));
+    padding-bottom: max(9px, env(safe-area-inset-bottom));
+  }
+  body.mobile-mini-active .mini-page-intro { margin: 0 0 10px; padding-block: 7px; }
+  body.mobile-mini-active .mini-layout { gap: 12px; }
+  body.mobile-mini-active .mini-board-column {
+    flex: 0 0 auto;
+    align-items: stretch;
+    gap: 0;
+    overflow: visible;
+  }
+  body.mobile-mini-active .mini-grid { margin: 2px auto 0; }
+  body.mobile-mini-active .mobile-mini-bar {
+    display: grid;
+    flex: 0 0 auto;
+    grid-template-columns: minmax(0, 1fr);
+    grid-auto-rows: max-content;
+    align-content: start;
+    gap: 10px;
+    width: 100%;
+    margin: 12px 0 0;
+    overflow: visible;
+  }
+  body.mobile-mini-active .mobile-clue-tabs { gap: 10px; }
+  body.mobile-mini-active .mobile-inline-clues { min-height: 0; }
+  body.mobile-mini-active .mobile-inline-clues .mini-clue-row:not([hidden]) {
+    min-height: 64px;
+    padding: 9px 11px;
+  }
+  body.mobile-mini-active .mobile-inline-clues .mini-clue { min-height: 46px; padding: 7px 5px; line-height: 1.4; }
+  body.mobile-mini-active .mobile-mini-answer-control {
+    gap: 6px;
+    padding: 10px 11px 11px;
+    border: 1px solid #d7dbd1;
+    border-radius: 10px;
+    background: #fffefa;
+  }
+  body.mobile-mini-active .mobile-mini-answer { height: 46px; min-height: 46px; }
+  body.mobile-mini-active .mobile-mini-clue-line { margin-top: 1px; }
+  body.mobile-mini-active .mobile-mini-bottom { margin-top: 1px; }
+  body.mobile-mini-active .mobile-mini-answer { height: 48px; min-height: 48px; }
+  body.mobile-mini-active .mobile-clue-tabs button,
+  body.mobile-mini-active .mobile-mini-clue-line button { min-height: 43px; }
+  body.mobile-mini-active .mobile-mini-progress-strip { margin-top: 8px; }
+  body.mobile-mini-active .mini-progress-strip { margin-top: 10px; }
+  body.mobile-mini-active .mini-challenge-card { margin-top: 10px; }
+  body.mobile-mini-active .mini-challenge-card { padding: 13px 15px; }
+  body.mobile-mini-active .mini-challenge-title { margin: 2px 0; }
+  body.mobile-mini-active .mini-challenge-card p { line-height: 1.4; }
+  body.mobile-mini-active .mini-challenge-streak { margin-top: 4px; }
+  body.mobile-mini-active .mini-rules { padding: 20px 18px; }
+  body.mobile-mini-active .mini-rules h2,
+  body.mobile-mini-active .mini-rules article h3 { margin-top: 12px; }
+}
+
+@media (max-width: 600px) {
+  body.mobile-play { --links-board-size: min(calc(100vw - 50px), max(140px, calc(100dvh - 590px))); }
+  body.links-keyboard-open { --links-board-size: min(calc(100vw - 50px), calc(100dvh - 400px)); }
+}
+
+@media (max-width: 600px) and (min-height: 850px) {
+  body.mobile-play .mission {
+    max-height: none;
+    min-height: 120px;
+    overflow: visible;
+    align-content: center;
+    gap: 10px;
+    padding: 12px 16px 14px;
+  }
+  body.mobile-play .mission-summary .eyebrow,
+  body.mobile-play .mission-tip .eyebrow { font-size: 8px; }
+  body.mobile-play .mission-summary h2 { margin: 5px 0; font-size: 17px; line-height: 1.1; }
+  body.mobile-play .mission-summary p { margin: 4px 0; font-size: 10px; line-height: 1.35; }
+  body.mobile-play .mission-summary .streak-line { margin-top: 6px !important; font-size: 10px; }
+  body.mobile-play .mission-tip { padding: 3px 3px 3px 12px; }
+  body.mobile-play .mission-tip h2 { margin: 5px 0; font-size: 15px; line-height: 1.12; }
+  body.mobile-play .mission-tip p { margin: 4px 0; font-size: 9px; line-height: 1.35; }
+  body.mobile-mini-active .mini-grid {
+    width: min(calc(100vw - 28px), calc(100dvh - 590px));
+    height: min(calc(100vw - 28px), calc(100dvh - 590px));
+  }
+}
+
+@media (max-width: 600px) and (max-height: 849px) {
+  body.mobile-mini-active .mini-grid {
+    width: min(calc(100vw - 28px), calc(100dvh - 500px));
+    height: min(calc(100vw - 28px), calc(100dvh - 500px));
+  }
+}
+
+@media (max-width: 600px) and (max-height: 700px) {
+  body.mobile-mini-active .mini-grid {
+    width: min(calc(100vw - 28px), calc(100dvh - 390px));
+    height: min(calc(100vw - 28px), calc(100dvh - 390px));
+  }
+  body.mobile-mini-active .mobile-mini-bar { gap: 7px; margin-top: 9px; }
+  body.mobile-mini-active .mobile-clue-tabs { gap: 7px; }
+  body.mobile-mini-active .mobile-inline-clues .mini-clue-row:not([hidden]) { min-height: 48px; padding: 4px 7px; }
+  body.mobile-mini-active .mobile-mini-answer-control { padding: 6px 8px 8px; }
+}
+
+@media (max-width: 600px) and (max-height: 480px) {
+  body.mobile-mini-active .mini-grid {
+    width: min(calc(100vw - 28px), calc(100dvh - 340px));
+    height: min(calc(100vw - 28px), calc(100dvh - 340px));
+  }
+  body.mobile-mini-active .mobile-mini-bar { gap: 5px; margin-top: 6px; }
+  body.mobile-mini-active .mobile-clue-tabs button { min-height: 32px; }
+  body.mobile-mini-active .mobile-inline-clues .mini-clue-row:not([hidden]) { min-height: 40px; }
+  body.mobile-mini-active .mobile-mini-answer-control { padding: 4px 7px 6px; }
+  body.mobile-mini-active .mobile-mini-answer { height: 34px; min-height: 34px; }
+  body.mobile-mini-active .mobile-mini-clue-line,
+  body.mobile-mini-active .mobile-mini-clue-line button { min-height: 34px; }
+  body.mobile-mini-active .mobile-mini-bottom,
+  body.mobile-mini-active .mobile-mini-check { min-height: 34px; height: 34px; }
+}
+
+@media (max-width: 600px) and (max-height: 760px) {
+  body.mobile-play { --links-board-size: min(calc(100vw - 42px), max(140px, calc(100dvh - 525px))); }
+  body.links-keyboard-open { --links-board-size: min(calc(100vw - 42px), calc(100dvh - 400px)); }
+  body.mobile-play main { height: calc(100dvh - 46px - env(safe-area-inset-top)); padding-top: 5px; padding-bottom: max(8px, env(safe-area-inset-bottom)); }
+  body.mobile-play .intro { flex-basis: 44px; height: 44px; min-height: 44px; }
+  body.mobile-play .game-layout > aside { gap: 6px; }
+  body.mobile-play .masthead {
+    min-height: calc(46px + env(safe-area-inset-top));
+    height: calc(46px + env(safe-area-inset-top));
+    padding-top: calc(5px + env(safe-area-inset-top));
+  }
+  body.mobile-play .intro { margin-top: 2px; margin-bottom: 7px; }
+  body.mobile-play .score-panel { height: 34px; min-height: 34px; }
+  body.mobile-play .entry-panel { padding: 8px 10px; }
+  body.mobile-play .mission { display: none; }
+}
+
+@media (max-width: 600px) and (min-height: 761px) and (max-height: 849px) {
+  body.mobile-play { --links-board-size: min(calc(100vw - 50px), max(140px, calc(100dvh - 525px))); }
+  body.mobile-play .mission { flex: 1 1 auto; min-height: 94px; padding: 12px 14px; }
+  body.mobile-play .mission-summary h2 { margin: 4px 0; font-size: 17px; }
+  body.mobile-play .mission-summary p { margin: 4px 0; font-size: 10px; line-height: 1.35; }
+}
+
+/* One consistent, tactile hover response for controls across both games and dialogs. */
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+  button:not(:disabled):not(.cell):not(.mini-cell):not(.site-keyboard-key):hover {
+    border-color: #91a45d;
+    box-shadow: 0 5px 13px rgba(36,57,48,.12);
+    translate: 0 -2px;
+  }
+  .direction button:not(:disabled):hover,
+  .clue-button:hover,
+  .clue-option:hover,
+  .mobile-clue-tabs button:hover,
+  .mobile-mini-clue-line button:hover,
+  .mini-actions button:hover,
+  .custom-builder button:hover {
+    background-color: #e7edda;
+    color: #243930;
+  }
+  .site-keyboard-key:hover:not(:disabled) {
+    background: #e1eea5;
+    border-color: #91a45d;
+    box-shadow: 0 3px 9px rgba(36,57,48,.15);
+    translate: 0 -1px;
+  }
+}
+
+/* One phone layout owns these controls. Earlier compact-phone rules left the
+   direction selector taller than its form row and clipped the guide below it. */
+@media (max-width: 600px) {
+  body.mobile-play main { padding-bottom: max(14px, env(safe-area-inset-bottom)); }
+  body.mobile-play .game-layout { gap: 10px; }
+  body.mobile-play .game-layout > aside { flex: 0 0 auto; gap: 9px; }
+  body.mobile-play .entry-panel { padding: 11px 12px 12px; }
+  body.mobile-play #word-form {
+    display: grid;
+    grid-template-rows: 40px 40px;
+    gap: 9px 6px;
+    margin: 0;
+  }
+  body.mobile-play #word,
+  body.mobile-play #word-form .submit { height: 40px; min-height: 40px; }
+  body.mobile-play #word-form .direction {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    align-self: stretch;
+    box-sizing: border-box;
+    height: 40px;
+    min-height: 40px;
+    margin: 0;
+    padding: 4px;
+  }
+  body.mobile-play .direction button { min-height: 30px; font-size: 11px; }
+  body.mobile-play .clue-actions {
+    margin: 13px 0 0;
+    padding-top: 10px;
+    gap: 8px;
+  }
+  body.mobile-play .clue-button {
+    width: max-content;
+    max-width: 132px;
+    height: 34px;
+    min-height: 34px;
+    padding-inline: 9px;
+    gap: 6px;
+    font-size: 10px;
+  }
+  body.mobile-play .mission {
+    display: block;
+    flex: 0 0 auto;
+    width: 100%;
+    min-height: 0;
+    max-height: none;
+    margin: 0;
+    padding: 12px 15px 13px;
+    overflow: visible;
+  }
+  body.mobile-play .mission-tip { display: none; }
+  body.mobile-play .mission-summary h2 { margin: 5px 0; font-size: 18px; line-height: 1.14; }
+  body.mobile-play .mission-summary p { margin: 5px 0; font-size: 11px; line-height: 1.4; }
+  body.mobile-play .mission-summary .streak-line { margin-top: 6px !important; font-size: 10px; }
+}
+
+@media (max-width: 600px) and (min-height: 761px) {
+  body.mobile-play {
+    --links-board-size: min(calc(100vw - 50px), max(140px, calc(100dvh - 555px)));
+  }
+  body.mobile-play:has(.game-layout.has-active-clue) {
+    --links-board-size: min(calc(100vw - 50px), max(140px, calc(100dvh - 680px)));
+  }
+}
+
+@media (max-width: 600px) and (max-height: 760px) {
+  body.mobile-play {
+    --links-board-size: min(calc(100vw - 42px), max(120px, calc(100dvh - 485px)));
+  }
+  body.mobile-play .board-wrap { display: grid; justify-items: center; }
+  body.mobile-play .mission { padding: 8px 12px 9px; }
+  body.mobile-play .mission-summary .eyebrow,
+  body.mobile-play .mission-summary .streak-line { display: none; }
+  body.mobile-play .mission-summary h2 { margin: 0 0 3px; font-size: 15px; line-height: 1.05; }
+  body.mobile-play .mission-summary p,
+  body.mobile-play .mission-summary .streak-line { font-size: 9px; }
+}
+
+@media (max-width: 600px) and (max-height: 760px) {
+  body.mobile-mini-active .mini-challenge-card { display: none !important; }
+  body.mobile-mini-active .mini-progress-strip { flex: none; margin-bottom: max(8px, env(safe-area-inset-bottom)); }
+}
+
+/* Crossword phone controls: tabs duplicate the clue direction and crowd the answer. */
+@media (max-width: 600px) {
+  body.mobile-mini-active .mini-masthead {
+    display: flex;
+    box-sizing: border-box;
+    position: relative;
+    align-items: center;
+    justify-content: center;
+    height: 60px; min-height: 60px; max-height: 60px;
+    padding: 0 54px 0 8px;
+    border-bottom: 1px solid var(--ink);
+  }
+  body.mobile-mini-active .mini-masthead .brand {
+    display: block;
+    margin: 0;
+    line-height: 1;
+    transform: translateY(-1px);
+  }
+  body.mobile-mini-active .mini-masthead .mini-menu {
+    top: 50%; right: 4px; transform: translateY(-50%);
+    width: 40px; height: 40px;
+    background: #f7f6f0; box-shadow: 0 1px 3px rgba(36,57,48,.12);
+  }
+  body.mobile-mini-active .mobile-clue-tabs { display: none !important; }
+  body.mobile-mini-active .mobile-mini-bar { gap: 9px; margin-top: 10px; overflow: visible; }
+  body.mobile-mini-active .mobile-mini-answer-control { gap: 7px; }
+  body.mobile-mini-active .mobile-mini-answer {
+    height: 52px; min-height: 52px; padding: 10px 14px;
+    border: 2px solid #9aaa72; border-radius: 10px;
+    background: #fffefa; box-shadow: inset 0 1px 3px rgba(36,57,48,.08), 0 2px 5px rgba(36,57,48,.06);
+    font-size: 19px; letter-spacing: .22em;
+  }
+  body.mobile-mini-active .mobile-mini-answer::placeholder { color: #77806f; font-size: 14px; letter-spacing: 0; font-weight: 500; }
+  body.mobile-mini-active .mobile-mini-answer:focus { outline: 3px solid #91a45d; outline-offset: 2px; }
+}

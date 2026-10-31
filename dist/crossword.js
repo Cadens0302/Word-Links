@@ -398,7 +398,10 @@ function numberMiniEntries(entries) {
   ordered.forEach((entry,index) => { entry.number = index + 1; });
 }
 
-function miniDirectionArrow(entry) { return entry.dir === 'Left' ? '←' : entry.dir === 'Across' || entry.dir === 'Right' ? '→' : '↓'; }
+function miniDirectionArrow(entry) {
+  const path = entry.dir === 'Down' ? '<path d="m6 9 6 6 6-6"/>' : '<path d="m9 6 6 6-6 6"/>';
+  return `<svg class="mini-arrow-icon" aria-hidden="true" viewBox="0 0 24 24">${path}</svg>`;
+}
 function miniArrowPlacement(entry) { return entry.dir === 'Left' ? 'left' : entry.dir === 'Across' || entry.dir === 'Right' ? 'right' : 'down'; }
 
 function renderMini() {
@@ -566,11 +569,11 @@ function escapeMiniHTML(value){return String(value).replace(/[&<>"']/g,char=>({'
 function renderMiniClues() {
   for (const direction of ['Across', 'Down']) {
     const list = document.getElementById(direction === 'Across' ? 'mini-across' : 'mini-down');
-    list.innerHTML = miniPuzzle.entries.filter(entry => entry.dir === direction).map(entry => `<div class="mini-clue-row" style="grid-template-columns:minmax(0,1fr) 32px 20px"><button class="mini-clue" type="button" data-entry="${entry.id}" aria-label="${direction} clue ${entry.number}: ${escapeMiniHTML(entry.clue)} (${entry.answer.length} letters)"><strong class="mini-clue-label" data-arrow="${miniArrowPlacement(entry)}"><span>${entry.number}</span><span class="mini-clue-arrow" aria-hidden="true">${miniDirectionArrow(entry)}</span></strong> <span class="mini-clue-copy">${escapeMiniHTML(entry.clue)} <span class="mini-length">(${entry.answer.length})</span></span></button><button class="mini-clue-toggle" type="button" aria-label="Show a better hint for ${direction} clue ${entry.number}" aria-expanded="false">▸</button><span class="mini-clue-check" style="display:none;place-items:center;width:20px;height:30px;color:#5c7837;font-size:17px;font-weight:bold" data-entry-check="${entry.id}" role="img" aria-label="Completed">✓</span><span class="mini-better-hint" hidden><span class="mini-easy-hint"></span><button class="mini-reveal-word secondary" type="button" data-mini-reveal="${entry.id}" hidden style="display:block;width:100%;margin-top:7px;padding:8px 10px;border:1px solid #c9c0ae;border-radius:6px;background:rgba(255,254,250,.55);color:var(--ink);cursor:pointer;font-size:11px">${miniRevealUsed?'Word reveal used for this puzzle':'Reveal this word · 1 use for this puzzle'}</button></span></div>`).join('');
+    list.innerHTML = miniPuzzle.entries.filter(entry => entry.dir === direction).map(entry => `<div class="mini-clue-row" style="grid-template-columns:minmax(0,1fr) 32px 20px"><button class="mini-clue" type="button" data-entry="${entry.id}" aria-label="${direction} clue ${entry.number}: ${escapeMiniHTML(entry.clue)} (${entry.answer.length} letters)"><strong class="mini-clue-label" data-arrow="${miniArrowPlacement(entry)}"><span>${entry.number}</span><span class="mini-clue-arrow" aria-hidden="true">${miniDirectionArrow(entry)}</span></strong> <span class="mini-clue-copy">${escapeMiniHTML(entry.clue)} <span class="mini-length">(${entry.answer.length})</span></span></button><button class="mini-clue-toggle" type="button" aria-label="Show a better hint for ${direction} clue ${entry.number}" aria-expanded="false"></button><span class="mini-clue-check" style="display:none;place-items:center;width:20px;height:30px;color:#5c7837;font-size:17px;font-weight:bold" data-entry-check="${entry.id}" role="img" aria-label="Completed">✓</span><span class="mini-better-hint" hidden><span class="mini-easy-hint"></span><button class="mini-reveal-word secondary" type="button" data-mini-reveal="${entry.id}" hidden style="display:block;width:100%;margin-top:7px;padding:8px 10px;border:1px solid #c9c0ae;border-radius:6px;background:rgba(255,254,250,.55);color:var(--ink);cursor:pointer;font-size:11px">${miniRevealUsed?'Word reveal used for this puzzle':'Reveal this word · 1 use for this puzzle'}</button></span></div>`).join('');
     list.querySelectorAll('.mini-clue').forEach(button => button.addEventListener('click', () => {
       const entry = miniPuzzle.entries.find(item => item.id === button.dataset.entry);
       highlightEntry(entry);
-      miniCell(entry.row, entry.col)?.focus();
+      if (!matchMedia('(max-width: 600px)').matches) miniCell(entry.row, entry.col)?.focus();
       saveMiniSession();
     }));
     list.querySelectorAll('.mini-clue-toggle').forEach(button => button.addEventListener('click', () => {
@@ -586,8 +589,10 @@ function renderMiniClues() {
           row.querySelector('.mini-easy-hint').textContent = `Hint: ${miniEasyHint(entry)}`;
           highlightEntry(entry);
           const cell = miniCell(entry.row, entry.col);
-          cell?.focus({ preventScroll: true });
-          cell?.scrollIntoView({ block: 'center', inline: 'nearest', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+          if (!matchMedia('(max-width: 600px)').matches) {
+            cell?.focus({ preventScroll: true });
+            cell?.scrollIntoView({ block: 'center', inline: 'nearest', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+          }
         }
         miniEasyUses++;
         updateMiniEasyButtons();
@@ -595,13 +600,13 @@ function renderMiniClues() {
       document.querySelectorAll('.mini-clue-toggle[aria-expanded="true"]').forEach(openButton => {
         if (openButton === button) return;
         openButton.setAttribute('aria-expanded', 'false');
-        openButton.textContent = '▸';
+        openButton.textContent = '';
         const openRow = openButton.closest('.mini-clue-row');
         openRow.querySelector('.mini-better-hint').hidden = true;
         openRow.querySelector('[data-mini-reveal]').hidden = true;
       });
       button.setAttribute('aria-expanded', String(!expanded));
-      button.textContent = expanded ? '▸' : '▾';
+      button.textContent = '';
       hint.hidden = expanded;
       row.querySelector('[data-mini-reveal]').hidden = expanded;
       if (!expanded) animateClueReveal(hint);

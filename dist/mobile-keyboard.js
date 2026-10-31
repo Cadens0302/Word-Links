@@ -45,7 +45,7 @@
       if (key) typeLetter(name, key.dataset.letter);
       else if (event.target.closest('.site-keyboard-done')) closeKeyboard();
     });
-    host.append(panel);
+    document.body.append(panel);
     return panel;
   }
 
@@ -62,6 +62,7 @@
     activeGame = null;
     body.classList.remove('links-keyboard-open', 'mini-keyboard-open');
   }
+  window.closeMobileKeyboard = closeKeyboard;
 
   function typeLetter(game, key) {
     if (!phone.matches || activeGame !== game) return;
@@ -77,7 +78,19 @@
     cell.focus({preventScroll: true});
     cell.dispatchEvent(new KeyboardEvent('keydown', {key, bubbles: true, cancelable: true}));
     if (document.activeElement?.classList.contains('mini-cell')) activeMiniCell = document.activeElement;
+    window.updateMobileCrosswordClue?.();
   }
+
+  // The mobile clue navigator changes the selected answer without focusing a
+  // grid cell. Track that answer silently so the on-screen keyboard always
+  // writes into the visible clue instead of a previously selected word.
+  window.setMobileCrosswordEntry = entry => {
+    if (!phone.matches || !entry || typeof window.entryCells !== 'function' || typeof window.miniCell !== 'function') return;
+    const cells = window.entryCells(entry)
+      .map(point => window.miniCell(point.row, point.col))
+      .filter(Boolean);
+    activeMiniCell = cells.find(cell => !cell.value) || cells[0] || activeMiniCell;
+  };
 
   function setInputModes() {
     const compact = phone.matches;
@@ -102,6 +115,12 @@
   });
   miniGrid.addEventListener('click', event => {
     if (event.target.classList.contains('mini-cell')) openKeyboard('mini');
+  });
+  document.querySelector('.mobile-mini-answer')?.addEventListener('focus', () => {
+    if (phone.matches && !miniModal.hidden) openKeyboard('mini');
+  });
+  document.querySelector('.mobile-mini-answer')?.addEventListener('click', () => {
+    if (phone.matches && !miniModal.hidden) openKeyboard('mini');
   });
   document.getElementById('word-form').addEventListener('submit', closeKeyboard);
   document.getElementById('mini-check').addEventListener('click', closeKeyboard);
