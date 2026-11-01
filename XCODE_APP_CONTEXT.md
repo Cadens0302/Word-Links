@@ -218,6 +218,13 @@ The recent website mobile work provides a concrete reference in `dist/mobile-pla
 - Buttons subtly change color on hover/press and give a small satisfying press response. Panels/sheets rise or fade in smoothly; clue and checkmark reveals have short animations. Avoid a flash of a different screen during navigation or replaying the entire game-entrance animation when simply closing a popup.
 - Honor **Reduce Motion**. The web implementation disables animation under `prefers-reduced-motion: reduce`; map that to iOS accessibility settings.
 
+### Interaction polish handoff (November 2026)
+
+- Use short, restrained motion that supports the action: buttons get a quick press response, successful cells fill with a subtle pop, status changes settle smoothly, and dialogs enter without flashing an unrelated screen.
+- Never leave a tap looking selected after the action. Touch browsers can latch `:hover` and pointer focus; clear pointer focus after activation while retaining visible focus for keyboard navigation. Keep persistent selected states only for controls with an actual selected value, such as the direction selector or active crossword clue.
+- Use a consistent 160–220 ms easing curve for hover and press transitions, and keep entrance/reveal motion around 200–380 ms. Avoid repeated bouncing, large translations, or animation that shifts the board and controls.
+- Respect Reduce Motion by removing transitions and animations, while keeping state changes clear through color, borders, and text.
+
 ## 12. Suggested app structure (implementation guidance, not existing code)
 
 The current repository contains a functioning web app, not a native Swift app. For a first Xcode implementation, decide whether to:

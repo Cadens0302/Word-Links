@@ -41,6 +41,17 @@ document.addEventListener('click', event => {
   if (control) replayMotion(control, 'motion-pop');
 });
 
+// Touch browsers may keep :hover and pointer focus latched after a tap.
+// Clear only pointer focus; keyboard focus remains visible for accessibility.
+document.addEventListener('pointerup', event => {
+  if (event.pointerType !== 'mouse' && event.pointerType !== 'pen' && event.pointerType !== 'touch') return;
+  const control = event.target.closest('button, a, summary');
+  if (!control) return;
+  requestAnimationFrame(() => {
+    if (document.activeElement === control && !control.matches(':focus-visible')) control.blur();
+  });
+}, true);
+
 document.addEventListener('input', event => {
   if (event.target.matches('.mini-cell')) replayMotion(event.target, 'motion-fill');
 });
