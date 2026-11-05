@@ -123,6 +123,8 @@ function dailyPuzzleWordsFor(date, avoid = []) {
 }
 
 function dailyPuzzleFor(date) {
+  const shared=window.WordroomDaily?.record('links');
+  if(shared && !window.WORDROOM_AUTHORING) return [...shared.layout.map(w=>w.text), `Daily Connection · ${window.currentWordAgeGroup().label} · ${dailyDateLabel(date)}`];
   const yesterday = dailyPuzzleWordsFor(previousPuzzleDate(date));
   const [first, second] = dailyPuzzleWordsFor(date, yesterday);
   return [first, second, `Daily Connection · ${window.currentWordAgeGroup().label} · ${dailyDateLabel(date)}`];
@@ -161,12 +163,13 @@ window.getWordLinksStreakMessage = function() {
 function startDaily() {
   window.CUSTOM_PUZZLE = null;
   window.DAILY_MODE = true;
+  if (window.WordroomDaily && !WordroomDaily.allow('links')) return;
   const date = todayKey();
   window.DAILY_PUZZLE = dailyPuzzleFor(date);
   window.DAILY_SEED = `daily-difficulty-v2-${window.currentWordAgeGroup().id}-${date}`;
   const layouts = readDailyLayouts();
   const layoutKey = `difficulty-v2:${date}:${window.currentWordAgeGroup().id}`;
-  window.DAILY_LAYOUT = Array.isArray(layouts[layoutKey]) ? layouts[layoutKey] : null;
+  window.DAILY_LAYOUT = window.WordroomDaily?.record('links')?.layout || (Array.isArray(layouts[layoutKey]) ? layouts[layoutKey] : window.wordroomPreparedDailyLayout?.(date, window.currentWordAgeGroup().id) || null);
   window.EXTRA_LEVEL = null;
   window.EXTRA_PUZZLE = null;
   window.EXTRA_SEED = null;
@@ -200,6 +203,7 @@ function levelWordsForAge(levelNumber, level, fallbackIndex) {
 }
 
 function startExtraLevel(levelNumber) {
+  window.WordroomDaily?.leave('links');
   const level = EXTRA_LEVELS[levelNumber - 1];
   if (!level) return;
   window.CUSTOM_PUZZLE = null;
@@ -267,9 +271,10 @@ function recordCompletion(result) {
   const date = todayKey();
   const ageGroup = window.currentWordAgeGroup().id;
   const history = readHistory().filter(item => item.date !== date || (item.ageGroup || '18+') !== ageGroup);
-  history.push({date, ageGroup, gameType:'Word Links', challengeName:window.DAILY_PUZZLE[2], score: result.score, words: result.words, puzzle: window.DAILY_PUZZLE[2]});
+  history.push({date, ageGroup, gameType:'Word Links', challengeName:window.DAILY_PUZZLE[2], score: result.score, linkCount: Math.max(0,result.words.length-2), puzzle: window.DAILY_PUZZLE[2]});
   history.sort((a,b) => a.date.localeCompare(b.date));
   writeHistory(history);
+  window.WordroomDaily?.complete('links',date,ageGroup,history.at(-1)).catch(error=>feedback(error.message,'error'));
   const streak = streakFor(history, date);
   updateStreakLabels();
   feedback(`Congratulations! You finished today’s daily puzzle. Your streak is ${streak} day${streak === 1 ? '' : 's'}. Your score: ${result.score} points.`, 'success');
@@ -301,7 +306,7 @@ function renderHistory(section = 'all') {
     const date = new Date(`${item.date}T12:00:00`).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric',year:'numeric'});
     const age = item.ageGroup ? ` · ${window.WORD_AGE_GROUPS.find(group => group.id === item.ageGroup)?.label || item.ageGroup}` : '';
     const label = item.type === 'daily' ? `<strong>Daily challenge</strong> · ${item.gameType || 'Word Links'} · ${item.challengeName || item.puzzle || `Challenge ${item.date}`}${age}` : `<strong>Level ${item.level}</strong> · Word Links · ${EXTRA_LEVELS[item.level - 1]?.name || 'Extra puzzle'}`;
-    return `<div class="history-row"><div><div class="history-date">${date}</div><div class="history-meta">${label} · ${item.words?.length || 0} links</div></div><div class="history-score">${item.score} pts</div></div>`;
+    return `<div class="history-row"><div><div class="history-date">${date}</div><div class="history-meta">${label} · ${item.linkCount ?? item.words?.length ?? 0} links</div></div><div class="history-score">${item.score} pts</div></div>`;
   }).join('');
 }
 
@@ -309,7 +314,7 @@ function openWelcome() {
   updateStreakLabels();
   const solvedToday = readHistory().some(item => item.date === todayKey() && (item.ageGroup || '18+') === window.currentWordAgeGroup().id);
   document.getElementById('welcome-copy').textContent = solvedToday
-    ? 'You’ve solved today’s challenge already. You can revisit it or keep your streak ready for tomorrow.'
+    ? 'You’ve solved today’s challenge. Your result is in history; another puzzle arrives tomorrow.'
     : 'A new daily puzzle is ready. Keep your run going with today’s connection.';
   document.getElementById('welcome-modal').hidden = false;
 }

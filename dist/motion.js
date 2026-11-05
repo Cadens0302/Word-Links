@@ -14,12 +14,12 @@ function animateClueReveal(element) {
 }
 function animateGameEntrance(game) {
   const selector = game === 'mini'
-    ? '.mini-board-column, .mini-side, .mini-info-card'
+    ? '.mini-masthead, .mini-page-intro, .mini-grid, .mobile-mini-bar, .mini-side, .mini-info-card'
     : '.intro, .board-panel, .score-panel, .entry-panel, .mission';
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   document.querySelectorAll(selector).forEach((element, index) => {
     gameEntranceAnimations.get(element)?.cancel();
-    if (reduced || !element.animate) return;
+    if (reduced || !element.animate || !element.getClientRects().length) return;
     // Animate only content; screen backgrounds must remain fully opaque.
     const animation = element.animate([
       { opacity: 0, transform: 'translateY(12px)' },
@@ -29,11 +29,17 @@ function animateGameEntrance(game) {
   });
 }
 
+const controlMotionTimers = new WeakMap();
 function replayMotion(element, className) {
   if (!element || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   element.classList.remove(className);
   void element.offsetWidth;
   element.classList.add(className);
+  if (className === 'motion-pop') {
+    clearTimeout(controlMotionTimers.get(element));
+    // Hidden/offscreen controls do not reliably deliver animationend.
+    controlMotionTimers.set(element, setTimeout(() => element.classList.remove(className), 220));
+  }
 }
 
 document.addEventListener('click', event => {
@@ -64,3 +70,39 @@ const motionObserver = new MutationObserver(records => {
   }
 });
 motionObserver.observe(document.body, { subtree: true, childList: true, characterData: true });
+
+// Explicit pointer state avoids WebKit's sticky emulated :hover after touch.
+// Delegation also covers buttons created later by puzzle and dialog renderers.
+const hoverControlSelector = 'button:not(:disabled), a, summary, .mini-cell, input[type="range"]';
+let hoveredControl = null;
+function clearPointerHover() {
+  hoveredControl?.classList.remove('pointer-hover');
+  hoveredControl = null;
+}
+document.addEventListener('pointerover', event => {
+  if (event.pointerType !== 'mouse' && event.pointerType !== 'pen') return;
+  const control = event.target.closest?.(hoverControlSelector);
+  if (control === hoveredControl) return;
+  clearPointerHover();
+  if (control) {
+    hoveredControl = control;
+    control.classList.add('pointer-hover');
+  }
+});
+document.addEventListener('pointerout', event => {
+  if (hoveredControl && !hoveredControl.contains(event.relatedTarget)) clearPointerHover();
+});
+document.addEventListener('pointerdown', event => {
+  if (event.pointerType === 'touch') clearPointerHover();
+  event.target.closest?.('button, a, summary')?.classList.add('pointer-focused');
+}, true);
+document.addEventListener('keydown', () => {
+  document.querySelectorAll('.pointer-focused').forEach(control => control.classList.remove('pointer-focused'));
+}, true);
+document.addEventListener('pointercancel', clearPointerHover, true);
+window.addEventListener('blur', clearPointerHover);
+document.addEventListener('visibilitychange', clearPointerHover);
+document.addEventListener('animationend', event => {
+  if (event.animationName === 'control-pop') event.target.classList.remove('motion-pop');
+});
+

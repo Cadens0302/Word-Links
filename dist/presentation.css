@@ -550,22 +550,22 @@ button:not(:disabled):active { transform: translateY(1px); }
 
 /* One consistent, tactile hover response for controls across both games and dialogs. */
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
-  button:not(:disabled):not(.cell):not(.mini-cell):not(.site-keyboard-key):hover {
+  button:not(:disabled):not(.cell):not(.mini-cell):not(.site-keyboard-key).pointer-hover {
     border-color: #91a45d;
     box-shadow: 0 5px 13px rgba(36,57,48,.12);
     translate: 0 -2px;
   }
-  .direction button:not(:disabled):hover,
-  .clue-button:hover,
-  .clue-option:hover,
-  .mobile-clue-tabs button:hover,
-  .mobile-mini-clue-line button:hover,
-  .mini-actions button:hover,
-  .custom-builder button:hover {
+  .direction button:not(:disabled).pointer-hover,
+  .clue-button.pointer-hover,
+  .clue-option.pointer-hover,
+  .mobile-clue-tabs button.pointer-hover,
+  .mobile-mini-clue-line button.pointer-hover,
+  .mini-actions button.pointer-hover,
+  .custom-builder button.pointer-hover {
     background-color: #e7edda;
     color: #243930;
   }
-  .site-keyboard-key:hover:not(:disabled) {
+  .site-keyboard-key.pointer-hover:not(:disabled) {
     background: #e1eea5;
     border-color: #91a45d;
     box-shadow: 0 3px 9px rgba(36,57,48,.15);
@@ -719,7 +719,7 @@ button:not(:disabled):active { transform: translateY(1px); }
     width: 40px; height: 40px;
     background: #f7f6f0; box-shadow: 0 1px 3px rgba(36,57,48,.12);
   }
-  body.mobile-mini-active .mobile-clue-tabs { display: none !important; }
+  body.mobile-mini-active .mobile-clue-tabs { display: grid; }
   body.mobile-mini-active .mobile-mini-bar { gap: 9px; margin-top: 10px; overflow: visible; }
   body.mobile-mini-active .mobile-mini-answer-control { gap: 7px; }
   body.mobile-mini-active .mobile-mini-answer {

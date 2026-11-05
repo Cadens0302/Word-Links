@@ -8,6 +8,7 @@
   const miniModal = document.getElementById('mini-modal');
   let activeGame = null;
   let activeMiniCell = null;
+  let activeMiniEntryID = null;
 
   function createKeyboard(name, host) {
     const panel = document.createElement('section');
@@ -89,7 +90,10 @@
     const cells = window.entryCells(entry)
       .map(point => window.miniCell(point.row, point.col))
       .filter(Boolean);
-    activeMiniCell = cells.find(cell => !cell.value) || cells[0] || activeMiniCell;
+    if (activeMiniEntryID !== entry.id || !cells.includes(activeMiniCell)) {
+      activeMiniCell = cells.find(cell => !cell.value) || cells[0] || null;
+    }
+    activeMiniEntryID = entry.id;
   };
 
   function setInputModes() {

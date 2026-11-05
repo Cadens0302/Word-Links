@@ -126,6 +126,8 @@ window.isAgePreferredDailyWord = word => window.WORD_AGE_GROUP !== 'easy' || MIN
 function miniDateKey(date = new Date()) { return puzzleDateKey(date); }
 function miniDailyIndex(date = miniDateKey()) { let hash = 2166136261; for (const char of `${window.WORD_AGE_GROUP}:${date}`) { hash ^= char.charCodeAt(0); hash = Math.imul(hash, 16777619); } return hash >>> 0; }
 function miniDailyPuzzle(date = miniDateKey()) {
+  const shared=window.WordroomDaily?.record('crossword');
+  if(shared && !window.WORDROOM_AUTHORING)return {title:`Daily Crossword · ${window.currentWordAgeGroup().label} · ${miniDateLabel(date)}`,entries:structuredClone(shared.entries),_laidOut:true};
   return {title:`Daily Crossword · ${window.currentWordAgeGroup().label} · ${miniDateLabel(date)}`,entries:[]};
 }
 function miniPreviousDailyAnswers(date) {
@@ -163,7 +165,7 @@ function updateMiniChallengeStreak() {
   const line = document.getElementById('mini-challenge-streak');
   if (line) line.textContent = `${miniStreak()} day streak`;
 }
-function recordMiniSolved() { const date = miniPuzzleDate; const ageGroup = window.WORD_AGE_GROUP; const history = miniHistory(); if (!history.some(item => item.date === date && (item.ageGroup || '18+') === ageGroup)) { history.unshift({date, ageGroup, gameType:'Mini Crossword', challengeName:miniPuzzle.title, title:miniPuzzle.title}); localStorage.setItem('wordLinksMiniHistory', JSON.stringify(history.slice(0, 60))); } return miniStreak(); }
+function recordMiniSolved() { const date = miniPuzzleDate; const ageGroup = window.WORD_AGE_GROUP; const history = miniHistory(); if (!history.some(item => item.date === date && (item.ageGroup || '18+') === ageGroup)) { history.unshift({date, ageGroup, gameType:'Mini Crossword', challengeName:miniPuzzle.title, title:miniPuzzle.title}); localStorage.setItem('wordLinksMiniHistory', JSON.stringify(history)); } window.WordroomDaily?.complete('crossword',date,ageGroup,history[0]).catch(error=>{document.getElementById('mini-feedback').textContent=error.message;}); return miniStreak(); }
 function renderMiniHistory(section = 'all') {
   const panel = document.getElementById('mini-history-list');
   const daily = miniHistory().map(item => ({...item, section:'daily'}));
@@ -225,7 +227,7 @@ function readMiniSession(mode, level, title) {
   } catch { return null; }
 }
 function saveMiniSession() {
-  if (miniMode === 'custom') return;
+  if (miniMode === 'custom' || (miniMode==='daily' && window.WordroomDaily?.completed('crossword'))) return;
   if (!miniPuzzle?.entries?.length) return;
   const answers = miniPuzzle.entries.flatMap(entry => entryCells(entry).map(({row, col}) => {
     const value = miniCell(row, col)?.value;
@@ -405,6 +407,9 @@ function miniDirectionArrow(entry) {
 function miniArrowPlacement(entry) { return entry.dir === 'Left' ? 'left' : entry.dir === 'Across' || entry.dir === 'Right' ? 'right' : 'down'; }
 
 function renderMini() {
+  if(miniMode==='daily' && window.WordroomDaily && !WordroomDaily.allow('crossword'))return;
+  if(miniMode!=='daily')window.WordroomDaily?.leave('crossword');
+  if(miniMode==='daily' && !miniPuzzle._laidOut && !window.WORDROOM_AUTHORING) { const shared=window.WordroomDaily?.record('crossword');if(shared){miniPuzzle.entries=structuredClone(shared.entries);miniPuzzle._laidOut=true;} }
   resetMiniReveal();
   if (!miniPuzzle._laidOut) { layoutMiniEntries(); miniPuzzle._laidOut = true; }
   numberMiniEntries(miniPuzzle.entries);
@@ -452,6 +457,7 @@ function renderMini() {
           event.preventDefault();
           cell.value = event.key.toUpperCase();
           cell.classList.remove('mini-wrong');
+          replayMotion(cell, 'motion-fill');
           focusMiniEntryCell(r, c, 1);
           updateMiniProgress();
           updateMiniClueChecks();
@@ -548,6 +554,7 @@ function highlightEntry(entry) {
   document.querySelectorAll('.mini-clue').forEach(button => button.classList.toggle('active', button.dataset.entry === entry.id));
   updateMiniEasyButtons();
   window.updateMobileCrosswordClue?.();
+  saveMiniSession();
 }
 
 function highlightEntryAt(row, col) {
@@ -698,11 +705,12 @@ function showMiniLevels() {
 function startMiniDaily() {
   miniPuzzleDate = miniDateKey();
   miniMode='daily'; miniLevel=null; miniIndex=miniDailyIndex();
+  if(window.WordroomDaily && !WordroomDaily.allow('crossword'))return;
   miniHintUses=0;miniEasyUses=0;miniRerollsLeft=Infinity;
   const puzzle=miniDailyPuzzle(miniPuzzleDate);
   miniResumeState=readMiniSession('daily',null,puzzle.title);
   miniPuzzle={...puzzle,entries:miniResumeState?miniResumeState.entries:puzzle.entries.map(entry=>({...entry}))};
-  miniPuzzle._laidOut=Boolean(miniResumeState); selectedEntry=null;
+  miniPuzzle._laidOut=Boolean(miniResumeState || puzzle._laidOut); selectedEntry=null;
   document.getElementById('mini-levels-modal').hidden=true;
   document.getElementById('mini-welcome').hidden=true;
   const resumed=Boolean(miniResumeState);
@@ -748,8 +756,12 @@ function restartMiniPuzzle() {
 
 
 function openMiniGame() {
+  document.getElementById('mini-modal').hidden = false;
+  document.getElementById('mini-welcome').hidden = true;
+  document.getElementById('game-selector').hidden = true;
   miniPuzzleDate = miniDateKey();
   miniMode='daily'; miniLevel=null; miniIndex=miniDailyIndex();
+  if(window.WordroomDaily && !WordroomDaily.allow('crossword'))return;
   const puzzle=miniDailyPuzzle(miniPuzzleDate);
   miniResumeState=readMiniSession('daily',null,puzzle.title);
   miniPuzzle={...puzzle,entries:miniResumeState?miniResumeState.entries:[],_laidOut:Boolean(miniResumeState)};

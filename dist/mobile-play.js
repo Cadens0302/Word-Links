@@ -249,7 +249,7 @@
     document.body.classList.toggle('mobile-mini-active', mobile.matches && !miniModal.hidden);
     if (mobile.matches) {
       if (miniClueList && miniClueList.parentElement !== miniBar) miniBar.insertBefore(miniClueList, miniBar.querySelector('.mobile-mini-clue-line'));
-      if (miniChallengeCard && miniProgress && miniChallengeCard.parentElement !== miniModal) miniProgress.after(miniChallengeCard);
+      if (miniChallengeCard && miniProgress && miniChallengeCard.parentElement !== miniModal) miniProgress.before(miniChallengeCard);
       linkClueContent.forEach(element => clueSheet.append(element));
     } else {
       if (miniClueList && miniClueList.parentElement !== miniSide) miniSide.insertBefore(miniClueList, miniSide.firstChild);
