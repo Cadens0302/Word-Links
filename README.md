@@ -10,6 +10,7 @@ Word Links is a SwiftUI/WebKit iPhone app and static website built from one shar
 - `publication/website/dist/` — GitHub Pages staging output and daily JSON files.
 - `tools/sync-wordlinks-bundle.mjs` — synchronizes the canonical bundle into website output (`publication/website/dist/` locally or root `dist/` in the GitHub checkout).
 - `tools/verify-website.mjs` — validates website assets and daily schedules.
+- `tools/generate-daily-schedule.mjs` — adds missing future daily files without rewriting published dates.
 
 Build the `Word Links` scheme in Xcode. Before website verification or publishing, run:
 
@@ -18,4 +19,4 @@ node tools/sync-wordlinks-bundle.mjs
 node tools/verify-website.mjs
 ```
 
-The app and website currently use device/browser-local progress. Accounts and cloud sync are not implemented.
+The app and website currently use device/browser-local progress. Accounts and cloud sync are not implemented. GitHub Actions maintains the future daily schedule; GitHub Pages publishes the committed files.

@@ -90,13 +90,15 @@ When both games show “Today’s shared puzzle is not available yet,” inspect
 - Added a repository README describing the Xcode project, canonical bundle, website staging, and verification commands.
 - Updated `START_HERE.md`, `HANDOFF_STATUS.json`, and this context to state that the app and website share the `Cadens0302/Word-Links` repository.
 - Recorded that the online repository must be updated by pushing these local changes; this workspace has no Git remote configured.
+- Prepared remote-ready commit `f3ce7e9` containing the Xcode project, shared bundle, website output, and corrected root-`dist` tools. The push was attempted but blocked because this environment has no GitHub credentials configured; push that commit to `main` from an authenticated Git client.
 
 ## 0.2 Offline and daily-publisher ownership — November 5, 2026
 
 - The app does **not** generate or publish daily puzzles. `DailyPuzzleDownloads.swift` downloads already-published JSON envelopes, validates their date, IDs, board data, and checksum, then stores up to 90 local dates in Application Support.
 - The website does **not** generate or publish daily puzzles at runtime. It fetches the same date-keyed JSON files from the GitHub Pages URL and caches them with the service worker and browser storage when available.
-- `publication/website/dist/daily/v1/` contains the current pre-generated schedule staging files. The current workspace has validation and bundle-sync tools, but no daily-schedule generator or deployment publisher script.
-- Therefore, the person or workflow that commits the schedule files to `Cadens0302/Word-Links` and serves GitHub Pages is the publisher. The repository history identifies the current published schedule commit, but the generator/owner of that external publishing step is not recorded in this workspace.
+- `tools/generate-daily-schedule.mjs` now deterministically adds missing future dates from the validated schedule catalog without rewriting existing dates.
+- `.github/workflows/generate-daily-schedule.yml` is the intended GitHub Actions publisher. It runs daily, maintains 400 dates, validates the result, commits only new schedule files, and lets GitHub Pages deploy the commit.
+- The generator supports easy, medium, hard, and master records for both games. It uses existing validated records as deterministic templates until a full content-authoring generator is introduced.
 - Offline play still works for bundled levels, dictionaries, and saved progress. A daily puzzle works offline only after its validated JSON has been downloaded and cached; a missing future daily file cannot be invented by the app.
 
 ## 2. How to use this document

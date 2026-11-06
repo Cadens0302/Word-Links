@@ -1,0 +1,132 @@
+/* Hidden controls stay hidden even when a component uses display: flex/grid. */
+[hidden] { display: none !important; }
+.direction { gap: 3px; }
+.direction button { padding: 8px 2px; font-size: 11px; white-space: nowrap; }
+
+@keyframes room-appear {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes room-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes room-check {
+  from { opacity: 0; transform: scale(.65); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .masthead, .rules, .word-bank, footer {
+    animation: room-rise 360ms ease-out both;
+  }
+  .modal-backdrop, .game-selector-modal, .mini-modal {
+    animation: none;
+    opacity: 1;
+  }
+  .game-selector-modal > .eyebrow, .game-selector-modal > h2,
+  .game-selector-modal > .modal-subtitle {
+    animation: room-rise 280ms ease-out;
+  }
+  .modal:not(.game-selector-modal):not(.mini-modal) {
+    animation: room-rise 280ms ease-out;
+  }
+  .game-choice, .level-card, .history-row {
+    animation: room-rise 300ms ease-out both;
+  }
+  .game-choice:nth-child(2), .level-card:nth-child(3n + 2) { animation-delay: 45ms; }
+  .level-card:nth-child(3n) { animation-delay: 90ms; }
+  button, a, summary, input {
+    transition: background-color 160ms ease, border-color 160ms ease,
+      color 160ms ease, box-shadow 160ms ease, opacity 160ms ease;
+  }
+  .secondary, .submit, .game-choice, .level-card, .game-menu, .mini-menu {
+    transition: translate 160ms ease, box-shadow 160ms ease,
+      background-color 160ms ease, border-color 160ms ease;
+  }
+  .secondary:active:not(:disabled), .submit:active:not(:disabled),
+  .game-choice:active, .level-card:active:not(:disabled) { translate: 0 1px; }
+  .mini-better-hint:not([hidden]), .clue-text:not([hidden]),
+  .mini-hint-text:not([hidden]), .mini-history-panel:not([hidden]) {
+    animation: room-rise 200ms ease-out;
+  }
+  .mini-clue-check { animation: room-check 240ms ease-out; }
+  .mini-progress-track span { transition: width 300ms ease-out; }
+  @media (hover: hover) {
+    .secondary.pointer-hover:not(:disabled), .submit.pointer-hover:not(:disabled),
+    .game-choice.pointer-hover, .level-card.pointer-hover:not(:disabled) {
+      translate: 0 -2px;
+      box-shadow: 0 5px 12px #24393012;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@keyframes control-pop {
+  from { scale: .97; }
+  to { scale: 1; }
+}
+@keyframes tile-fill {
+  0% { scale: .96; }
+  58% { scale: 1.02; }
+  100% { scale: 1; }
+}
+@keyframes status-pop {
+  0% { scale: .97; }
+  55% { scale: 1; }
+  100% { scale: 1; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  button, a, summary, input, .cell, .mini-cell {
+    transition: color 180ms ease, background-color 180ms ease,
+      border-color 180ms ease, box-shadow 180ms ease, translate 180ms ease,
+      scale 180ms ease;
+  }
+  .motion-pop { animation: control-pop 180ms ease-out; }
+  .motion-fill { animation: tile-fill 340ms cubic-bezier(.2,.8,.25,1.12); }
+  .motion-update { animation: status-pop 340ms cubic-bezier(.2,.8,.25,1.12); }
+
+  @media (hover: hover) {
+    .secondary.pointer-hover:not(:disabled), .game-menu.pointer-hover, .mini-menu.pointer-hover,
+    .history-tab.pointer-hover, .clue-option.pointer-hover, .mini-clue-toggle.pointer-hover {
+      background-color: #e7edda;
+      border-color: #93a466;
+      color: #263f2f;
+      box-shadow: 0 5px 14px #24393018;
+      translate: 0 -2px;
+    }
+    .submit.pointer-hover:not(:disabled) {
+      background-color: #d1e586;
+      color: #20372b;
+      box-shadow: 0 7px 18px #536a2728;
+      translate: 0 -2px;
+    }
+    .game-choice.pointer-hover, .level-card.pointer-hover:not(:disabled) {
+      background-color: #fffefa;
+      border-color: #93a466;
+      box-shadow: 0 12px 26px #2439301c;
+      translate: 0 -3px;
+    }
+    .direction button.pointer-hover { background-color: #e4e9d8; color: #243930; }
+    .mini-clue.pointer-hover { background-color: #f0f2e7; border-radius: 4px; }
+    .cell.pointer-hover, .mini-cell.pointer-hover {
+      box-shadow: inset 0 0 0 2px #a8bd68, 0 3px 9px #2439301c;
+      position: relative;
+      z-index: 3;
+    }
+    .game-choice-mark, .game-menu, .mini-menu { transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, scale 180ms ease; }
+    .game-choice.pointer-hover .game-choice-mark { background-color: #d4e48f; scale: 1.08; }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-pop, .motion-fill, .motion-update { animation: none !important; }
+}

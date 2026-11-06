@@ -1,0 +1,233 @@
+/* App viewport contract: controls keep their natural height; boards use the
+   remaining space. Supplemental guidance yields before gameplay controls. */
+@media (max-width: 600px) {
+  html:has(body.mobile-play), body.mobile-play {
+    height: 100dvh !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+  body.mobile-play #game-menu {
+    top: auto;
+    bottom: 4px;
+    transform: none;
+  }
+  body.mobile-play main {
+    height: calc(100dvh - var(--app-header-height, 50px)) !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    padding-bottom: max(8px, env(safe-area-inset-bottom)) !important;
+  }
+  body.mobile-play .game-layout {
+    flex: 1 1 0;
+    height: auto !important;
+    min-height: 0;
+    overflow: hidden !important;
+    padding-bottom: 0;
+  }
+  body.mobile-play .game-layout > aside { flex: none; }
+  body.mobile-play .feedback {
+    max-height: none;
+    overflow: visible;
+    height: auto;
+  }
+  body.mobile-play .mission { flex: none; margin: 0; }
+  body.mobile-play .mission.app-guidance-hidden,
+  body.mobile-mini-active .mini-challenge-card.app-guidance-hidden { display: none !important; }
+  body.mobile-mini-active .mini-layout {
+    flex: 1 1 0;
+    min-height: 0;
+    justify-content: flex-start;
+    overflow: hidden;
+  }
+  body.mobile-mini-active .mini-board-column {
+    flex: 1 1 0;
+    min-height: 0;
+    justify-content: flex-start;
+  }
+  body.mobile-mini-active .mini-grid {
+    width: var(--app-crossword-size, 180px);
+    height: var(--app-crossword-size, 180px);
+  }
+  .custom-builder-backdrop {
+    inset: auto 0;
+    top: var(--app-visible-top, 0px);
+    height: var(--app-visible-height, 100dvh);
+    padding: calc(env(safe-area-inset-top) + 10px) 10px calc(env(safe-area-inset-bottom) + 10px);
+  }
+  .custom-builder {
+    max-height: calc(var(--app-visible-height, 100dvh) - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 20px);
+  }
+  .custom-builder-close {
+    position: sticky;
+    top: 0;
+    float: right;
+    z-index: 2;
+    margin: -12px -7px 0 0;
+    background: #f8f6ef;
+  }
+  .custom-builder input, .custom-builder textarea, .custom-builder select {
+    font-size: 16px;
+  }
+  /* iOS zooms focused input fields below 16px, including readonly grid cells. */
+  body.mobile-mini-active #mini-grid .mini-cell { font-size: 16px !important; }
+  body.mobile-mini-active .mobile-clue-tabs { display: grid !important; }
+  body.mobile-mini-active .mobile-mini-status { max-height: none; overflow: visible; }
+  body.mobile-mini-active .mini-progress-strip { flex: none; }
+}
+@media (max-width: 600px) and (max-height: 760px) {
+  body.mobile-play .mission,
+  body.mobile-mini-active .mini-challenge-card { display: none !important; }
+  body.mobile-play .intro { margin-block: 0 4px; }
+  body.mobile-play .game-layout { gap: 6px; }
+  body.mobile-play .entry-panel { padding: 7px 9px; }
+  body.mobile-play .clue-actions { margin-top: 7px; padding-top: 7px; }
+  body.mobile-mini-active .mini-masthead { height: 42px; min-height: 42px; max-height: 42px; }
+  body.mobile-mini-active .mini-page-intro { margin-bottom: 4px; }
+  body.mobile-mini-active .mobile-mini-bar { gap: 5px; margin-top: 5px; }
+  body.mobile-mini-active .mobile-mini-answer-control { padding: 4px 7px; }
+  body.mobile-mini-active .mobile-mini-answer { height: 36px; min-height: 36px; padding: 5px 9px; }
+  body.mobile-mini-active .mobile-clue-tabs button,
+  body.mobile-mini-active .mobile-mini-clue-line button { min-height: 34px; }
+  body.mobile-mini-active .mobile-mini-clue-line { min-height: 34px; }
+  body.mobile-mini-active .mobile-inline-clues .mini-clue { min-height: 32px; padding: 3px; }
+  body.mobile-mini-active .mobile-inline-clues .mini-clue-row:not([hidden]) { min-height: 40px; padding: 3px 6px; }
+}
+
+/* Confirmation is part of the game, above both game screens and keyboards. */
+.wordroom-confirm-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 11000;
+  display: grid;
+  place-items: center;
+  padding: max(16px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+  background: rgba(23, 38, 30, .42);
+}
+.wordroom-confirm-dialog {
+  width: min(100%, 440px);
+  max-height: 100%;
+  overflow: auto;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+  color: var(--ink);
+  box-shadow: 0 22px 70px rgba(15, 32, 24, .22);
+}
+.wordroom-confirm-dialog h2 { margin: 12px 0; font: 30px/1.1 Georgia, serif; }
+.wordroom-confirm-dialog p { line-height: 1.5; color: var(--muted); }
+.wordroom-confirm-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+.wordroom-confirm-actions button {
+  min-height: 44px;
+  padding: 10px 15px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #fffefa;
+  color: var(--ink);
+}
+.wordroom-confirm-accept.danger { background: var(--ink); color: var(--paper); }
+@media (prefers-reduced-motion: no-preference) {
+  .wordroom-confirm-dialog { animation: room-rise 220ms ease-out; }
+}
+
+/* Keep reference cards visible after native safe areas reduce the web viewport. */
+@media (max-width: 600px) and (min-height: 700px) {
+  body.mobile-play .mission:not(.app-guidance-hidden) { display: block !important; }
+  body.mobile-mini-active .mini-challenge-card:not(.app-guidance-hidden) {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 12px;
+    row-gap: 3px;
+  }
+  body.mobile-mini-active .mini-challenge-card > .eyebrow { grid-column: 1 / -1; }
+  body.mobile-mini-active .mini-challenge-title { margin: 0; }
+  body.mobile-mini-active .mini-challenge-card p { grid-column: 1; }
+  body.mobile-mini-active .mini-challenge-streak {
+    grid-column: 2; grid-row: 2 / span 2; align-self: center; margin: 0;
+    white-space: nowrap; font-size: 9px;
+  }
+}
+
+/* A single movement channel prevents hover translation from stacking. */
+button:not(.cell):not(.mini-cell):not(.site-keyboard-key) {
+  translate: none !important;
+}
+@media (prefers-reduced-motion: no-preference) {
+  button:not(.cell):not(.mini-cell):not(.site-keyboard-key) {
+    transition: transform 180ms ease, background-color 180ms ease,
+      color 180ms ease, border-color 180ms ease, box-shadow 180ms ease;
+  }
+  button.pointer-hover:not(:disabled):not(.cell):not(.mini-cell):not(.site-keyboard-key) {
+    transform: translateY(-2px);
+  }
+  button.pointer-hover:active:not(:disabled):not(.cell):not(.mini-cell):not(.site-keyboard-key) {
+    transform: translateY(1px);
+  }
+  .custom-builder, .mini-welcome, .welcome-modal {
+    animation: room-rise 280ms ease-out;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  button:not(.cell):not(.mini-cell) { transform: none !important; translate: none !important; }
+}
+
+/* Screenshot reference: inset paper cards, generous boards, compact controls. */
+@media (max-width: 600px) {
+  body.mobile-play main {
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+    padding-bottom: calc(env(safe-area-inset-bottom) + 10px) !important;
+  }
+  body.mobile-play .masthead {
+    padding-inline: max(14px, env(safe-area-inset-left)) max(14px, env(safe-area-inset-right));
+  }
+  body.mobile-play #game-menu { right: max(14px, env(safe-area-inset-right)); }
+  body.mobile-play .game-layout { gap: 9px; }
+  body.mobile-play .game-layout > aside { gap: 9px; }
+  body.mobile-play .board-heading { padding-inline: 8px; }
+  body.mobile-play .entry-panel { border-radius: 9px; padding: 11px 12px; }
+  body.mobile-play .score-panel { border-radius: 7px; }
+  body.mobile-play .score-line { align-items: baseline; }
+  body.mobile-play .score-line > span:not(.score-symbol) { align-self: baseline; }
+  body.mobile-play .mission { border-radius: 11px; padding: 12px 15px; }
+  body.mobile-play .mission-summary h2 { font-size: 17px; line-height: 1.08; }
+  body.mobile-mini-active .mini-modal {
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+    padding-bottom: calc(env(safe-area-inset-bottom) + 10px);
+  }
+  body.mobile-mini-active .mini-masthead { height: 48px; min-height: 48px; max-height: 48px; }
+  body.mobile-mini-active .mini-page-intro { margin-bottom: 8px; }
+  body.mobile-mini-active .mobile-mini-bar { gap: 8px; margin-top: 9px; }
+  body.mobile-mini-active .mobile-clue-tabs { gap: 7px; }
+  body.mobile-mini-active .mobile-clue-tabs button { min-height: 30px; padding: 4px 7px; font-size: 11px; }
+  body.mobile-mini-active .mobile-inline-clues .mini-clue-row:not([hidden]) { min-height: 48px; padding: 6px 10px; }
+  body.mobile-mini-active .mobile-inline-clues .mini-clue { min-height: 34px; padding: 4px; }
+  body.mobile-mini-active .mobile-mini-answer-control { padding: 8px 10px; gap: 5px; }
+  body.mobile-mini-active .mobile-mini-answer { height: 44px; min-height: 44px; padding: 7px 11px; }
+  body.mobile-mini-active .mobile-mini-clue-line,
+  body.mobile-mini-active .mobile-mini-clue-line button { min-height: 36px; }
+  body.mobile-mini-active .mini-challenge-card {
+    order: 4;
+    flex: none;
+    margin: 9px 0 0;
+    padding: 10px 13px;
+    border-radius: 10px;
+  }
+  body.mobile-mini-active .mini-challenge-title { font-size: 17px; line-height: 1.1; }
+  body.mobile-mini-active .mini-challenge-card p { font-size: 10px; line-height: 1.35; margin-block: 5px; }
+  body.mobile-mini-active .mini-progress-strip { order: 5; margin-top: 9px; min-height: 38px; }
+  body.mobile-play .site-keyboard { width: calc(100vw - 24px) !important; }
+}
+@media (max-width: 600px) and (max-height: 760px) {
+  body.mobile-play .game-layout, body.mobile-play .game-layout > aside { gap: 6px; }
+  body.mobile-play .entry-panel { padding: 7px 9px; }
+  body.mobile-mini-active .mobile-mini-bar { gap: 5px; margin-top: 5px; }
+  body.mobile-mini-active .mini-masthead { height: 42px; min-height: 42px; max-height: 42px; }
+  body.mobile-mini-active .mobile-mini-answer { height: 36px; min-height: 36px; }
+  body.mobile-mini-active .mini-page-intro { margin-bottom: 4px; }
+  body.mobile-mini-active .mobile-mini-answer-control { padding: 4px 7px; }
+  body.mobile-mini-active .mobile-inline-clues .mini-clue-row:not([hidden]) { min-height: 40px; padding: 3px 6px; }
+  body.mobile-mini-active .mobile-inline-clues .mini-clue { min-height: 32px; padding: 3px; }
+  body.mobile-mini-active .mini-progress-strip { margin-top: 5px; min-height: 34px; }
+}
