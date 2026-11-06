@@ -1,2 +1,14 @@
 .DS_Store
-.sites-runtime/
+.openai/
+DerivedData/
+build/
+*.xcuserstate
+xcuserdata/
+node_modules/
+.env
+.env.*
+!.env.example
+
+# Keep published puzzle data and static website assets tracked.
+!publication/website/dist/
+!publication/website/dist/daily/

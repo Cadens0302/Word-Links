@@ -30,7 +30,7 @@
       seen.add(id);return true;
     });
   };
-  let database, failure = '', pending = 0;
+  let database, failure = '', pending = 0, persistent = null;
   const notify = () => window.dispatchEvent(new Event('wordroom-storage-status'));
   const ready = new Promise((resolve, reject) => {
     const request = indexedDB.open('beacon-wordroom-offline', 1);
@@ -40,9 +40,19 @@
       db.createObjectStore('operations', {keyPath:'id'});
       db.createObjectStore('packs', {keyPath:'id'});
     };
-    request.onsuccess = () => { database = request.result; resolve(database); };
+    request.onsuccess = () => { database = request.result; resolve(database); requestPersistence(); };
     request.onerror = () => reject(request.error);
   });
+  async function requestPersistence() {
+    try {
+      if (!navigator.storage?.persisted) return;
+      persistent = await navigator.storage.persisted();
+      if (!persistent && navigator.storage.persist) persistent = await navigator.storage.persist();
+    } catch {
+      persistent = false;
+    }
+    notify();
+  }
   ready.catch(() => { failure = 'Extra backup storage is unavailable. Export your progress to keep a separate copy.'; notify(); });
 
   async function transaction(names, work) {
@@ -89,10 +99,10 @@
     return JSON.stringify({format:'beacon-wordroom-backup',version:1,createdAt:new Date().toISOString(),data:snapshot()}, null, 2);
   }
   function validateBackup(text) {
-    if (typeof text !== 'string' || text.length > 20_000_000) throw new Error('Choose a Wordroom backup smaller than 20 MB.');
+    if (typeof text !== 'string' || text.length > 20_000_000) throw new Error('Choose a Word Links backup smaller than 20 MB.');
     const backup = JSON.parse(text);
     if (backup.format !== 'beacon-wordroom-backup' || backup.version !== 1 ||
-        !backup.data || Array.isArray(backup.data) || typeof backup.data !== 'object') throw new Error('This is not a supported Wordroom backup.');
+        !backup.data || Array.isArray(backup.data) || typeof backup.data !== 'object') throw new Error('This is not a supported Word Links backup.');
     for (const [key,value] of Object.entries(backup.data)) {
       if (!eligible(key) || typeof value !== 'string' || value.length > 5_000_000) throw new Error('This backup contains an invalid save.');
       const parsed = JSON.parse(value);
@@ -234,7 +244,7 @@
   }
   window.WordroomOffline = {
     ready, removeLegacyPacks, exportBackup, validateBackup, importBackup, putPack, getPack, recoveredSessions, restoreSession,
-    status: () => ({pending, failure, cloudConfigured:false})
+    status: () => ({pending, failure, persistent, cloudConfigured:false})
   };
   ready.then(() => {
     // Existing installations retain all their saves; migration is additive.

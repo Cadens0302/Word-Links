@@ -1,0 +1,28 @@
+name: Validate Word Links
+
+on:
+  push:
+    paths:
+      - 'publication/website/**'
+      - 'WordLinks/WordLinks.bundle/**'
+      - 'tools/verify-website.mjs'
+      - 'tools/sync-wordlinks-bundle.mjs'
+      - '.github/workflows/validate-website.yml'
+  pull_request:
+    paths:
+      - 'publication/website/**'
+      - 'WordLinks/WordLinks.bundle/**'
+      - 'tools/verify-website.mjs'
+      - 'tools/sync-wordlinks-bundle.mjs'
+      - '.github/workflows/validate-website.yml'
+
+jobs:
+  website:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node tools/sync-wordlinks-bundle.mjs
+      - run: node tools/verify-website.mjs

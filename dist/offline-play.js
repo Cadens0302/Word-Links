@@ -59,7 +59,10 @@
   }
   function refresh() {
     const status = store.status();
-    panel.querySelector('#offline-save-status').textContent = status.failure || (status.pending ? 'Saving on this device…' : 'Progress is stored on this device. No cloud backup.');
+    const storageMessage = status.persistent === false
+      ? 'Progress is stored on this device, but the browser may clear it when storage is low.'
+      : 'Progress is stored on this device. No cloud backup.';
+    panel.querySelector('#offline-save-status').textContent = status.failure || (status.pending ? 'Saving on this device…' : storageMessage);
     panel.querySelector('#offline-pack-status').textContent = 'Included levels are always available offline. Daily puzzles are prepared automatically over Wi-Fi in the app.';
   }
   const close = () => { panel.close(); lastTrigger?.focus({preventScroll:true}); };
@@ -77,7 +80,7 @@
       window.webkit.messageHandlers.exportWordroomBackup.postMessage(text);
     } else {
       const url=URL.createObjectURL(new Blob([text],{type:'application/json'}));
-      const link=document.createElement('a'); link.href=url; link.download='Beacon-Wordroom-backup.json'; link.click();
+      const link=document.createElement('a'); link.href=url; link.download='Word-Links-backup.json'; link.click();
       setTimeout(()=>URL.revokeObjectURL(url),1000);
     }
     panel.querySelector('#offline-backup-status').textContent='Choose where to save your backup.';

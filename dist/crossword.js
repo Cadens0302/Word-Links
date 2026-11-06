@@ -790,7 +790,7 @@ window.createMiniCustomPuzzle = (rawEntries, title = '', options = {}) => {
   const entries = rawEntries.map(item => ({answer:String(item.answer || '').toUpperCase(),clue:String(item.clue || '').trim(),...(Number.isInteger(item.row)?{row:item.row}:{}),...(Number.isInteger(item.col)?{col:item.col}:{}),...(['Across','Down'].includes(item.dir)?{dir:item.dir}:{})}));
   if (entries.some(item => !/^[A-Z]{3,9}$/.test(item.answer) || !item.clue)) return {ok:false,message:'Each entry needs a 3–9 letter dictionary word and a clue.'};
   if (new Set(entries.map(item => item.answer)).size !== entries.length) return {ok:false,message:'Each answer must be different. Remove duplicate words.'};
-  if (entries.some(item => !window.isWordAccepted?.(item.answer))) return {ok:false,message:'One or more answers are not in the Wordroom dictionary.'};
+  if (entries.some(item => !window.isWordAccepted?.(item.answer))) return {ok:false,message:'One or more answers are not in the Word Links dictionary.'};
 
   const prepared=window.previewMiniCustomPuzzle(entries,title);if(!prepared?.ok)return prepared;
   const previous = {miniMode,miniIndex,miniPuzzle,miniPuzzleDate,miniLevel,miniCustomPool,miniCustomOptions,miniResumeState,selectedEntry};

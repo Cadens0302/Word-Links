@@ -1,19 +1,103 @@
-# Beacon Wordroom — context for an iPhone app
+# Word Links — context for an iPhone app
 
 > **Purpose:** Give an Xcode coding assistant a reliable, detailed description of the existing website and the intended iPhone app. Read this file **and the current `dist/` source** before changing game rules or building native screens. This file is a specification and source map; it is not an iOS project.
 
 ## 1. The product in one minute
 
-**Beacon Wordroom** is an independent word-game collection with two games:
+**Word Links** is an independent word-game collection with two games:
 
 1. **Word Links:** Connect two given words on a 15 × 15 letter board by placing valid crossing words. Minimize the total score; each letter in a submitted word costs one point.
-2. **Beacon Crossword:** Solve a connected 12 × 12 crossword with numbered Across and Down answers, clues, optional easier clues, and a once-per-puzzle word reveal.
+2. **Mini Crossword:** Solve a connected 12 × 12 crossword with numbered Across and Down answers, clues, optional easier clues, and a once-per-puzzle word reveal.
 
 The website has a welcome flow, a difficulty selector, daily challenges, sequential extra levels, separate game histories and streaks, and a puzzle creator with share links. The games use a newspaper-like cream, deep-green, and pale-lime design. The iPhone app should feel like the same product, with touch controls and a complete play view that does not require page scrolling.
 
-**Name and tone:** Use “Beacon Wordroom” for the collection, “Word Links” for game one, and “Beacon Crossword” or “Mini Crossword” for game two. Keep copy friendly, concise, and thoughtful. The site intentionally avoids imitating Wordle.
+**Name and tone:** Use “Word Links” for the collection, “Word Links” for game one, and “Mini Crossword” for game two. Keep copy friendly, concise, and thoughtful. The site intentionally avoids imitating Wordle.
 
-**Current implementation:** Static HTML, CSS, and vanilla JavaScript in `dist/`; no framework, account system, or server-side game database. The root `index.html` redirects to `dist/`. `.openai/hosting.json` points Sites hosting at `dist`. The live website is `https://word-links-bostonian.cadensong.chatgpt.site/`. An Xcode project does not yet exist in this folder.
+**Current implementation:** The website remains static HTML, CSS, and vanilla JavaScript in `publication/website/dist/`; the root `index.html` redirects to `dist/`. `WordLinks/WordLinks.bundle/` is the canonical web-game source used by both products: Xcode packages it into the app, and `tools/sync-wordlinks-bundle.mjs` regenerates the website bundle from it. There is still no account system, server-side save database, or cloud progress sync.
+
+## 0. Current native-app handoff (November 2026)
+
+This repository now contains an Xcode iPhone app in addition to the website source. The native app is a SwiftUI shell around the bundled web game:
+
+- Xcode project: `Word Links.xcodeproj`.
+- App entry point: `WordLinks/Word_LinksApp.swift`.
+- WebKit shell and JavaScript bridge: `WordLinks/ContentView.swift`.
+- Native daily cache and background downloads: `WordLinks/DailyPuzzleDownloads.swift`.
+- Canonical bundled game files: `WordLinks/WordLinks.bundle/`.
+- Native storage location: Application Support/`SharedDailies/`; it is separate from the bundled read-only game assets.
+
+The current working tree is intentionally dirty and contains user work. Preserve existing changes; do not reset, clean, or replace unrelated files. Use Xcode project tools for Xcode-organized files and build with Xcode’s `BuildProject` action. The app has already built successfully after the offline-cache changes.
+
+The Xcode project is part of this same repository at `Word Links.xcodeproj`. If the online repository does not show it, the local project changes have not been pushed yet.
+
+### Current deployment and takeover state
+
+- A dedicated takeover guide is available in `START_HERE.md`; read it before this full context when joining the project.
+- Machine-readable state is maintained in `HANDOFF_STATUS.json`.
+- The Word Links web bundle is generated into `publication/website/dist/` from `WordLinks/WordLinks.bundle/`.
+- The latest Word Links deployment commit is `61fd7aab58e61be70fa6b3603c30dc33d409c1cb`.
+- The deployment contains the synchronized Word Links bundle and 400 daily schedule files covering `2026-11-02` through `2027-12-06`.
+- The app, website, and daily schedule use the same repository: `Cadens0302/Word-Links`.
+- Verified public paths are `https://cadens0302.github.io/Word-Links/dist/index.html` and `https://cadens0302.github.io/Word-Links/dist/daily/v1/2026-11-04.json`.
+
+### Native daily puzzle contract
+
+The authoritative daily schedule is published at:
+
+`https://cadens0302.github.io/Word-Links/dist/daily/v1/<YYYY-MM-DD>.json`
+
+The source repository is `Cadens0302/Word-Links`. The immutable schedule was published to its `main` branch in commit `1c5db366b8738c6aedf7efd109439866a54f11c3`, covering 400 dates beginning `2026-11-02`. The app’s `baseURL` must remain aligned with this Pages path unless the hosting location is deliberately changed in both the app and deployment configuration.
+
+Each daily file is an envelope with `schema: 1`, a date, a SHA-256 checksum, and a JSON payload containing exactly eight records: `links` and `crossword` for `easy`, `medium`, `hard`, and `master`. Record IDs are `<date>:<difficulty>:<game>`. Native validation must reject wrong dates, duplicate IDs, malformed boards, invalid words/clues, altered checksums, and unsupported schema versions before replacing stored content.
+
+### Download and retention rules
+
+- Maintain the next **90 local calendar dates**, including today. The native date key uses the device’s current/autoupdating time zone, not UTC.
+- Prefer Wi-Fi. Do not use cellular data while at least 30 future dates are ready.
+- If fewer than 30 future dates are ready and Wi-Fi is unavailable, cellular may refill the cache to 90. Constrained networks remain disallowed.
+- Use background `URLSession` downloads and `BGAppRefreshTask`. These are best-effort iOS facilities; the OS may delay or skip execution while the app is terminated. Recompute the current date whenever the app launches or returns to the foreground.
+- Built-in levels and game assets in `WordLinks.bundle` are never removed by daily-cache cleanup.
+- A completed daily puzzle remains stored for today and the two previous local dates. Cleanup may remove completed records older than that window. Unfinished attempts must be retained.
+- Save completion results before cleanup. Completion and download installation must be idempotent so retries cannot lose progress.
+
+### Native/WebKit boundary
+
+`shared-daily.js` asks the native `dailyPuzzles` message handler for `today`, `begin`, and `complete`. Only the current date’s records and completion results cross the bridge. The web game remains responsible for rendering, local session state, histories, and difficulty selection; native storage is responsible for immutable daily records, durable completion records, and background acquisition.
+
+When both games show “Today’s shared puzzle is not available yet,” inspect the native cache status and the schedule URL first. Both games intentionally share the same native daily cache, so the same message generally indicates a missing/404 schedule file or a failed native installation rather than two separate game bugs.
+
+## 0.1 Latest maintenance log — November 5, 2026
+
+**Completed in the latest command:**
+
+- Confirmed there are no Beacon-named files remaining in the active Word Links workspace.
+- Established `WordLinks/WordLinks.bundle/` as the canonical web-game source for both the app and website.
+- Added `tools/sync-wordlinks-bundle.mjs` so website assets are regenerated from the app source.
+- Fixed the synchronization and verification tools to use the repository’s root `dist/` when running in the GitHub Pages checkout, while retaining `publication/website/dist/` for the local staging workspace.
+- Updated the website validation workflow to synchronize before verifying.
+- Preserved legacy offline database names, backup format identifiers, JavaScript bridge names, and published daily URLs so existing progress and cached data remain compatible.
+- Removed the obsolete attached `/Users/cadensong/Documents/Beacon Wordroom Puzzle Room/` directory.
+
+**Next recommended work:**
+
+- Add a local development command that runs synchronization and serves `publication/website/dist/`.
+- Keep future web-game edits in `WordLinks/WordLinks.bundle/`, then run synchronization and verification before publishing.
+- Push the current Xcode project, shared bundle, README, and updated context files to `Cadens0302/Word-Links` so the online repository matches this workspace.
+
+**Completed in the following maintenance command:**
+
+- Confirmed the local `Word Links.xcodeproj` contains the `Word Links`, `Word LinksTests`, and `Word LinksUITests` targets.
+- Added a repository README describing the Xcode project, canonical bundle, website staging, and verification commands.
+- Updated `START_HERE.md`, `HANDOFF_STATUS.json`, and this context to state that the app and website share the `Cadens0302/Word-Links` repository.
+- Recorded that the online repository must be updated by pushing these local changes; this workspace has no Git remote configured.
+
+## 0.2 Offline and daily-publisher ownership — November 5, 2026
+
+- The app does **not** generate or publish daily puzzles. `DailyPuzzleDownloads.swift` downloads already-published JSON envelopes, validates their date, IDs, board data, and checksum, then stores up to 90 local dates in Application Support.
+- The website does **not** generate or publish daily puzzles at runtime. It fetches the same date-keyed JSON files from the GitHub Pages URL and caches them with the service worker and browser storage when available.
+- `publication/website/dist/daily/v1/` contains the current pre-generated schedule staging files. The current workspace has validation and bundle-sync tools, but no daily-schedule generator or deployment publisher script.
+- Therefore, the person or workflow that commits the schedule files to `Cadens0302/Word-Links` and serves GitHub Pages is the publisher. The repository history identifies the current published schedule commit, but the generator/owner of that external publishing step is not recorded in this workspace.
+- Offline play still works for bundled levels, dictionaries, and saved progress. A daily puzzle works offline only after its validated JSON has been downloaded and cached; a missing future daily file cannot be invented by the app.
 
 ## 2. How to use this document
 
@@ -121,7 +205,7 @@ The validator can align the selected square to a matching letter later in the ty
 - Reroll and easier-clue buttons look disabled until a clue is open. They show remaining uses. An easier clue expands the current clue with more direct information, including the word’s first letter, crossing, and ending coordinate; once used, its content stays visible while that clue is shown.
 - On mobile, opening a clue shows a bottom sheet over the board; the board and word-entry controls still fit on one screen when the sheet is closed.
 
-## 7. Beacon Crossword: exact play rules
+## 7.  Mini Crossword: exact play rules
 
 ### Board and puzzle construction
 
@@ -152,7 +236,7 @@ The validator can align the selected square to a matching letter later in the ty
 ### Daily puzzle identity
 
 - Daily keys use the **device’s local calendar date** (`YYYY-MM-DD`) rather than UTC. `dist/daily-clock.js` schedules the next local midnight with calendar arithmetic and checks again on focus, page show, and visibility return. In iOS, recalculate on app foreground and after device time/time-zone changes.
-- Within the same date, difficulty, and generator version, a daily puzzle must stay the **same on refresh and across devices running the same app version**. Different difficulties get distinct daily puzzles. Its title includes the date and difficulty.
+- Within the same date and difficulty, the published schedule file is the authority, so a daily puzzle must stay the **same across users, devices, website sessions, and app launches**. Different difficulties get distinct daily puzzles. Its title includes the date and difficulty.
 - The crossword generator has an explicit version constant (`MINI_DAILY_GENERATOR_VERSION = 8` when this file was written). Word Links seeds and level session keys also contain version tags. Preserve/version a deterministic generator when changing it so old saved progress cannot silently attach to a different board.
 - Word Links daily starters deliberately avoid both of the previous day’s starters where the pool allows. Crossword daily selection partitions its curated pool by day parity to reduce adjacent-day repeats.
 
@@ -225,20 +309,22 @@ The recent website mobile work provides a concrete reference in `dist/mobile-pla
 - Use a consistent 160–220 ms easing curve for hover and press transitions, and keep entrance/reveal motion around 200–380 ms. Avoid repeated bouncing, large translations, or animation that shifts the board and controls.
 - Respect Reduce Motion by removing transitions and animations, while keeping state changes clear through color, borders, and text.
 
-## 12. Suggested app structure (implementation guidance, not existing code)
+## 12. Current app structure and continuation rules
 
-The current repository contains a functioning web app, not a native Swift app. For a first Xcode implementation, decide whether to:
+The current iPhone implementation bundles the existing web experience in a SwiftUI/WebKit shell and adds native handling for durable daily records, background downloads, local-time date selection, and the iOS share sheet. Continue with this architecture unless a deliberate native rewrite is requested.
 
-1. Bundle the existing `dist/` experience in an app shell and add native handling for safe areas, offline assets, external/shared links, and durable storage; or
-2. Build native SwiftUI views with a separately tested game engine that ports the exact generators, validators, clue logic, and persistence schema.
-
-Either route should leave the rules and player history intact. A native rewrite should keep **Word Links** and **Crossword** engines independent, share only the difficulty/date/navigation/persistence infrastructure, and use a versioned `PuzzleID` containing game, mode, difficulty, date or level, and generator version. Separate engine logic from view layout. The giant accepted-word set and authored clue bank should be bundled as read-only app resources so daily generation works offline.
-
-Do not promise cross-device progress without adding a real sync design. If reusing web content in an app, confirm that share links and local storage persist in the chosen web-view configuration. If porting natively, verify deterministic seeded results against the website for representative dates and difficulties before claiming “same daily puzzle.”
+- Keep **Word Links** and **Crossword** game logic independent. Shared infrastructure should cover only difficulty, local date, navigation, persistence, and daily-cache access.
+- Treat the published daily JSON files as immutable content. Do not silently regenerate a missing published date in the app; fix the publisher or hosting path instead.
+- Keep bundled levels and dictionaries read-only. Do not put daily-cache cleanup logic against `WordLinks.bundle`.
+- Preserve the native/WebKit bridge contract (`today`, `begin`, `complete`) unless all corresponding JavaScript callers and tests are updated together.
+- Use stable IDs containing date, difficulty, and game. Never use array position or a transient download task ID as puzzle identity.
+- Do not promise cross-device progress. Daily puzzle equality is provided by the published schedule; progress remains device-local until a real account/sync design exists.
+- If the daily schema, board generator, or content rules change, publish a new schema/version and retain old schedule files needed by installed app versions.
+- For background work, use `BGAppRefreshTask` and background `URLSession`; never describe iOS background execution as guaranteed. Test both foreground recovery and delayed background delivery.
 
 ### Release preparation still to decide
 
-The folder has **no Xcode project, bundle identifier, app icon, Apple signing configuration, or App Store listing assets**. Those are implementation and publishing inputs, not facts to invent from the website. Keep signing credentials out of source control. Before submission, verify the current Apple review and privacy requirements for the chosen app architecture, and test installation, app suspension/resume, offline launch, sharing/deep links, and saved progress on real devices. A web-view package by itself should not be treated as proof of App Store acceptance.
+The Xcode project and app shell now exist, but bundle signing, App Store listing assets, production entitlements, and final device validation remain release tasks. Keep signing credentials out of source control. Before submission, verify current Apple review and privacy requirements for the chosen app architecture, and test installation, app suspension/resume, offline launch, schedule downloads, sharing/deep links, and saved progress on real devices. A successful simulator build is not proof of App Store acceptance.
 
 ## 13. Acceptance checklist for the Xcode app
 
@@ -273,9 +359,203 @@ The folder has **no Xcode project, bundle identifier, app icon, Apple signing co
 
 - There is no account, remote save, public score database, or friends leaderboard. Word Links “best” is a local personal best.
 - Crossword does not currently award a numeric score like Word Links.
-- Daily puzzles are deterministic from local date, difficulty, code version, and local data. People in different time zones change dates at their own midnight.
+- Published daily puzzles are immutable date-keyed records. People in different time zones change which date is “today” at their own local midnight, but everyone receives the same record for a given date and difficulty.
 - The site’s very large Word Links dictionary includes obscure entries, while clue-backed crossword generation uses a much smaller authored pool. The iPhone app should keep those purposes distinct.
 - Product wording in a few legacy source names and descriptions still says “age” even though the current UI uses **difficulty**. Use the current player-facing terminology.
+
+## 15. Detailed transfer and maintenance instructions
+
+This section is intentionally operational. A future coding assistant should read it before making changes to offline daily puzzles, the WebKit bridge, background execution, or the publication repository.
+
+### 15.1 Start-of-task checklist
+
+1. Read this file completely.
+2. Inspect the current Xcode project tree and read the relevant source instead of assuming the context is newer than the code.
+3. Check `git status --short`. The repository may contain unfinished user work and generated publication files. Preserve it.
+4. Determine whether the request concerns the native shell, the bundled web game, the daily schedule publisher, or more than one of those systems.
+5. For Apple framework work, consult current Apple documentation through Xcode documentation search. SwiftUI, BackgroundTasks, WebKit, and URLSession behavior can change between SDKs.
+6. Use Xcode’s project-aware read/write tools for files in the Xcode project. Build with `BuildProject`; do not treat a successful JavaScript check as proof that Swift compiles.
+7. After a code change, run a build. For UI or lifecycle changes, install and run on a simulator or device and verify the actual state, not only the compiler result.
+
+### 15.2 Native file responsibilities
+
+`Word_LinksApp.swift` is the SwiftUI application entry point. It uses `UIApplicationDelegateAdaptor` to attach `WordroomAppDelegate`.
+
+`ContentView.swift` owns the `WKWebView` wrapper. It:
+
+- Loads `WordLinks.bundle/index.html` with `loadFileURL(_:allowingReadAccessTo:)`.
+- Uses `WKWebsiteDataStore.default()` so WebKit localStorage/IndexedDB survive app suspension and relaunch.
+- Registers the page-world `dailyPuzzles` reply handler.
+- Registers native handlers for copying validated website share links and exporting the web backup JSON through the iOS share sheet.
+- Refreshes the web daily state on app activation, significant time changes, and native download-change notifications.
+- Must not expose arbitrary native file access or accept unvalidated URLs from JavaScript.
+
+`DailyPuzzleDownloads.swift` is the source of truth for native daily files. It is `@MainActor`, owns the Application Support cache, validates and installs downloaded envelopes, stores completion results, tracks started records, schedules background work, and implements `URLSessionDownloadDelegate`.
+
+`Word_Links.entitlements` and `Info.plist` contain app configuration. The current plist declares `fetch` and `remote-notification` background modes and permits `com.beaconwordroom.daily-refresh`. Do not add capabilities merely because they sound useful; confirm that an Apple API requires them.
+
+`WordLinks.bundle` is the shipped web product. It includes the games, dictionaries, levels, styles, service-worker/offline support, and the JavaScript daily bridge. It is not the native daily-file cache and must remain available even when every network request fails.
+
+### 15.3 Native daily-cache state machine
+
+The daily cache is date-keyed. A date file contains records for that date; `results.json` contains durable completion results; `started.json` marks records that have been opened so unfinished attempts are not treated as disposable.
+
+#### Installation
+
+1. A background or foreground URLSession task downloads `<date>.json`.
+2. The delegate checks for HTTP 200 and reads the temporary download file before returning from the delegate callback.
+3. `DailyPuzzleDownloads.validate(_:expectedDate:)` validates size, schema, date, checksum, record count, IDs, difficulty, game, words, clues, directions, and board bounds.
+4. `install(_:date:)` merges only valid immutable records. Existing valid records are not replaced casually.
+5. A completed record is not discarded on reinstall while it is inside the two-previous-day retention window.
+6. A change notification causes the WebKit page to call `window.WordroomDaily?.refresh()`.
+
+#### Begin
+
+When the web game starts today’s daily puzzle, it sends `{ operation: "begin", id: "<date>:<difficulty>:<game>" }`. Native marks that ID in `started.json`. This is a recovery marker, not a completion marker. Never delete an unfinished attempt merely because it is marked started.
+
+#### Complete
+
+The web game first saves its normal history entry in localStorage, then sends `{ operation: "complete", id, result }`. Native verifies that the ID is for the current local date, a supported difficulty/game, and a matching result date/difficulty. Native writes the result before any cleanup. Completion is idempotent: retrying the same completion must not duplicate or corrupt history.
+
+Completed daily records stay available for today and the two previous local calendar dates. On a later refresh, native removes completed records older than that window. This delayed deletion is intentional so users can retain recent daily puzzles. Unfinished records are retained for recovery.
+
+#### Today request
+
+The web game sends `{ operation: "today" }`. Native returns a dictionary shaped like:
+
+```text
+{
+  date: "YYYY-MM-DD",
+  records: [daily record objects for today that are not completed],
+  completed: { "<date>:<difficulty>:<game>": result object },
+  status: "user-readable preparation status"
+}
+```
+
+The native response must remain property-list/JavaScript bridge compatible: strings, arrays, dictionaries, numbers, booleans, and null-compatible values only. Do not return Swift types or URL objects through the bridge.
+
+### 15.4 Download policy in exact terms
+
+The cache window is 90 local dates: today plus the following 89 dates. “Ready” means that every supported combination—four difficulties × two games—has either an installed record or a durable completion result for that date.
+
+- Wi-Fi available: use the Wi-Fi background session and request missing dates until the 90-date window is complete.
+- Wi-Fi unavailable, fewer than 30 ready future dates, and usable cellular available: use the cellular-capable background session and request missing dates until 90 are ready.
+- Wi-Fi unavailable and at least 30 ready future dates: do not start cellular downloads.
+- Constrained networks are not accepted.
+- Cellular is a fallback, not the normal path. Do not change the threshold or target without updating user-facing copy and tests.
+- Duplicate date requests must be suppressed across both background sessions by examining all active task descriptions.
+- Today should receive high priority; later dates may be low priority.
+- The app may be suspended or terminated between scheduling and completion. The code must be safe when the OS relaunches it for background URLSession events.
+
+The system is not a guaranteed scheduler. `BGAppRefreshTask` gives the app a short, system-selected opportunity; background URLSession transfers can continue while suspended, but the system controls timing and may delay work. Never promise users that all 90 files will be present immediately after installation. The first foreground launch is the reliable trigger; later background refreshes are best effort.
+
+### 15.5 Time-zone and date rules
+
+The native date key and JavaScript `puzzleDateKey()` must agree on local calendar date. Do not use UTC date strings for the player-facing daily identity. The native formatter uses an autoupdating current time zone; JavaScript uses local `Date` getters.
+
+When the app returns to the foreground, refresh native storage and ask the web page to re-check local midnight. A device traveling across time zones may select a different date without changing the content associated with any already-published date. Do not rewrite a puzzle’s ID when the time zone changes.
+
+When testing date behavior, cover:
+
+- Just before and just after local midnight.
+- A daylight-saving transition.
+- Moving the simulator across time zones.
+- App suspension across midnight.
+- A device clock that is temporarily incorrect.
+- A future date that has a published file versus a missing date.
+
+### 15.6 Web/native bridge rules
+
+`shared-daily.js` is loaded by both games. It is the common gatekeeper, so a native daily-cache failure can block Word Links and Crossword at the same time. This is expected architecture, not evidence that both game engines failed independently.
+
+The bridge must preserve these operation names and meanings:
+
+| Operation | JavaScript sends | Native action | JavaScript expects |
+|---|---|---|---|
+| `today` | `{ operation: "today" }` | Read current date, records, completions, status | State dictionary described above. |
+| `begin` | `{ operation: "begin", id }` | Mark an unfinished daily attempt as started | Updated state dictionary. |
+| `complete` | `{ operation: "complete", id, result }` | Validate and durably save the result | Updated state dictionary. |
+
+If a bridge call fails, the page should show a truthful recovery message and keep local game progress. Do not claim that a puzzle was saved when native storage rejected it. If the native cache is unavailable, the user can still play bundled levels.
+
+### 15.7 Schedule publishing procedure
+
+The app repository is `Cadens0302/Word-Links`. The schedule repository is separate: `Cadens0302/Word-Links`. Do not publish daily JSON files to the app repository and assume the app’s URL will see them.
+
+The expected public path is:
+
+`https://cadens0302.github.io/Word-Links/dist/daily/v1/`
+
+The local staging directory is `publication/daily/v1/`. These files may be untracked in the app workspace because they are publication artifacts, not Xcode bundle resources. The authoritative remote files belong under `dist/daily/v1/` in `Word-Links`.
+
+Before publishing:
+
+1. Confirm every file name is exactly `YYYY-MM-DD.json`.
+2. Confirm each envelope date matches its file name.
+3. Confirm each file has eight unique IDs and all eight supported combinations.
+4. Confirm the checksum validates the exact UTF-8 payload.
+5. Confirm no existing immutable date is being rewritten. If content rules change, use a new schedule/schema version rather than silently replacing a published date.
+6. Confirm the current app `baseURL` and website relative URL point to the same schedule host/path.
+7. Publish only the schedule files or the intended publisher workflow; do not include unrelated app worktree changes.
+8. Verify both the raw GitHub URL and the GitHub Pages URL. Raw GitHub can become available before Pages propagation completes.
+
+The publication workflow, when present in the schedule repository, may generate future dates and deploy Pages. A Pages 404 after a successful commit can be propagation or a Pages-source configuration problem; it is not fixed by changing puzzle validation. Check the deployed path before changing app code.
+
+### 15.8 Troubleshooting matrix
+
+| Symptom | First checks | Likely cause | Correct response |
+|---|---|---|---|
+| Both games say the daily puzzle is unavailable | Check the schedule URL for today’s exact local date; inspect native status | Missing/404 schedule file or failed native install | Fix publication/hosting or validation input. Do not patch two game engines separately. |
+| Status says waiting for Wi-Fi | Check NWPathMonitor state and cache count | No Wi-Fi and cache is at/above the cellular threshold | Expected policy behavior. Connect Wi-Fi or wait for a permitted refresh. |
+| Cellular never starts below 30 | Check path is satisfied, not constrained, and uses cellular; check cellular session identifier | Simulator/network path does not report usable cellular, or background session policy blocks it | Test on a real cellular device; do not infer cellular behavior from a Wi-Fi simulator. |
+| Today file exists remotely but is not installed | Validate HTTP status, envelope checksum, eight records, ID/date, board bounds | File shape/version mismatch or stale endpoint | Fix the publisher/schema, then retry. Keep existing valid cache. |
+| Daily puzzle changes after refresh | Compare date/difficulty/ID and schedule file checksum | Published file was rewritten or generator/version is not stable | Treat published dates as immutable; publish a new version for rule changes. |
+| Completed puzzle disappears immediately | Inspect `complete` and `pruneCompleted` | Cleanup called at completion or retention cutoff is wrong | Completion saves first; retain today and two previous dates. |
+| Unfinished puzzle disappears | Inspect `started.json` and cleanup filter | Cleanup is treating “started” as “used” | Retain unfinished records and in-progress WebKit session state. |
+| App works after opening but not in background | Inspect BGTask registration, plist identifier, URLSession event handoff | iOS delayed/denied background runtime | Expected limitation; improve scheduling and recovery, never claim guaranteed execution. |
+| Website works but app does not | Compare website `dist` schedule path with native `baseURL`; inspect app bundle version | App is using a stale copied bundle or URL | Update the intended Xcode resource and rebuild; do not modify the remote site first. |
+
+### 15.9 Testing requirements for future changes
+
+At minimum, add or preserve tests for:
+
+- Exact 90-date coverage across month/year boundaries and daylight-saving changes.
+- Two-previous-date completion retention and cleanup on the third later date.
+- Idempotent completion and interrupted install recovery.
+- Cache readiness counting all eight records per date.
+- Wi-Fi-only behavior at 30 and 29 ready dates.
+- Cellular fallback refilling from below 30 to 90.
+- Duplicate suppression across Wi-Fi and cellular sessions.
+- Envelope checksum, schema, ID, date, board-bound, clue, and word validation failures.
+- Local-time date changes without changing a published date’s puzzle identity.
+- WebKit bridge responses for `today`, `begin`, and `complete`.
+- Offline launch with bundled levels available and daily content unavailable.
+- Website/native history reconciliation after backup import.
+
+For manual verification, use a clean simulator state and a second state with an existing unfinished daily attempt. Test both games because they share the bridge but exercise different record shapes. Verify the public schedule independently with an HTTP request before diagnosing a native cache failure.
+
+### 15.10 Security and data-integrity rules
+
+- Treat downloaded JSON as untrusted input, even though it comes from the project’s own site.
+- Keep the maximum file size and strict schema checks.
+- Reject HTML, script-like clue text, unexpected directions, out-of-bounds coordinates, duplicate IDs, and records for another date.
+- Use atomic writes for native JSON files. Mark private cache files excluded from backup where appropriate.
+- Do not execute downloaded JavaScript or load downloaded HTML as a web page.
+- Do not accept arbitrary native bridge operations or arbitrary URLs from the page.
+- Do not store account credentials, signing secrets, GitHub tokens, or deployment tokens in the repository or context file.
+- Do not force-push the schedule repository. Use an expected branch head and preserve immutable history.
+
+### 15.11 Explicit non-goals
+
+The following are not implemented and must not be implied by the app:
+
+- Cloud progress synchronization.
+- Accounts, authentication, password recovery, or account deletion.
+- Public leaderboards or cross-device completion merging.
+- Guaranteed execution while the app is force-quit or fully terminated.
+- Cellular downloading when the cache has 30 or more ready future dates.
+- Regenerating or replacing a published daily puzzle after users may have received it.
+- Deleting bundled levels when a daily puzzle is completed.
 
 ---
 

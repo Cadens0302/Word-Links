@@ -18,7 +18,7 @@
       <label class="custom-field">Second starting word<input id="custom-word-two" maxlength="15" autocomplete="off" placeholder="For example, BRIDGE"></label>
       <div class="custom-placement"><strong>Place your starting words</strong><div class="custom-placement-row"><button type="button" class="custom-placement-pick active" data-pick-word="one" aria-pressed="true">First word</button><input id="custom-place-one" value="A2" maxlength="3" aria-label="First word starting square" placeholder="A2"><select id="custom-dir-one" aria-label="First word direction"><option value="R">→ Right</option><option value="D">↓ Down</option><option value="L">← Left</option><option value="U">↑ Up</option></select></div><div class="custom-placement-row"><button type="button" class="custom-placement-pick" data-pick-word="two" aria-pressed="false">Second word</button><input id="custom-place-two" value="A9" maxlength="3" aria-label="Second word starting square" placeholder="A9"><select id="custom-dir-two" aria-label="Second word direction"><option value="R">→ Right</option><option value="D">↓ Down</option><option value="L">← Left</option><option value="U">↑ Up</option></select></div><div class="custom-board-picker" aria-label="Click a square to place the selected word"><div class="custom-board-corner" aria-hidden="true"></div><div id="custom-board-columns" class="custom-board-columns" aria-hidden="true"></div><div id="custom-board-rows" class="custom-board-rows" aria-hidden="true"></div><div id="custom-placement-grid" class="custom-placement-grid" role="group" aria-label="Word placement squares"></div></div><small id="custom-placement-instruction" role="status" aria-live="polite">Choose the first word, then click its starting square. Click a square to place it.</small></div>
       ${limitsMarkup('links')}
-      <p class="custom-note">Use two different words from the Wordroom dictionary. Starting words must not overlap or touch.</p>
+      <p class="custom-note">Use two different words from the Word Links dictionary. Starting words must not overlap or touch.</p>
     </div>
     <div id="custom-crossword-fields" class="custom-fields" hidden>
       <label class="custom-field" for="custom-crossword-entries">Words and clues <span>one per line</span><textarea id="custom-crossword-entries" rows="9" spellcheck="false" placeholder="GARDEN | A place where flowers grow\nRIVER | Moving water headed toward a lake or sea\nBRIDGE | A structure that lets you cross a river\nFOREST | A large area covered with trees\nWINDOW | A glass opening that lets light into a room\nPLANET | A large world that travels around a star\nSTREAM | A small flowing body of water\nTHUNDER | A loud sound after lightning"></textarea></label>
@@ -97,7 +97,7 @@
     const words=[overlay.querySelector('#custom-word-one').value.trim().toUpperCase(),overlay.querySelector('#custom-word-two').value.trim().toUpperCase()];
     if(words.some(word=>!/^[A-Z]{3,15}$/.test(word)))return {error:'Enter two words that are 3–15 letters long.'};
     if(words[0]===words[1])return {error:'Choose two different starting words.'};
-    if(words.some(word=>!window.isWordAccepted?.(word)))return {error:'Both starting words must be in the Wordroom dictionary.'};
+    if(words.some(word=>!window.isWordAccepted?.(word)))return {error:'Both starting words must be in the Word Links dictionary.'};
     const placements=[];
     for(let i=0;i<2;i++){
       const square=overlay.querySelector(`#custom-place-${i?'two':'one'}`).value.trim().toUpperCase().match(/^([A-O])(1[0-5]|[1-9])$/);
@@ -116,7 +116,7 @@
     for(const line of lines){const parts=line.split('|').map(part=>part.trim());if(parts.length<2||!parts[0]||!parts[1])return {error:'Use ANSWER | clue on every line.'};const answer=parts[0].toUpperCase();if(!/^[A-Z]{3,9}$/.test(answer))return {error:'Each answer must be 3–9 letters. Remove spaces and punctuation from answers.'};if(parts[1].length>180)return {error:'Keep each clue under 180 characters so the share link stays manageable.'};const item={answer,clue:parts[1]};if(parts[2]||parts[3]){const cell=parts[2]?.toUpperCase().match(/^([A-L])(1[0-2]|[1-9])$/);const dir=parts[3]?.toLowerCase();if(!cell||!['across','down'].includes(dir))return {error:'Pinned answers need both a square (A1–L12) and a direction (across or down).'};item.col=cell[1].charCodeAt(0)-65;item.row=Number(cell[2])-1;item.dir=dir==='across'?'Across':'Down';}entries.push(item);}
     if(entries.length<8||entries.length>24)return {error:'Enter 8–24 word and clue pairs.'};
     if(new Set(entries.map(e=>e.answer)).size!==entries.length)return {error:'Each answer must be different. Remove duplicate words.'};
-    if(entries.some(e=>!window.isWordAccepted?.(e.answer)))return {error:'One or more answers are not in the Wordroom dictionary.'};
+    if(entries.some(e=>!window.isWordAccepted?.(e.answer)))return {error:'One or more answers are not in the Word Links dictionary.'};
     const pinned=entries.some(e=>e.row!==undefined||e.col!==undefined||e.dir);
     if(pinned&&(entries.length!==8||entries.some(e=>e.row===undefined||e.col===undefined||!e.dir)))return {error:'Exact placement needs exactly eight entries, each with a square and direction.'};
     return {entries,pinned};

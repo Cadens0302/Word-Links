@@ -1,6 +1,6 @@
 # Beacon app files
 
-The files listed below are imported from the Beacon Wordroom Puzzle Room app bundle.
+The files listed below are imported from the Word Links Puzzle Room app bundle.
 They are labeled as app-owned so they can be distinguished from the daily puzzle data.
 
 ## App-owned web bundle

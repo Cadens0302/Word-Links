@@ -319,7 +319,7 @@ window.createWordLinksPuzzle = (first, second, title = '', options = {}, placeme
   const a = clean(first), b = clean(second);
   if (a.length < 3 || a.length > 15 || b.length < 3 || b.length > 15) return {ok:false,message:'Use two words that are 3–15 letters long.'};
   if (a === b) return {ok:false,message:'Choose two different starting words.'};
-  if (!WORDS.has(a) || !WORDS.has(b)) return {ok:false,message:'Both starting words must be in the Wordroom dictionary.'};
+  if (!WORDS.has(a) || !WORDS.has(b)) return {ok:false,message:'Both starting words must be in the Word Links dictionary.'};
   const chosen=(Array.isArray(placements)?placements:[]).length===2?placements.map(item=>({r:Number(item.r),c:Number(item.c),dir:['R','L','U','D'].includes(item.dir)?item.dir:'R'})):null;
   if(chosen){const placed=[{text:a,...chosen[0]},{text:b,...chosen[1]}],points=placed.map(cells);for(let i=0;i<placed.length;i++){if(points[i].some(p=>p.r<0||p.r>14||p.c<0||p.c>14))return {ok:false,message:`${i?'Second':'First'} word goes beyond the 15 × 15 board. Change its starting square or direction.`};}if(points[0].some(x=>points[1].some(y=>Math.abs(x.r-y.r)<=1&&Math.abs(x.c-y.c)<=1)))return {ok:false,message:'Keep the two starting words separate, with at least one empty square between them.'};}
   window.DAILY_MODE = false; window.DAILY_PUZZLE = null; window.DAILY_LAYOUT = null; window.DAILY_SEED = null;
@@ -336,4 +336,4 @@ window.createWordLinksPuzzle = (first, second, title = '', options = {}, placeme
 };
 
 startGame();
-if(document.modelContext?.registerTool){try{Promise.resolve(document.modelContext.registerTool({name:'place_word',description:'Place and score a word in Beacon Wordroom. Rows and columns are zero-based; direction is H or V.',inputSchema:{type:'object',properties:{word:{type:'string'},row:{type:'integer',minimum:0,maximum:14},column:{type:'integer',minimum:0,maximum:14},direction:{type:'string',enum:['H','V']}},required:['word','row','column','direction'],additionalProperties:false},execute:input=>submitWord(input.word,input.row,input.column,input.direction)})).catch(()=>{});}catch{}}
+if(document.modelContext?.registerTool){try{Promise.resolve(document.modelContext.registerTool({name:'place_word',description:'Place and score a word in Word Links. Rows and columns are zero-based; direction is H or V.',inputSchema:{type:'object',properties:{word:{type:'string'},row:{type:'integer',minimum:0,maximum:14},column:{type:'integer',minimum:0,maximum:14},direction:{type:'string',enum:['H','V']}},required:['word','row','column','direction'],additionalProperties:false},execute:input=>submitWord(input.word,input.row,input.column,input.direction)})).catch(()=>{});}catch{}}
