@@ -1,15 +1,15 @@
 {
   "project": "Word Links",
   "handoffVersion": 1,
-  "implementationPhase": "native app, shared WordLinks bundle, website staging, and offline cache integration complete; remote-ready commit prepared, authenticated GitHub push still required",
+  "implementationPhase": "native app, shared WordLinks bundle, website staging, offline cache integration, and compact no-scroll phone layout implemented; prepared commits are pushed and validation passed, but daily workflow dispatch and new Pages deployment remain pending",
   "appRepository": "Cadens0302/Word-Links",
   "deploymentRepository": "Cadens0302/Word-Links",
   "latestDeploymentCommit": "61fd7aab58e61be70fa6b3603c30dc33d409c1cb",
   "dailySchedule": {
     "baseURL": "https://cadens0302.github.io/Word-Links/dist/daily/v1/",
     "firstDate": "2026-11-02",
-    "lastDate": "2027-12-06",
-    "fileCount": 400,
+    "lastDate": "2027-12-10",
+    "fileCount": 404,
     "recordsPerFile": 8,
     "supportedDifficulties": ["easy", "medium", "hard", "master"],
     "supportedGames": ["links", "crossword"]
@@ -26,6 +26,16 @@
     "syncCommand": "node tools/sync-wordlinks-bundle.mjs",
     "verificationCommand": "node tools/verify-website.mjs"
   },
+  "mobileLayout": {
+    "reference": "Beacon Wordroom phone screenshots supplied November 5, 2026",
+    "pageScrolling": false,
+    "safeAreaInsets": true,
+    "roundedPhoneFrame": true,
+    "sharedTouchTargetHeight": 40,
+    "canonicalStylesheet": "WordLinks/WordLinks.bundle/presentation.css",
+    "websiteSynchronized": true
+  },
+  "remoteReadyCommits": ["f3ce7e9", "c39a765", "9b38299"],
   "xcodeProject": {
     "path": "Word Links.xcodeproj",
     "appTarget": "Word Links",
@@ -37,7 +47,7 @@
     "deploymentIndexHTTPStatus": 200,
     "todayScheduleHTTPStatus": 200,
     "xcodeBuildPassedAfterOfflineCacheChanges": true,
-    "nextRecommendedVerification": "Push the generator workflow from an authenticated GitHub client, run it manually, then confirm Pages serves a newly generated date"
+    "nextRecommendedVerification": "Run Generate daily schedule manually from GitHub Actions, confirm the workflow succeeds, wait for Pages deployment of 9b38299, then review both games visually on compact and tall iPhones"
   },
   "knownLimitations": [
     "iOS background execution is best effort and is not guaranteed while force-quit.",

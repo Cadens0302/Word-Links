@@ -656,6 +656,173 @@ button:not(:disabled):active { transform: translateY(1px); }
   body.mobile-mini-active .mini-progress-strip { flex: none; margin-bottom: max(8px, env(safe-area-inset-bottom)); }
 }
 
+/* Final compact phone frame: keep the whole play surface inside the device viewport. */
+@media (max-width: 600px) {
+  :root {
+    --phone-edge: max(10px, env(safe-area-inset-left), env(safe-area-inset-right));
+    --phone-bottom: max(10px, env(safe-area-inset-bottom));
+    --phone-control-height: 40px;
+  }
+
+  body.mobile-play {
+    box-sizing: border-box;
+    width: 100%;
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+    overflow: hidden !important;
+    overscroll-behavior: none;
+  }
+
+  body.mobile-play .masthead {
+    box-sizing: border-box;
+    padding-left: var(--phone-edge);
+    padding-right: var(--phone-edge);
+  }
+
+  body.mobile-play main {
+    box-sizing: border-box;
+    width: 100%;
+    height: calc(100dvh - 50px - env(safe-area-inset-top)) !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    padding-left: var(--phone-edge);
+    padding-right: var(--phone-edge);
+    padding-bottom: var(--phone-bottom);
+  }
+
+  body.mobile-play .game-layout {
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    padding-bottom: 0 !important;
+  }
+
+  body.mobile-play .board-wrap,
+  body.mobile-play .board-panel,
+  body.mobile-play .entry-panel,
+  body.mobile-play .mission {
+    box-sizing: border-box;
+    max-width: 100%;
+  }
+
+  body.mobile-play .board-wrap { padding-left: 0; padding-right: 0; }
+  body.mobile-play .board-heading { border-radius: 8px 8px 0 0; }
+  body.mobile-play .score-panel,
+  body.mobile-play .entry-panel,
+  body.mobile-play .mission {
+    border-radius: 10px;
+  }
+
+  body.mobile-play #word,
+  body.mobile-play #word-form .submit,
+  body.mobile-play .direction,
+  body.mobile-play .direction button,
+  body.mobile-play .clue-option,
+  body.mobile-play .clue-button {
+    min-height: var(--phone-control-height);
+    height: var(--phone-control-height);
+    box-sizing: border-box;
+  }
+
+  body.mobile-play #word-form .submit,
+  body.mobile-play .clue-button,
+  body.mobile-play .clue-option {
+    padding-inline: 10px;
+  }
+
+  body.mobile-play .direction {
+    height: var(--phone-control-height);
+    padding: 4px;
+  }
+
+  body.mobile-play .direction button { min-height: 30px; height: 30px; }
+
+  body.mobile-play .clue-actions {
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 10px;
+  }
+
+  body.mobile-play .entry-panel .clue-actions #clue.clue-button {
+    width: max-content !important;
+    max-width: 100% !important;
+    min-height: var(--phone-control-height) !important;
+    height: var(--phone-control-height) !important;
+  }
+
+  body.mobile-mini-active .mini-modal {
+    box-sizing: border-box;
+    width: 100%;
+    height: 100dvh !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    padding-left: var(--phone-edge);
+    padding-right: var(--phone-edge);
+    padding-bottom: var(--phone-bottom);
+    border-radius: 0 0 14px 14px;
+  }
+
+  body.mobile-mini-active .mini-page-intro,
+  body.mobile-mini-active .mini-layout,
+  body.mobile-mini-active .mini-progress-strip,
+  body.mobile-mini-active .mini-challenge-card {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  body.mobile-mini-active .mini-layout {
+    flex: 1 1 auto;
+    min-height: 0;
+    gap: 8px;
+    overflow: hidden;
+  }
+
+  body.mobile-mini-active .mini-board-column {
+    flex: 0 0 auto;
+    min-height: 0;
+    width: 100%;
+  }
+
+  body.mobile-mini-active .mini-grid {
+    width: min(calc(100vw - 2 * var(--phone-edge)), max(190px, calc(100dvh - 500px)));
+    height: min(calc(100vw - 2 * var(--phone-edge)), max(190px, calc(100dvh - 500px)));
+    max-width: 100%;
+    margin-inline: auto;
+    border-radius: 14px;
+  }
+
+  body.mobile-mini-active .mobile-mini-bar {
+    flex: 0 0 auto;
+    min-height: 0;
+    margin-top: 6px;
+    gap: 6px;
+    overflow: hidden;
+  }
+
+  body.mobile-mini-active .mobile-mini-answer-control,
+  body.mobile-mini-active .mobile-mini-clue-line button,
+  body.mobile-mini-active .mobile-mini-check {
+    min-height: var(--phone-control-height);
+    height: var(--phone-control-height);
+    box-sizing: border-box;
+  }
+
+  body.mobile-mini-active .mobile-mini-answer {
+    height: var(--phone-control-height);
+    min-height: var(--phone-control-height);
+    box-sizing: border-box;
+  }
+
+  body.mobile-mini-active .mini-challenge-card,
+  body.mobile-mini-active .mini-progress-strip,
+  body.mobile-mini-active .mini-rules,
+  body.mobile-mini-active .mini-word-bank,
+  body.mobile-mini-active .mini-footer {
+    display: none !important;
+  }
+}
+
 /* Crossword phone controls: tabs duplicate the clue direction and crowd the answer. */
 @media (max-width: 600px) {
   body.mobile-play .entry-panel .clue-actions {
@@ -730,4 +897,75 @@ button:not(:disabled):active { transform: translateY(1px); }
   }
   body.mobile-mini-active .mobile-mini-answer::placeholder { color: #77806f; font-size: 14px; letter-spacing: 0; font-weight: 500; }
   body.mobile-mini-active .mobile-mini-answer:focus { outline: 3px solid #91a45d; outline-offset: 2px; }
+}
+
+/* Final viewport guard: this must remain last so legacy mobile rules cannot reopen page scrolling. */
+@media (max-width: 600px) {
+  body.mobile-play,
+  body.mobile-play main,
+  body.mobile-play .game-layout,
+  body.mobile-mini-active,
+  body.mobile-mini-active .mini-modal,
+  body.mobile-mini-active .mini-layout {
+    overflow: hidden !important;
+    overscroll-behavior: none;
+  }
+
+  body.mobile-play {
+    width: 100%;
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+  }
+
+  body.mobile-play main {
+    height: calc(100dvh - 50px - env(safe-area-inset-top)) !important;
+    min-height: 0 !important;
+    padding-bottom: max(10px, env(safe-area-inset-bottom)) !important;
+  }
+
+  body.mobile-play .game-layout {
+    height: auto !important;
+    min-height: 0 !important;
+    padding-bottom: 0 !important;
+  }
+
+  body.mobile-play #word,
+  body.mobile-play #word-form .submit,
+  body.mobile-play .clue-option,
+  body.mobile-play .clue-button,
+  body.mobile-mini-active .mobile-mini-answer,
+  body.mobile-mini-active .mobile-mini-check {
+    min-height: 40px;
+    height: 40px;
+    box-sizing: border-box;
+  }
+
+  body.mobile-play .clue-actions { gap: 8px; }
+
+  body.mobile-mini-active .mini-modal {
+    height: 100dvh !important;
+    min-height: 0 !important;
+    padding-left: max(10px, env(safe-area-inset-left));
+    padding-right: max(10px, env(safe-area-inset-right));
+    padding-bottom: max(10px, env(safe-area-inset-bottom));
+    border-radius: 0 0 14px 14px;
+  }
+
+  body.mobile-mini-active .mini-grid {
+    width: min(calc(100vw - 20px), max(190px, calc(100dvh - 500px))) !important;
+    height: min(calc(100vw - 20px), max(190px, calc(100dvh - 500px))) !important;
+    max-width: 100%;
+  }
+
+  body.mobile-mini-active .mobile-mini-bar { overflow: hidden !important; }
+  body.mobile-mini-active .mini-challenge-card,
+  body.mobile-mini-active .mini-progress-strip,
+  body.mobile-mini-active .mini-rules,
+  body.mobile-mini-active .mini-word-bank,
+  body.mobile-mini-active .mini-footer { display: none !important; }
+}
+
+@media (max-width: 600px) and (min-height: 761px) {
+  body.mobile-mini-active .mini-challenge-card { display: block !important; }
+  body.mobile-mini-active .mini-progress-strip { display: flex !important; }
 }

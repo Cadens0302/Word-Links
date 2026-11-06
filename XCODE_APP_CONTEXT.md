@@ -99,6 +99,7 @@ When both games show “Today’s shared puzzle is not available yet,” inspect
 - `tools/generate-daily-schedule.mjs` now deterministically adds missing future dates from the validated schedule catalog without rewriting existing dates.
 - `.github/workflows/generate-daily-schedule.yml` is the intended GitHub Actions publisher. It runs daily, maintains 400 dates, validates the result, commits only new schedule files, and lets GitHub Pages deploy the commit.
 - The generator supports easy, medium, hard, and master records for both games. It uses existing validated records as deterministic templates until a full content-authoring generator is introduced.
+- The local schedule now validates 404 files through `2027-12-10`; the prepared remote commits are `f3ce7e9`, `c39a765`, and `9b38299`. They still require an authenticated push.
 - Offline play still works for bundled levels, dictionaries, and saved progress. A daily puzzle works offline only after its validated JSON has been downloaded and cached; a missing future daily file cannot be invented by the app.
 
 ## 2. How to use this document
@@ -579,3 +580,41 @@ The following are not implemented and must not be implied by the app:
 - On phones, place the Word Links direction selector and clue controls in separate rows with a visible gap. Keep reroll and easier-clue controls side by side, and inset challenge and guide headings from their card borders.
 - On phones, give the crossword grid, direction tabs, active clue, answer field, clue navigation, check control, and progress strip distinct spacing. Size the grid against the remaining viewport height so these controls do not overlap or get clipped.
 - Keep the mobile Word Links direction selector in a dedicated two-row-height track in the form; reserve vertical space for it before showing the clue action row. The clue trigger is compact, separated by a fine divider, and the reroll and easier-clue actions share a row. Keep both columns of the challenge/guide card fully inside the card with compact mobile type and padding.
+
+### Mobile viewport pass (November 5, 2026)
+
+- Added a final shared phone-layout override after the earlier responsive rules so later declarations no longer reopen document scrolling.
+- Both games now force a `100dvh` play surface with `overflow: hidden`, `overscroll-behavior: none`, safe-area edge padding, and rounded lower corners for the mobile frame.
+- Word Links controls use a shared 40px touch target height, consistent gaps, and side clearance. The board, score, entry form, direction selector, clue action, and challenge content are constrained to the viewport.
+- Mini Crossword uses the same side clearance and touch sizing, keeps the square board responsive to remaining height, and hides nonessential long-form information on phone so the board and controls remain visible without page scrolling.
+- Updated the shared bundle stylesheet cache version and synchronized all 36 bundle assets into the website staging output.
+- Verification passed: `node tools/sync-wordlinks-bundle.mjs` and `node tools/verify-website.mjs` (`404` daily files, `32` referenced assets).
+- GitHub publishing remains blocked until GitHub Desktop authentication is available; no token or password was stored in the repository.
+
+### Follow-up verification log (November 5, 2026)
+
+- Installed and launched the updated app in the Xcode simulator successfully.
+- The device-inspection session ended before returning its screenshot/hierarchy, so visual no-scroll behavior still needs a manual simulator review on Word Links and Mini Crossword.
+- Re-attempted `git push origin main` from `/tmp/word-links-push.GZ92tg`; it still failed with `could not read Username for 'https://github.com': Device not configured`.
+- Prepared commits remain available in that temporary clone: `f3ce7e9`, `c39a765`, and `9b38299`.
+
+### GitHub authentication follow-up (November 5, 2026)
+
+- Retried the prepared push after the user re-authenticated; it still failed before contacting GitHub.
+- This environment has no `gh` executable, no Git credential helper configured, and no GitHub Desktop application at the standard Applications locations.
+- Do not request or store a GitHub password or token in this repository. The remaining action is to install/open GitHub Desktop or configure an approved Git credential helper, sign in to GitHub.com, then retry the push from `/tmp/word-links-push.GZ92tg`.
+- A later check found Xcode's system Git configuration points to Apple `osxkeychain`, but the keychain returned no GitHub credential. The terminal sandbox also cannot modify the user's global Git config. Re-authenticate GitHub in a client that writes to macOS Keychain, then retry the same push.
+- Retried the push with elevated Keychain access; it still failed. A direct read-only `git credential-osxkeychain get` returned no credential, confirming that GitHub Desktop/Xcode login has not stored HTTPS Git credentials for `github.com` on this Mac.
+- Retried again after the user re-signed in; the HTTPS push still returned `could not read Username for 'https://github.com': Device not configured`. Stop terminal retries until the prepared repository is opened and pushed directly from GitHub Desktop, or until its Keychain credential is confirmed.
+- Checked whether GitHub Desktop could be opened directly; macOS reported `Unable to find application named 'GitHub Desktop'`. It is not installed in the available environment, so direct GUI pushing is unavailable here.
+- A later download created `/Users/cadensong/Downloads/GitHub Desktop.app`, but opening it failed with macOS `kLSNoExecutableErr` because the application executable is missing. The download is incomplete/corrupt and cannot authenticate or push.
+- The repaired GitHub Desktop app now opens successfully, but `git push` still returns `could not read Username for 'https://github.com'`. The installation is fixed; GitHub Desktop still needs an authenticated account/repository push to populate the credential used by terminal Git.
+- Directly opening `/Users/cadensong/Downloads/GitHub Desktop.app` with the prepared repository again returned `kLSNoExecutableErr`; Spotlight finds a stale/incomplete app bundle, so GitHub Desktop cannot actually open the clone or show Push origin.
+- The user moved GitHub Desktop into `/Applications`, but opening `/Applications/GitHub Desktop.app` still returns `kLSNoExecutableErr`. The copied app bundle is missing its executable; terminal Git remains unauthenticated.
+- A direct bundle inspection now confirms `/Applications/GitHub Desktop.app` contains a valid arm64 Mach-O executable and `Info.plist`. Launching it succeeds without an error, but the prepared push still returns `could not read Username for 'https://github.com'`; authentication is the remaining blocker, not installation or repository state.
+- The prepared commits are now published remotely: `git ls-remote` reports `9b382996505a11871e20fd0eb070d492d3bb56c7` on `main`. GitHub’s `Validate Word Links` workflow for that commit completed successfully.
+- The user reports six app icons in the simulator. These are expected to be leftover simulator installs from earlier Beacon/Word Links bundle identifiers or prior builds; the project has one real app target, `Word Links`, plus test bundles. Do not delete simulator data without confirming because erase/reset removes simulator progress.
+- Cleanup was requested, but `simctl` could not connect to CoreSimulatorService (`connection refused` / runtime service unavailable). No simulator apps or data were deleted. Restart the simulator/Xcode service, enumerate bundle identifiers, and uninstall only the old Beacon/Word Links duplicates.
+- A new Xcode device session did not recover CoreSimulatorService; `simctl listapps` still fails with connection refused before returning bundle IDs. The user reports three Word Links icons, but no app will be removed until the simulator service can identify their bundle IDs.
+- The online `.github/workflows/generate-daily-schedule.yml` is present and valid with both scheduled and manual triggers. It has not run yet; trigger it manually from GitHub Actions or wait for its scheduled run.
+- GitHub Pages has not deployed commit `9b38299` yet; its latest public deployment remains `61fd7aa`, so a Pages 404/stale site at this moment is deployment propagation/configuration, not a missing repository push.
