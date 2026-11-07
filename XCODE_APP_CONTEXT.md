@@ -626,3 +626,5 @@ The following are not implemented and must not be implied by the app:
 - The duplicate folder is being archived after verification so future app and website edits happen in the Git-backed canonical project only.
 - The canonical Xcode project is `Word Links.xcodeproj`; open it from the repository root before making further changes.
 - The project built successfully with tests during consolidation verification.
+- Recoverable archives are outside the repository at `/Users/cadensong/Documents/Coding /Word-Links/Word Links.archive-20261106` and `/Users/cadensong/Documents/Word-Links-archive-20261106`.
+- Consolidation context is committed locally as `f3c6c4e`; pushing it still requires an authenticated GitHub Desktop session because terminal Git reports `Device not configured`.
