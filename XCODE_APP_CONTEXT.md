@@ -628,4 +628,5 @@ The following are not implemented and must not be implied by the app:
 - The project built successfully with tests during consolidation verification.
 - Recoverable archives are outside the repository at `/Users/cadensong/Documents/Coding /Word-Links/Word Links.archive-20261106` and `/Users/cadensong/Documents/Word-Links-archive-20261106`.
 - Consolidation context is committed locally as `f3c6c4e`; pushing it still requires an authenticated GitHub Desktop session because terminal Git reports `Device not configured`.
+- After the duplicate was removed, the canonical project still builds, but Xcode's active workspace has no scheme/run destination until the canonical project is reopened. `xcrun simctl list devices` currently fails because CoreSimulatorService refuses the connection and no Simulator app/runtime is discoverable on this Mac.
 - The duplicate temporary clone `/private/tmp/word-links-push.GZ92tg` was verified against the same remote and deleted at the user's request. Keep `/Users/cadensong/Documents/Word-Links` as the sole active repository.
