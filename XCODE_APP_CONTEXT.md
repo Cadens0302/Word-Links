@@ -628,4 +628,4 @@ The following are not implemented and must not be implied by the app:
 - The project built successfully with tests during consolidation verification.
 - Recoverable archives are outside the repository at `/Users/cadensong/Documents/Coding /Word-Links/Word Links.archive-20261106` and `/Users/cadensong/Documents/Word-Links-archive-20261106`.
 - Consolidation context is committed locally as `f3c6c4e`; pushing it still requires an authenticated GitHub Desktop session because terminal Git reports `Device not configured`.
-- GitHub Desktop's second repository entry is the temporary clone `/private/tmp/word-links-push.GZ92tg`; remove that entry from GitHub Desktop only. Keep `/Users/cadensong/Documents/Word-Links` as the sole active repository.
+- The duplicate temporary clone `/private/tmp/word-links-push.GZ92tg` was verified against the same remote and deleted at the user's request. Keep `/Users/cadensong/Documents/Word-Links` as the sole active repository.
