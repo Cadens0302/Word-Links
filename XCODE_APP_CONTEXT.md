@@ -618,3 +618,11 @@ The following are not implemented and must not be implied by the app:
 - A new Xcode device session did not recover CoreSimulatorService; `simctl listapps` still fails with connection refused before returning bundle IDs. The user reports three Word Links icons, but no app will be removed until the simulator service can identify their bundle IDs.
 - The online `.github/workflows/generate-daily-schedule.yml` is present and valid with both scheduled and manual triggers. It has not run yet; trigger it manually from GitHub Actions or wait for its scheduled run.
 - GitHub Pages has not deployed commit `9b38299` yet; its latest public deployment remains `61fd7aa`, so a Pages 404/stale site at this moment is deployment propagation/configuration, not a missing repository push.
+
+### Repository consolidation (November 6, 2026)
+
+- Canonical local and remote repository: `/Users/cadensong/Documents/Word-Links` → `https://github.com/Cadens0302/Word-Links`.
+- The duplicate Xcode folder at `/Users/cadensong/Documents/Coding /Word-Links/Word Links` matched the canonical Swift source, shared bundle, tools, and workflows, but was not a Git checkout.
+- The duplicate folder is being archived after verification so future app and website edits happen in the Git-backed canonical project only.
+- The canonical Xcode project is `Word Links.xcodeproj`; open it from the repository root before making further changes.
+- The project built successfully with tests during consolidation verification.

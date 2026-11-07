@@ -1,10 +1,10 @@
 {
   "project": "Word Links",
   "handoffVersion": 1,
-  "implementationPhase": "native app, shared WordLinks bundle, website staging, offline cache integration, and compact no-scroll phone layout implemented; prepared commits are pushed and validation passed, but daily workflow dispatch and new Pages deployment remain pending",
+  "implementationPhase": "single canonical Word-Links repository with native app, shared WordLinks bundle, website staging, offline cache integration, compact no-scroll phone layout, and automated daily puzzle publishing",
   "appRepository": "Cadens0302/Word-Links",
   "deploymentRepository": "Cadens0302/Word-Links",
-  "latestDeploymentCommit": "61fd7aab58e61be70fa6b3603c30dc33d409c1cb",
+  "latestDeploymentCommit": "38de0bb93d5816372b824127cf8593f7243043cf",
   "dailySchedule": {
     "baseURL": "https://cadens0302.github.io/Word-Links/dist/daily/v1/",
     "firstDate": "2026-11-02",
@@ -35,7 +35,7 @@
     "canonicalStylesheet": "WordLinks/WordLinks.bundle/presentation.css",
     "websiteSynchronized": true
   },
-  "remoteReadyCommits": ["f3ce7e9", "c39a765", "9b38299"],
+  "remoteReadyCommits": ["38de0bb"],
   "xcodeProject": {
     "path": "Word Links.xcodeproj",
     "appTarget": "Word Links",
@@ -47,7 +47,7 @@
     "deploymentIndexHTTPStatus": 200,
     "todayScheduleHTTPStatus": 200,
     "xcodeBuildPassedAfterOfflineCacheChanges": true,
-    "nextRecommendedVerification": "Run Generate daily schedule manually from GitHub Actions, confirm the workflow succeeds, wait for Pages deployment of 9b38299, then review both games visually on compact and tall iPhones"
+    "nextRecommendedVerification": "Open the canonical Xcode project from /Users/cadensong/Documents/Word-Links, push workflow cleanup commit 5fac7dc if desired, then review both games visually on compact and tall iPhones"
   },
   "knownLimitations": [
     "iOS background execution is best effort and is not guaranteed while force-quit.",
